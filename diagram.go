@@ -20,47 +20,50 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 		l              = len(net.Nodes)
 		width          = marginLeft + nodeRadius + 100 + nodeRadius + marginRight
 		height         = marginTop + nodeRadius*2*l + betweenPadding*(l-1) + marginBottom
+		imgPadding     = 5
+		lineWidth      = 2
 	)
 
 	// Prepare colors that will be used more than once
 	lightYellow := onthefly.ColorByName("#ffffcc")
 
 	// Start a new SVG image
-	page, svg := onthefly.NewTinySVG(0, 0, width, height)
+	page, svg := onthefly.NewTinySVG(0, 0, width+imgPadding*2, height+imgPadding*2)
+
 	desc := svg.AddNewTag("desc")
 	desc.AddContent("generated with github.com/xyproto/wann")
 
 	// White background rounded rectangle
-	bg := svg.AddRoundedRect(0, 0, 30, 30, width, height)
+	bg := svg.AddRoundedRect(imgPadding, imgPadding, 30, 30, width, height)
 	bg.Fill2(onthefly.ColorByName("white"))
 	bg.Stroke2(onthefly.ColorByName("black"))
 
 	// Position of output node
-	outputx := width - (marginRight + nodeRadius*2)
-	outputy := (height - (nodeRadius * 2)) / 2
+	outputx := width - (marginRight + nodeRadius*2) + imgPadding
+	outputy := (height-(nodeRadius*2))/2 + imgPadding
 
-	// Draw the output node
-	output := svg.AddCircle(outputx+nodeRadius, outputy+nodeRadius, nodeRadius)
-	output.Fill2(lightYellow)
-	output.Stroke2(onthefly.ColorByName("black"))
-
-	// Draw the input nodes
+	// Draw the input nodes as circles, and connections to the output node as lines
 	for i, n := range net.Nodes {
 
 		// Find the position of this node circle
-		x := marginLeft
-		y := (i * (nodeRadius*2 + betweenPadding)) + marginTop
+		x := marginLeft + imgPadding
+		y := (i * (nodeRadius*2 + betweenPadding)) + marginTop + imgPadding
+
+		// Draw the connection from this node to the output node, if applicable
+		if net.OutputNode.HasInput(n) {
+			svg.Line(x+nodeRadius*2, y+nodeRadius, outputx, outputy+nodeRadius, lineWidth, "#0099ff")
+		}
 
 		// Draw this input node
 		input := svg.AddCircle(x+nodeRadius, y+nodeRadius, nodeRadius)
 		input.Fill2(lightYellow)
 		input.Stroke2(onthefly.ColorByName("black"))
-
-		// Draw the connection from this node to the output node, if applicable
-		if net.OutputNode.HasInput(n) {
-			svg.Line(x+nodeRadius*2, y+nodeRadius, outputx, outputy+nodeRadius, 2, "#0099ff")
-		}
 	}
+
+	// Draw the output node
+	output := svg.AddCircle(outputx+nodeRadius, outputy+nodeRadius, nodeRadius)
+	output.Fill2(lightYellow)
+	output.Stroke2(onthefly.ColorByName("black"))
 
 	// Write the data to the given io.Writer
 	return w.Write([]byte(page.GetXML(false)))
