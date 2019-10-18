@@ -15,8 +15,8 @@ type Neuron struct {
 
 // NewNeuron creates a new *Neuron, with an id
 func NewNeuron() *Neuron {
-	// Pre-allocate room for 1024 neurons and use Swish as the default activation function
-	return &Neuron{InputNeurons: make([]*Neuron, 1024), ActivationFunction: swish.Swish}
+	// Pre-allocate room for 1024 connections and use Swish as the default activation function
+	return &Neuron{InputNeurons: make([]*Neuron, 0, 1024), ActivationFunction: swish.Swish}
 }
 
 // HasInput checks if the given neuron is an input neuron to this one
@@ -59,6 +59,7 @@ func (neuron *Neuron) RemoveInput(e *Neuron) error {
 	return errors.New("neuron does not exist")
 }
 
+// String will return a string containing both the pointer address and the number of input neurons
 func (neuron *Neuron) String() string {
-	return fmt.Sprintf("NEURON %v", neuron)
+	return fmt.Sprintf("NEURON[%p,%d]", neuron, len(neuron.InputNeurons))
 }
