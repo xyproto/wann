@@ -1,4 +1,4 @@
-# github.com/xyproto/af v0.0.0-20191018211848-b756d54fecdd
+# github.com/xyproto/af v0.0.0-20191018214252-a15a0cfd0e83
 github.com/xyproto/af
 # github.com/xyproto/onthefly v0.0.0-20191018123521-59ab4a5c245f
 github.com/xyproto/onthefly
