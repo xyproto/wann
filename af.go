@@ -33,7 +33,9 @@ var ActivationFunctions = map[int](func(float64) float64){
 	SQUARED: af.Squared,    // Squared
 }
 
-func Eval(functionIndex int, x float64) float64 {
+// Calc runs an activation function with the given float64 value.
+// The activation function is chosen by one of the constants above.
+func Calc(functionIndex int, x float64) float64 {
 	if f, ok := ActivationFunctions[functionIndex]; ok {
 		return f(x)
 	}
