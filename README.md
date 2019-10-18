@@ -1,4 +1,4 @@
-# WORK IN PROGRESS, not complete
+# WORK IN PROGRESS
 
 ## wann
 
