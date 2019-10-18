@@ -49,9 +49,9 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 		x := marginLeft + imgPadding
 		y := (i * (nodeRadius*2 + betweenPadding)) + marginTop + imgPadding
 
-		// Draw the connection from this node to the output node, if applicable
+		// Draw the connection from the center of this node to the center of the output node, if applicable
 		if net.OutputNode.HasInput(n) {
-			svg.Line(x+nodeRadius*2, y+nodeRadius, outputx, outputy+nodeRadius, lineWidth, "#0099ff")
+			svg.Line(x+nodeRadius, y+nodeRadius, outputx+nodeRadius, outputy+nodeRadius, lineWidth, "#0099ff")
 		}
 
 		// Draw this input node
