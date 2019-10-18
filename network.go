@@ -12,9 +12,9 @@ func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 }
 
-// Network is a collection of neurons, an output neuron pointer and a shared weight.
+// Network is a collection of nodes, an output node and a shared weight.
 type Network struct {
-	InputNodes []*Neuron
+	Nodes      []*Neuron
 	OutputNode *Neuron
 	Weight     float64
 }
@@ -27,18 +27,21 @@ func NewNetwork(c *Config) *Network {
 	if n <= 0 {
 		return nil
 	}
-	// Pre-allocate room for n neurons and set the shared weight to 0.5
+	// Pre-allocate room for n neurons and set the shared weight to the configured value
 	net := &Network{make([]*Neuron, n), NewNeuron(), w}
+
 	// Initialize n input nodes that all are inputs to the one output node.
 	for i := 0; i < n; i++ {
-		neuron := NewNeuron()
-		net.InputNodes[i] = neuron
+		net.Nodes[i] = NewNeuron()
 		// Make connections for all nodes where a random number between 0 and 1 are larger than r
 		if rand.Float64() > r {
-			net.OutputNode.AddInput(net.InputNodes[i])
-		}
-		if !net.OutputNode.HasInput(net.InputNodes[i]) {
-			panic("EVERYTHING IS BROKEN")
+			err := net.OutputNode.AddInput(net.Nodes[i])
+			if err != nil {
+				panic(err)
+			}
+			//if !net.OutputNode.HasInput(net.Nodes[i]) {
+			//	panic("EVERYTHING IS BROKEN")
+			//}
 		}
 	}
 	return net
@@ -84,22 +87,23 @@ func (net *Network) ChangeActivationFunction(n *Neuron, f func(float64) float64)
 // String creates a simple ASCII representation of the network
 func (net *Network) String() string {
 	var sb strings.Builder
-	for i, n := range net.InputNodes {
+	lastNode := len(net.Nodes) - 1
+	for i, n := range net.Nodes {
 		if net.OutputNode.HasInput(n) {
 			if i == 0 {
 				sb.WriteString("o---o\n")
-			} else if i == (len(net.InputNodes) - 1) {
-				sb.WriteString("o--/\n")
+			} else if i != lastNode {
+				sb.WriteString("o---|\n")
 			} else {
-				sb.WriteString("o--/|\n")
+				sb.WriteString("o---|\n")
 			}
 		} else {
 			if i == 0 {
 				sb.WriteString("o   o\n")
-			} else if i == (len(net.InputNodes) - 1) {
-				sb.WriteString("o  /\n")
+			} else if i != lastNode {
+				sb.WriteString("o   |\n")
 			} else {
-				sb.WriteString("o  /|\n")
+				sb.WriteString("o   |\n")
 			}
 		}
 	}

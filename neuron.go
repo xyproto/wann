@@ -14,8 +14,8 @@ type Neuron struct {
 
 // NewNeuron creates a new *Neuron, with an id
 func NewNeuron() *Neuron {
-	// Pre-allocate room for 1024 connections and use Swish as the default activation function
-	return &Neuron{InputNeurons: make([]*Neuron, 0, 1024), ActivationFunction: swish.Swish}
+	// Pre-allocate room for 64 connections and use Swish as the default activation function
+	return &Neuron{InputNeurons: make([]*Neuron, 0, 64), ActivationFunction: swish.Swish}
 }
 
 // HasInput checks if the given neuron is an input neuron to this one

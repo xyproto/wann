@@ -1,16 +1,16 @@
 package wann
 
 import (
-	"fmt"
+	"math/rand"
 	"testing"
 )
 
 func TestDiagram(t *testing.T) {
+	rand.Seed(currentTime)
 	net := NewNetwork(&Config{
 		Inputs:          5,
 		ConnectionRatio: 0.5,
 		SharedWeight:    0.5,
 	})
 	net.OutputDiagram("/tmp/output.svg")
-	fmt.Println("xdg-open /tmp/output.svg")
 }

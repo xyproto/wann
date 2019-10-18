@@ -2,10 +2,15 @@ package wann
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
+	"time"
 )
 
+var currentTime = time.Now().UTC().UnixNano()
+
 func TestNetwork(t *testing.T) {
+	rand.Seed(currentTime)
 	net := NewNetwork(&Config{
 		Inputs:          5,
 		ConnectionRatio: 0.5,
