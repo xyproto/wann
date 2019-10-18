@@ -1,4 +1,7 @@
 github.com/buger/goterm v0.0.0-20181115115552-c206103e1f37/go.mod h1:u9UyCz2eTrSGy6fbupqJ54eY5c4IC8gREQ1053dK12U=
+github.com/urfave/negroni v1.0.0/go.mod h1:Meg73S6kFm/4PpbYdq35yYWoCZ9mS/YSx+lKnmiohz4=
+github.com/xyproto/onthefly v0.0.0-20191018123521-59ab4a5c245f h1:Z+yE3f/ZTdiNpawU0iEd5DSVqyiw26um/yaP1JjhXm4=
+github.com/xyproto/onthefly v0.0.0-20191018123521-59ab4a5c245f/go.mod h1:J7JMYZnDl3GQMTLkQzTOclZmc8s+YNNErLjkTkgbABo=
 github.com/xyproto/swish v1.1.0 h1:iEoVSkfEC80K7/TaV923eZouT4AAraUbi998VYRkNIc=
 github.com/xyproto/swish v1.1.0/go.mod h1:IVhz2R80pNsPaSxbEcqR84i4MVL0b06HN7KIMhv38WA=
 golang.org/x/sys v0.0.0-20190613101156-ab3f67ed278a/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
