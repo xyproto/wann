@@ -29,9 +29,9 @@ func (neuron *Neuron) HasInput(e *Neuron) bool {
 	return false
 }
 
-// FindInputNeuron checks if the given neuron is an input neuron to this one,
+// FindInput checks if the given neuron is an input neuron to this one,
 // and also returns the index to InputNeurons, if found.
-func (neuron *Neuron) FindInputNeuron(e *Neuron) (int, bool) {
+func (neuron *Neuron) FindInput(e *Neuron) (int, bool) {
 	for i, n := range neuron.InputNeurons {
 		if n == e {
 			return i, true
@@ -51,7 +51,7 @@ func (neuron *Neuron) AddInput(e *Neuron) error {
 
 // RemoveInput will remove an input neuron
 func (neuron *Neuron) RemoveInput(e *Neuron) error {
-	if i, found := neuron.FindInputNeuron(e); found {
+	if i, found := neuron.FindInput(e); found {
 		// Found it, remove the neuron at index i
 		neuron.InputNeurons = append(neuron.InputNeurons[:i], neuron.InputNeurons[i+1:]...)
 		return nil

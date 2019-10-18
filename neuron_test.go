@@ -47,22 +47,22 @@ func TestHasInput(t *testing.T) {
 	}
 }
 
-func TestFindInputNeuron(t *testing.T) {
+func TestFindInput(t *testing.T) {
 	a := NewNeuron()
 	b := NewNeuron()
 	c := NewNeuron()
 	d := NewNeuron()
 	a.AddInput(b)
 	a.AddInput(c)
-	if _, found := a.FindInputNeuron(d); found {
+	if _, found := a.FindInput(d); found {
 		t.Errorf("a should have d as an input")
 	}
-	if pos, found := a.FindInputNeuron(b); !found {
+	if pos, found := a.FindInput(b); !found {
 		t.Errorf("a should have b as an input")
 	} else if found && pos != 0 {
 		t.Errorf("a should have b as an input at position 0")
 	}
-	if pos, found := a.FindInputNeuron(c); !found {
+	if pos, found := a.FindInput(c); !found {
 		t.Errorf("a should have c as an input")
 	} else if found && pos != 1 {
 		t.Errorf("a should have c as an input at position 1")
