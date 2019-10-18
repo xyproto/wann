@@ -8,7 +8,6 @@ import (
 
 // Neuron is a list of input-neurons, and an activation function.
 type Neuron struct {
-	id                 int
 	InputNeurons       []*Neuron
 	ActivationFunction func(float64) float64
 }
