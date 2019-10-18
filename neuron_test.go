@@ -4,7 +4,6 @@ import (
 	"math"
 	"strings"
 	"testing"
-	//"fmt"
 )
 
 func TestNeuron(t *testing.T) {
