@@ -12,3 +12,4 @@
 *.out
 
 cmd/graph/graph
+cmd/precision/precision

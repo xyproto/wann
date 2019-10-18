@@ -1,7 +1,4 @@
 github.com/buger/goterm v0.0.0-20181115115552-c206103e1f37/go.mod h1:u9UyCz2eTrSGy6fbupqJ54eY5c4IC8gREQ1053dK12U=
-github.com/xyproto/swish v1.0.0 h1:GH9mUSfOazp6LOfLh1BgoG38iXjjll3voh+hHJKhhPw=
-github.com/xyproto/swish v1.0.0/go.mod h1:J6duhmONU+Kq4C68hsj9KK7pHP5j9D15T3xv9AO6c9E=
-github.com/xyproto/swish v1.0.1-0.20191014124858-1276952cb9ae h1:t6ygEMasrrWxUF3taqgY14TtTV4WikrWz8cZ4BA6pwo=
-github.com/xyproto/swish v1.0.1-0.20191014124858-1276952cb9ae/go.mod h1:IVhz2R80pNsPaSxbEcqR84i4MVL0b06HN7KIMhv38WA=
-golang.org/x/sys v0.0.0-20190602015325-4c4f7f33c9ed/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+github.com/xyproto/swish v1.1.0 h1:iEoVSkfEC80K7/TaV923eZouT4AAraUbi998VYRkNIc=
+github.com/xyproto/swish v1.1.0/go.mod h1:IVhz2R80pNsPaSxbEcqR84i4MVL0b06HN7KIMhv38WA=
 golang.org/x/sys v0.0.0-20190613101156-ab3f67ed278a/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
