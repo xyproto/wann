@@ -1,4 +1,6 @@
-# Swish [![Build Status](https://travis-ci.org/xyproto/swich.svg?branch=master)](https://travis-ci.org/xyproto/swish) [![Go Report Card](https://goreportcard.com/badge/github.com/xyproto/swish)](https://goreportcard.com/report/github.com/xyproto/swish)
+# Swish
+
+[![Build Status](https://travis-ci.org/xyproto/swish.svg?branch=master)](https://travis-ci.org/xyproto/swish) [![Go Report Card](https://goreportcard.com/badge/github.com/xyproto/swish)](https://goreportcard.com/report/github.com/xyproto/swish) [![GoDoc](https://godoc.org/github.com/xyproto/swish?status.svg)](https://godoc.org/github.com/xyproto/swish)
 
 An optimized Swish activation function ([Ramachandran, Zoph and Le, 2017](https://arxiv.org/abs/1710.05941)), for neural networks.
 
@@ -62,6 +64,6 @@ I have no idea why the assembly version is so slow, but `0.26 ns/op` isn't bad f
 
 ## General info
 
-* Version: 1.1.0
+* Version: 1.3.0
 * License: MIT
 * Author: Alexander F. Rødseth &lt;xyproto@archlinux.org&gt;
