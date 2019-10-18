@@ -1,6 +1,7 @@
 package wann
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 )
@@ -12,5 +13,9 @@ func TestDiagram(t *testing.T) {
 		ConnectionRatio: 0.5,
 		SharedWeight:    0.5,
 	})
-	net.OutputDiagram("/tmp/output.svg")
+	err := net.SaveDiagram("/tmp/output.svg")
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println("xdg-open /tmp/output.svg")
 }

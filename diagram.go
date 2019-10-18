@@ -1,12 +1,15 @@
 package wann
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/xyproto/onthefly"
+	"io"
+	"io/ioutil"
 )
 
-// OutputDiagram will output a diagram as an SVG image
-func (net *Network) OutputDiagram(filename string) error {
+// WriteSVG will output the current network as an SVG image to the given io.Writer
+func (net *Network) WriteSVG(w io.Writer) (int, error) {
 	l := len(net.Nodes)
 	fmt.Printf("%d input nodes\n", l)
 
@@ -43,20 +46,29 @@ func (net *Network) OutputDiagram(filename string) error {
 	output.Stroke2(onthefly.ColorByName("black"))
 
 	for i, n := range net.Nodes {
-		x := 10
+		x := marginLeft
 		// 24 pixels per node, including padding (4 pixels above, 4 pixels below)
-		y := (i * (20 + 5)) + 5
+		y := (i * (nodeRadius*2 + betweenPadding)) + marginTop
 
 		//rr := svg.AddRoundedRect(x, y, 5, 5, 20, 20)
-		rr := svg.AddCircle(x+10, y+10, 10)
+		rr := svg.AddCircle(x+nodeRadius, y+nodeRadius, nodeRadius)
 		rr.Fill2(lightYellow)
 		rr.Stroke2(onthefly.ColorByName("black"))
 
 		if net.OutputNode.HasInput(n) {
-			svg.Line(x+20, y+10, outputx, outputy+10, 1, "#0099ff")
+			svg.Line(x+nodeRadius*2, y+nodeRadius, outputx, outputy+nodeRadius, 2, "#0099ff")
 		}
 
 	}
+	return w.Write([]byte(page.GetXML(false)))
+}
 
-	return page.SaveSVG(filename)
+// SaveDiagram saves a drawing of the current network as an SVG file
+func (net *Network) SaveDiagram(filename string) error {
+	var buf bytes.Buffer
+	_, err := net.WriteSVG(&buf)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(filename, buf.Bytes(), 0644)
 }
