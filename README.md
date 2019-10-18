@@ -4,4 +4,6 @@
 
 Weight Agnostic Neural Networks, implemented in Go
 
+https://ai.googleblog.com/2019/08/exploring-weight-agnostic-neural.html
+
 # WORK IN PROGRESS, does not work yet
