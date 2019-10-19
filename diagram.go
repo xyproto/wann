@@ -7,6 +7,11 @@ import (
 	"io/ioutil"
 )
 
+type Pos struct {
+	x float64
+	y float64
+}
+
 // WriteSVG will output the current network as an SVG image to the given io.Writer
 func (net *Network) WriteSVG(w io.Writer) (int, error) {
 	// Set up margins and the canvas size
@@ -58,6 +63,52 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 		input := svg.AddCircle(x+nodeRadius, y+nodeRadius, nodeRadius)
 		input.Fill2(lightYellow)
 		input.Stroke2(onthefly.ColorByName("black"))
+
+		// Plot the activation function inside this node
+		startx := float64(x) + float64(nodeRadius)*0.5
+		stopx := float64(x+nodeRadius*2) - float64(nodeRadius)*0.5
+		ypos := float64(y)
+		//p := onthefly.NewPosf(0.0, 0.0)
+		//prevp := onthefly.NewPosf(0.0, 0.0)
+		//first := true
+		//fmt.Println("---")
+		points := make([]*onthefly.Pos, 0)
+		for xpos := startx; xpos < stopx; xpos += 0.2 {
+			xr := float64(xpos-startx) / float64(stopx-startx)
+			xv := (xr * 8.0) - 5.0
+			yv := n.ActivationFunction(xv)
+			// plot
+			yp := float64(ypos) + float64(nodeRadius) - (yv * 2.5) + float64(nodeRadius)*0.1
+			//yz := float64(ypos)+float64(nodeRadius)-(0.0*2.5)+float64(nodeRadius)*0.1
+			xp := xpos
+			//dot := svg.AddCirclef(xp, yp, 0.5)
+			//prevp = p
+			p := onthefly.NewPosf(xp, yp)
+			//if first {
+			//	prevp = p
+			//	first = false
+			//}
+			//svg.Line2(prevp, p, 1, onthefly.ColorByName("red"))
+			points = append(points, p)
+			//svg.Line2(onthefly.NewPosf(xp, yp), onthefly.NewPosf(xp+0.2, yp-0.2), 2, onthefly.ColorByName("black"))
+			//svg.Circle2(onthefly.NewPosf(xp, yp), 1, onthefly.ColorByName("black"))
+			//dot.Fill2(onthefly.ColorByName("black"))
+			//dot := svg.AddRectf(float64(xpos), float64(ypos)+float64(nodeRadius)-(yv*2.5)+float64(nodeRadius)*0.1, 0.5)
+			//dot.Fill2(onthefly.ColorByName("black"))
+			//dot.Stroke2(onthefly.ColorByName("black"))
+		}
+
+		// Now append all the points in reverse, to make it a line
+		//pc2 := points[:]
+		//for i := len(pc2)-1; i > 0; i-- {
+		//	points = append(points, pc2[i])
+		//}
+
+		//points = append(points, onthefly.NewPosf(100, 100))
+
+		pl := svg.Polyline(points, onthefly.ColorByName("black"))
+		pl.Stroke2(onthefly.ColorByName("black"))
+		pl.Fill2(onthefly.ColorByName("none"))
 	}
 
 	// Draw the output node
