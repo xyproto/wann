@@ -4,10 +4,13 @@ import (
 	"math"
 	"strings"
 	"testing"
+
+	"github.com/xyproto/swish"
 )
 
 func TestNeuron(t *testing.T) {
 	n := NewNeuron()
+	n.ActivationFunction = swish.Swish
 	result := n.ActivationFunction(0.5)
 	diff := math.Abs(result - 0.311287)
 	if diff > 0.00001 { // 0.0000001 {

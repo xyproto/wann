@@ -65,11 +65,23 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 		ypos := float64(y)
 		var points []*onthefly.Pos
 		for xpos := startx; xpos < stopx; xpos += 0.2 {
+			// xr is from 0 to 1
 			xr := float64(xpos-startx) / float64(stopx-startx)
-			xv := (xr * 8.0) - 5.0
+			// xv is from -5 to 3
+			//xv := (xr * 8.0) - 5.0
+			// xv is from -2 to 2
+			//xv := (xr * 4.0) - 2.0
+			// xv is from -5 to 5
+			xv := (xr - 0.5) * float64(nodeRadius)
 			yv := n.ActivationFunction(xv)
-			// plot
-			yp := float64(ypos) + float64(nodeRadius) - (yv * 2.5) + float64(nodeRadius)*0.1
+			// plot, 3.0 is the amplitude along y
+			yp := float64(ypos) + float64(nodeRadius)*1.35 - (yv * 0.6 * float64(nodeRadius))
+
+			if yp < (ypos + float64(nodeRadius)*0.1) {
+				continue
+			} else if yp > (ypos + float64(nodeRadius)*1.9) {
+				continue
+			}
 			p := onthefly.NewPosf(xpos, yp)
 			points = append(points, p)
 		}
