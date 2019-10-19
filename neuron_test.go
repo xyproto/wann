@@ -1,10 +1,13 @@
 package wann
 
 import (
+	"fmt"
 	"math"
+	"math/rand"
 	"strings"
 	"testing"
 
+	"github.com/xyproto/af"
 	"github.com/xyproto/swish"
 )
 
@@ -93,3 +96,26 @@ func TestRemoveInput(t *testing.T) {
 }
 
 // func (neuron *Neuron) RemoveInput(e *Neuron) error {
+
+func TestEvaluate(t *testing.T) {
+	rand.Seed(currentTime)
+	net := NewNetwork(&Config{
+		Inputs:          5,
+		ConnectionRatio: 0.5,
+		SharedWeight:    0.5,
+	})
+
+	// Set a few activation functions
+	net.Nodes[0].ActivationFunction = af.Linear
+	net.Nodes[0].SetValue(0.5)
+	net.Nodes[1].ActivationFunction = af.Swish
+	net.Nodes[1].SetValue(0.5)
+	net.Nodes[2].ActivationFunction = af.Gaussian01
+	net.Nodes[2].SetValue(0.5)
+	net.Nodes[3].ActivationFunction = af.Sigmoid
+	net.Nodes[3].SetValue(0.5)
+	net.Nodes[4].ActivationFunction = af.ReLU
+	net.Nodes[4].SetValue(0.5)
+
+	fmt.Println(net.OutputNode.Evaluate(0.5))
+}

@@ -5,16 +5,27 @@ import (
 )
 
 const (
+	// Linear is the linear activation function. Gradually from 0 to 1.
 	Linear = iota + 1
+	// Step is a step. First 0 and then abrubtly up to 1.
 	Step
+	// Sin is the sinoid activation function
 	Sin
+	// Gauss is the Gaussian function, with a mean of 0 and a sigma of 1
 	Gauss
+	// Tanh is math.Tanh
 	Tanh
+	// Sigmoid is the optimized sigmoid function from github.com/xyproto/swish
 	Sigmoid
+	// Inv is the inverse linear function
 	Inv
+	// Abs is math.Abs
 	Abs
+	// Relu or ReLU is the rectified linear unit, first 0 and then the linear function
 	Relu
+	// Cos is the cosoid (?) activation function
 	Cos
+	// Squared increases rapidly
 	Squared
 )
 
