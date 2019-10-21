@@ -1,6 +1,6 @@
-# github.com/xyproto/af v0.0.0-20191018214252-a15a0cfd0e83
+# github.com/xyproto/af v0.0.0-20191018214415-1a8887381bd3
 github.com/xyproto/af
-# github.com/xyproto/onthefly v0.0.0-20191018123521-59ab4a5c245f
-github.com/xyproto/onthefly
 # github.com/xyproto/swish v1.3.0
 github.com/xyproto/swish
+# github.com/xyproto/tinysvg v0.0.0-20191021102652-2273b0663827
+github.com/xyproto/tinysvg

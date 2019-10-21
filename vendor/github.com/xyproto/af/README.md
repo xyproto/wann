@@ -1,6 +1,6 @@
 # af [![Build Status](https://travis-ci.org/xyproto/af.svg?branch=master)](https://travis-ci.org/xyproto/af) [![Go Report Card](https://goreportcard.com/badge/github.com/xyproto/af)](https://goreportcard.com/report/github.com/xyproto/af) [![GoDoc](https://godoc.org/github.com/xyproto/af?status.svg)](https://godoc.org/github.com/xyproto/af)
 
-Activation functions, intended for use in neural networks.
+Activation functions for neural networks.
 
 These activation functions are included:
 
