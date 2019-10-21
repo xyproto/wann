@@ -71,16 +71,16 @@ func (neuron *Neuron) String() string {
 	return fmt.Sprintf("NEURON[%p,%d]", neuron, len(neuron.InputNeurons))
 }
 
-// Evaluate will return a weighted sum of the input nodes,
+// evaluate will return a weighted sum of the input nodes,
 // using the .Value field if it is set and no input nodes are available.
-func (neuron *Neuron) Evaluate(weight float64) float64 {
+func (neuron *Neuron) evaluate(weight float64) float64 {
 	// Assume this is the Output neuron, recursively evaluating the result
 	// For each input neuron, evaluate them
 	summed := 0.0
 	counter := 0
 	for _, inputNeuron := range neuron.InputNeurons {
 		// Let each input neuron do its own evauluation, using the given weight
-		summed += inputNeuron.Evaluate(weight) * weight
+		summed += inputNeuron.evaluate(weight) * weight
 		counter++
 	}
 	// No input neurons. Use the .Value field if it's not nil.

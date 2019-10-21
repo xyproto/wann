@@ -3,6 +3,7 @@ package wann
 import (
 	"errors"
 	"math/rand"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -14,7 +15,7 @@ func init() {
 
 // Network is a collection of nodes, an output node and a shared weight.
 type Network struct {
-	Nodes      []*Neuron
+	InputNodes []*Neuron
 	OutputNode *Neuron
 	Weight     float64
 }
@@ -32,16 +33,13 @@ func NewNetwork(c *Config) *Network {
 
 	// Initialize n input nodes that all are inputs to the one output node.
 	for i := 0; i < n; i++ {
-		net.Nodes[i] = NewNeuron()
+		net.InputNodes[i] = NewNeuron()
 		// Make connections for all nodes where a random number between 0 and 1 are larger than r
 		if rand.Float64() > r {
-			err := net.OutputNode.AddInput(net.Nodes[i])
+			err := net.OutputNode.AddInput(net.InputNodes[i])
 			if err != nil {
 				panic(err)
 			}
-			//if !net.OutputNode.HasInput(net.Nodes[i]) {
-			//	panic("EVERYTHING IS BROKEN")
-			//}
 		}
 	}
 	return net
@@ -84,28 +82,31 @@ func (net *Network) ChangeActivationFunction(n *Neuron, f func(float64) float64)
 	n.ActivationFunction = f
 }
 
-// String creates a simple ASCII representation of the network
+// String creates a simple and not very useful ASCII representation of the input nodes and the output node.
+// Nodes that are not input nodes are skipped.
+// Input nodes that are not connected directly to the output node are drawn as non-connected,
+// even if they are connected via another node.
 func (net *Network) String() string {
 	var sb strings.Builder
-	lastNode := len(net.Nodes) - 1
-	for i, n := range net.Nodes {
-		if net.OutputNode.HasInput(n) {
-			if i == 0 {
-				sb.WriteString("o---o\n")
-			} else if i != lastNode {
-				sb.WriteString("o---|\n")
-			} else {
-				sb.WriteString("o---|\n")
-			}
-		} else {
-			if i == 0 {
-				sb.WriteString("o   o\n")
-			} else if i != lastNode {
-				sb.WriteString("o   |\n")
-			} else {
-				sb.WriteString("o   |\n")
-			}
+	//--- Network ---
+	//Input nodes: 5
+	//Connections to output node: 5
+	//---------------
+	sb.WriteString("--- Network ---\n")
+	sb.WriteString("Input nodes: " + strconv.Itoa(len(net.InputNodes)) + "\n")
+	sb.WriteString("Connections to output node: " + strconv.Itoa(len(net.OutputNode.InputNeurons)) + "\n")
+	sb.WriteString("---------------")
+	return sb.String()
+}
+
+// Evaluate will return a weighted sum of the input nodes,
+// using the .Value field if it is set and no input nodes are available.
+// A shared weight can be given.
+func (net *Network) Evaluate(inputValues []float64, weight float64) float64 {
+	for i, n := range net.InputNodes {
+		if i < len(inputValues) {
+			n.SetValue(inputValues[i])
 		}
 	}
-	return sb.String()
+	return net.OutputNode.evaluate(weight)
 }
