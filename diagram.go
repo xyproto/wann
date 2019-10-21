@@ -2,7 +2,7 @@ package wann
 
 import (
 	"bytes"
-	"github.com/xyproto/onthefly"
+	"github.com/xyproto/tinysvg"
 	"io"
 	"io/ioutil"
 )
@@ -17,7 +17,7 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 		marginRight    = 10
 		nodeRadius     = 10
 		betweenPadding = 4
-		l              = len(net.Nodes)
+		l              = len(net.InputNodes)
 		width          = marginLeft + nodeRadius + 100 + nodeRadius + marginRight
 		height         = marginTop + nodeRadius*2*l + betweenPadding*(l-1) + marginBottom
 		imgPadding     = 5
@@ -25,25 +25,23 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 	)
 
 	// Prepare colors that will be used more than once
-	lightYellow := onthefly.ColorByName("#ffffcc")
+	lightYellow := tinysvg.ColorByName("#ffffcc")
 
 	// Start a new SVG image
-	page, svg := onthefly.NewTinySVG(0, 0, width+imgPadding*2, height+imgPadding*2)
-
-	desc := svg.AddNewTag("desc")
-	desc.AddContent("generated with github.com/xyproto/wann")
+	document, svg := tinysvg.NewTinySVG(width+imgPadding*2, height+imgPadding*2)
+	svg.Describe("generated with github.com/xyproto/wann")
 
 	// White background rounded rectangle
 	bg := svg.AddRoundedRect(imgPadding, imgPadding, 30, 30, width, height)
-	bg.Fill2(onthefly.ColorByName("white"))
-	bg.Stroke2(onthefly.ColorByName("black"))
+	bg.Fill2(tinysvg.ColorByName("white"))
+	bg.Stroke2(tinysvg.ColorByName("black"))
 
 	// Position of output node
 	outputx := width - (marginRight + nodeRadius*2) + imgPadding
 	outputy := (height-(nodeRadius*2))/2 + imgPadding
 
 	// Draw the input nodes as circles, and connections to the output node as lines
-	for i, n := range net.Nodes {
+	for i, n := range net.InputNodes {
 
 		// Find the position of this node circle
 		x := marginLeft + imgPadding
@@ -57,13 +55,13 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 		// Draw this input node
 		input := svg.AddCircle(x+nodeRadius, y+nodeRadius, nodeRadius)
 		input.Fill2(lightYellow)
-		input.Stroke2(onthefly.ColorByName("black"))
+		input.Stroke2(tinysvg.ColorByName("black"))
 
 		// Plot the activation function inside this node
 		startx := float64(x) + float64(nodeRadius)*0.5
 		stopx := float64(x+nodeRadius*2) - float64(nodeRadius)*0.5
 		ypos := float64(y)
-		var points []*onthefly.Pos
+		var points []*tinysvg.Pos
 		for xpos := startx; xpos < stopx; xpos += 0.2 {
 			// xr is from 0 to 1
 			xr := float64(xpos-startx) / float64(stopx-startx)
@@ -82,22 +80,22 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 			} else if yp > (ypos + float64(nodeRadius)*1.9) {
 				continue
 			}
-			p := onthefly.NewPosf(xpos, yp)
+			p := tinysvg.NewPosf(xpos, yp)
 			points = append(points, p)
 		}
 		// Draw the polyline (graph)
-		pl := svg.Polyline(points, onthefly.ColorByName("black"))
-		pl.Stroke2(onthefly.ColorByName("black"))
-		pl.Fill2(onthefly.ColorByName("none"))
+		pl := svg.Polyline(points, tinysvg.ColorByName("black"))
+		pl.Stroke2(tinysvg.ColorByName("black"))
+		pl.Fill2(tinysvg.ColorByName("none"))
 	}
 
 	// Draw the output node
 	output := svg.AddCircle(outputx+nodeRadius, outputy+nodeRadius, nodeRadius)
 	output.Fill2(lightYellow)
-	output.Stroke2(onthefly.ColorByName("black"))
+	output.Stroke2(tinysvg.ColorByName("black"))
 
 	// Write the data to the given io.Writer
-	return w.Write([]byte(page.GetXML(false)))
+	return w.Write(document.Bytes())
 }
 
 // SaveDiagram saves a drawing of the current network as an SVG file

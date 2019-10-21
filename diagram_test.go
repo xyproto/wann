@@ -16,11 +16,11 @@ func TestDiagram(t *testing.T) {
 	})
 
 	// Set a few activation functions
-	net.Nodes[0].ActivationFunction = af.Linear
-	net.Nodes[1].ActivationFunction = af.Swish
-	net.Nodes[2].ActivationFunction = af.Gaussian01
-	net.Nodes[3].ActivationFunction = af.Sigmoid
-	net.Nodes[4].ActivationFunction = af.ReLU
+	net.InputNodes[0].ActivationFunction = af.Linear
+	net.InputNodes[1].ActivationFunction = af.Swish
+	net.InputNodes[2].ActivationFunction = af.Gaussian01
+	net.InputNodes[3].ActivationFunction = af.Sigmoid
+	net.InputNodes[4].ActivationFunction = af.ReLU
 
 	err := net.SaveDiagram("/tmp/output.svg")
 	if err != nil {
