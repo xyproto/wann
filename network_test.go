@@ -124,7 +124,8 @@ func TestUpDetection(t *testing.T) {
 	// Now take the best networks and make mutated offspring.
 	// Delete the worst networks.
 
-	// For now, don't weight anything, just delete the bad half, then add modified versions of the best 3 until the population is full.
+	// For now, don't weight anything, just delete the bad half,
+	// then add modified versions of the best 3 until the population is full.
 	for networkIndex := 0; networkIndex < N; networkIndex++ {
 		// Is this network in the best half?
 		bestHalf := false
@@ -136,7 +137,8 @@ func TestUpDetection(t *testing.T) {
 				}
 			}
 		}
-		// If not in the best half, take a copy of the best network, then modify it a bit (in a random way)
+		// If not in the best half, take a copy of the best network,
+		// then modify it a bit (in a random way)
 		if !bestHalf {
 			// Take a deep copy, not just the the pointers
 			newNetwork := bestNetwork.Copy()
