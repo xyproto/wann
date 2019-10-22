@@ -102,11 +102,22 @@ func (net *Network) String() string {
 // Evaluate will return a weighted sum of the input nodes,
 // using the .Value field if it is set and no input nodes are available.
 // A shared weight can be given.
-func (net *Network) Evaluate(inputValues []float64, weight float64) float64 {
+func (net *Network) Evaluate(inputValues []float64) float64 {
 	for i, n := range net.InputNodes {
 		if i < len(inputValues) {
 			n.SetValue(inputValues[i])
 		}
 	}
-	return net.OutputNode.evaluate(weight)
+	return net.OutputNode.evaluate(net.Weight)
+}
+
+// SetWeight will set a shared weight for the entire network
+func (net *Network) SetWeight(weight float64) {
+	net.Weight = weight
+}
+
+// Complexity measures the network complexity
+func (net *Network) Complexity() float64 {
+	// Just return the node count, for now
+	return float64(len(net.InputNodes))
 }
