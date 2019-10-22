@@ -2,7 +2,6 @@ package wann
 
 import (
 	"errors"
-	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -164,7 +163,7 @@ func (net *Network) Modify() {
 	// TODO: Perform a modfification, using one of the three methods outlined in the paper
 	switch method {
 	case 0:
-		fmt.Println("Modifying the network using method 1 - insert node")
+		//fmt.Println("Modifying the network using method 1 - insert node")
 		nodeA := net.FindRandomNeuron()
 		nodeB := net.FindRandomNeuron()
 		if nodeA != nodeB {
@@ -173,7 +172,7 @@ func (net *Network) Modify() {
 			net.InsertNode(nodeA, nodeB, newNode)
 		}
 	case 1:
-		fmt.Println("Modifying the network using method 2 - add connection")
+		//fmt.Println("Modifying the network using method 2 - add connection")
 		nodeA := net.FindRandomNeuron()
 		nodeB := net.FindRandomNeuron()
 		if nodeA != nodeB {
@@ -181,7 +180,7 @@ func (net *Network) Modify() {
 			net.AddConnection(nodeA, nodeB)
 		}
 	case 2:
-		fmt.Println("Modifying the network using method 3 - change activation")
+		//fmt.Println("Modifying the network using method 3 - change activation")
 		node := net.FindRandomNeuron()
 		// Change the activation function
 		node.RandomizeActivationFunction()
