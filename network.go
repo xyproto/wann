@@ -17,6 +17,7 @@ func init() {
 // Network is a collection of nodes, an output node and a shared weight.
 type Network struct {
 	InputNodes []*Neuron
+	ExtraNodes []*Neuron
 	OutputNode *Neuron
 	Weight     float64
 }
@@ -30,11 +31,11 @@ func NewNetwork(c *Config) *Network {
 		return nil
 	}
 	// Pre-allocate room for n neurons and set the shared weight to the configured value
-	net := &Network{make([]*Neuron, n), NewNeuron(), w}
+	net := &Network{make([]*Neuron, n), make([]*Neuron, 0, 64), NewRandomNeuron(), w}
 
 	// Initialize n input nodes that all are inputs to the one output node.
 	for i := 0; i < n; i++ {
-		net.InputNodes[i] = NewNeuron()
+		net.InputNodes[i] = NewRandomNeuron()
 		// Make connections for all nodes where a random number between 0 and 1 are larger than r
 		if rand.Float64() > r {
 			err := net.OutputNode.AddInput(net.InputNodes[i])
@@ -70,6 +71,7 @@ func (net *Network) InsertNode(a, b, newNode *Neuron) error {
 	if err != nil {
 		return errors.New("can not insert node: " + err.Error())
 	}
+	net.ExtraNodes = append(net.ExtraNodes, newNode)
 	return nil
 }
 
@@ -129,10 +131,30 @@ func (net *Network) Copy() *Network {
 	for _, neuron := range net.InputNodes {
 		newNet.InputNodes = append(newNet.InputNodes, neuron.Copy())
 	}
+	for _, neuron := range net.ExtraNodes {
+		newNet.ExtraNodes = append(newNet.ExtraNodes, neuron.Copy())
+	}
 	newOutputNeuron := *(net.OutputNode)
 	newNet.OutputNode = &newOutputNeuron
 	newNet.Weight = net.Weight
 	return &newNet
+}
+
+// All returns a slice with pointers to all nodes in this network
+func (net *Network) All() []*Neuron {
+	allNodes := make([]*Neuron, 0, len(net.InputNodes)+len(net.ExtraNodes)+1)
+	allNodes = append(allNodes, net.InputNodes...)
+	allNodes = append(allNodes, net.ExtraNodes...)
+	allNodes = append(allNodes, net.OutputNode)
+	return allNodes
+}
+
+// Start with the output node and traverse the net to gather a list of neurons,
+// then choose one at random.
+func (net *Network) FindRandomNeuron() *Neuron {
+	allNeurons := net.All()
+	chosenIndex := rand.Intn(len(allNeurons))
+	return allNeurons[chosenIndex]
 }
 
 // Modify this network a bit
@@ -142,10 +164,26 @@ func (net *Network) Modify() {
 	// TODO: Perform a modfification, using one of the three methods outlined in the paper
 	switch method {
 	case 0:
-		fmt.Println("Modifying the network using method 0")
+		fmt.Println("Modifying the network using method 1 - insert node")
+		nodeA := net.FindRandomNeuron()
+		nodeB := net.FindRandomNeuron()
+		if nodeA != nodeB {
+			// Insert a new node with a random activation function
+			newNode := NewRandomNeuron()
+			net.InsertNode(nodeA, nodeB, newNode)
+		}
 	case 1:
-		fmt.Println("Modifying the network using method 1")
+		fmt.Println("Modifying the network using method 2 - add connection")
+		nodeA := net.FindRandomNeuron()
+		nodeB := net.FindRandomNeuron()
+		if nodeA != nodeB {
+			// Create a new connection
+			net.AddConnection(nodeA, nodeB)
+		}
 	case 2:
-		fmt.Println("Modifying the network using method 2")
+		fmt.Println("Modifying the network using method 3 - change activation")
+		node := net.FindRandomNeuron()
+		// Change the activation function
+		node.RandomizeActivationFunction()
 	}
 }

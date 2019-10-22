@@ -3,6 +3,7 @@ package wann
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 
 	"github.com/xyproto/af"
 )
@@ -14,10 +15,23 @@ type Neuron struct {
 	Value              *float64
 }
 
-// NewNeuron creates a new *Neuron, with an id
+// NewNeuron creates a new *Neuron
 func NewNeuron() *Neuron {
 	// Pre-allocate room for 64 connections and use Linear as the default activation function
 	return &Neuron{InputNeurons: make([]*Neuron, 0, 64), ActivationFunction: af.Linear}
+}
+
+// NewRandomNeuron creates a new *Neuron, with a randomly chosen activation function
+func NewRandomNeuron() *Neuron {
+	neuron := NewNeuron()
+	neuron.RandomizeActivationFunction()
+	return neuron
+}
+
+// RandomizeActivationFunction will choose a random activation function for this neuron
+func (neuron *Neuron) RandomizeActivationFunction() {
+	chosenIndex := rand.Intn(len(ActivationFunctions))
+	neuron.ActivationFunction = ActivationFunctions[chosenIndex]
 }
 
 // SetValue can be used for setting a value for this neuron instead of using input neutrons.
@@ -85,9 +99,12 @@ func (neuron *Neuron) evaluate(weight float64) float64 {
 	}
 	// No input neurons. Use the .Value field if it's not nil.
 	if counter == 0 && neuron.Value != nil {
-		return neuron.ActivationFunction(*(neuron.Value))
+		return *(neuron.Value)
 	}
-	// Return the averaged sum
+	// Return the averaged sum, or 0
+	if counter == 0 {
+		return 0.0
+	}
 	return neuron.ActivationFunction(summed / float64(counter))
 }
 

@@ -6,7 +6,7 @@ import (
 
 const (
 	// Linear is the linear activation function. Gradually from 0 to 1.
-	Linear = iota + 1
+	Linear = iota
 	// Step is a step. First 0 and then abrubtly up to 1.
 	Step
 	// Sin is the sinoid activation function

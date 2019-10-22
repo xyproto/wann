@@ -148,4 +148,9 @@ func TestUpDetection(t *testing.T) {
 		fmt.Println(networkIndex, "is in the best half?", bestHalf)
 	}
 
+	// Output a diagram of the best network
+	err := bestNetwork.SaveDiagram("best.svg")
+	if err != nil {
+		panic(err)
+	}
 }
