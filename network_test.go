@@ -78,6 +78,7 @@ func TestUpDetection(t *testing.T) {
 
 	// For each network, for each weight, evaluate the result
 	scoreMap := make(map[float64]int)
+	scoreSum := 0.0
 	for i := 0; i < N; i++ {
 		net := population[i]
 		bestResult := 0.0
@@ -93,8 +94,11 @@ func TestUpDetection(t *testing.T) {
 		}
 		score := bestResult / (complexity * 0.1)
 		scoreMap[score] = i
+		scoreSum += score
 		fmt.Println("Best weight for network", i, "is", bestWeight, "with score", score, "(best result", bestResult, ", complexity", complexity, ")")
 	}
+
+	averageScore := scoreSum / float64(N)
 
 	// Prepare to sort the score -> population index map, by key
 	keys := make(sort.Float64Slice, 0, len(scoreMap))
@@ -108,14 +112,40 @@ func TestUpDetection(t *testing.T) {
 	for _, scoreIndex := range keys {
 		fmt.Println("score", scoreIndex, "network index", scoreMap[scoreIndex])
 	}
-	if len(keys) > 0 {
-		bestIndex := scoreMap[keys[len(keys)-1]]
-		fmt.Println("Best network index: ", bestIndex)
-		bestNetwork := population[bestIndex]
-		fmt.Println(bestNetwork)
+	if len(keys) == 0 {
+		panic("NO KEYS!")
 	}
+
+	bestIndex := scoreMap[keys[len(keys)-1]]
+	fmt.Println("Best network index: ", bestIndex)
+	bestNetwork := population[bestIndex]
+	fmt.Println(bestNetwork)
 
 	// Now take the best networks and make mutated offspring.
 	// Delete the worst networks.
+
+	// For now, don't weight anything, just delete the bad half, then add modified versions of the best 3 until the population is full.
+	for networkIndex := 0; networkIndex < N; networkIndex++ {
+		// Is this network in the best half?
+		bestHalf := false
+		for score, scoreIndex := range scoreMap {
+			if scoreIndex == networkIndex {
+				if score >= averageScore {
+					bestHalf = true
+					break
+				}
+			}
+		}
+		// If not in the best half, take a copy of the best network, then modify it a bit (in a random way)
+		if !bestHalf {
+			// Take a deep copy, not just the the pointers
+			newNetwork := bestNetwork.Copy()
+			// Modify it a bit
+			newNetwork.Modify()
+			// Assign it to the population, replacing the low-scoring one
+			population[networkIndex] = newNetwork
+		}
+		fmt.Println(networkIndex, "is in the best half?", bestHalf)
+	}
 
 }

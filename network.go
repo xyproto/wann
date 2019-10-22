@@ -2,6 +2,7 @@ package wann
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -120,4 +121,31 @@ func (net *Network) SetWeight(weight float64) {
 func (net *Network) Complexity() float64 {
 	// Just return the node count, for now
 	return float64(len(net.InputNodes))
+}
+
+// Take a deep copy of the network struct
+func (net *Network) Copy() *Network {
+	var newNet Network
+	for _, neuron := range net.InputNodes {
+		newNet.InputNodes = append(newNet.InputNodes, neuron.Copy())
+	}
+	newOutputNeuron := *(net.OutputNode)
+	newNet.OutputNode = &newOutputNeuron
+	newNet.Weight = net.Weight
+	return &newNet
+}
+
+// Modify this network a bit
+func (net *Network) Modify() {
+	// Use method 0, 1 or 2
+	method := rand.Intn(3) // up to and not including 3
+	// TODO: Perform a modfification, using one of the three methods outlined in the paper
+	switch method {
+	case 0:
+		fmt.Println("Modifying the network using method 0")
+	case 1:
+		fmt.Println("Modifying the network using method 1")
+	case 2:
+		fmt.Println("Modifying the network using method 2")
+	}
 }

@@ -90,3 +90,22 @@ func (neuron *Neuron) evaluate(weight float64) float64 {
 	// Return the averaged sum
 	return neuron.ActivationFunction(summed / float64(counter))
 }
+
+// Copy takes a deep copy of this neuron
+func (neuron *Neuron) Copy() *Neuron {
+	var newNeuron Neuron
+	for _, inputNeuron := range neuron.InputNeurons {
+		if inputNeuron == neuron {
+			newNeuron.InputNeurons = append(newNeuron.InputNeurons, inputNeuron.Copy())
+		} else {
+			// This neuron is an input to itself!? okay. Don't make a copy.
+			newNeuron.InputNeurons = append(newNeuron.InputNeurons, inputNeuron)
+		}
+	}
+	newNeuron.ActivationFunction = neuron.ActivationFunction
+	if neuron.Value != nil {
+		v := *neuron.Value
+		newNeuron.Value = &v
+	}
+	return &newNeuron
+}
