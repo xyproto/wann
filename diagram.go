@@ -2,9 +2,10 @@ package wann
 
 import (
 	"bytes"
-	"github.com/xyproto/tinysvg"
 	"io"
 	"io/ioutil"
+
+	"github.com/xyproto/tinysvg"
 )
 
 // WriteSVG will output the current network as an SVG image to the given io.Writer
@@ -40,53 +41,94 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 	outputx := width - (marginRight + nodeRadius*2) + imgPadding
 	outputy := (height-(nodeRadius*2))/2 + imgPadding
 
-	// Draw the input nodes as circles, and connections to the output node as lines
-	for i, n := range net.InputNodes {
-
-		// Find the position of this node circle
-		x := marginLeft + imgPadding
-		y := (i * (nodeRadius*2 + betweenPadding)) + marginTop + imgPadding
-
-		// Draw the connection from the center of this node to the center of the output node, if applicable
-		if net.OutputNode.HasInput(n) {
-			svg.Line(x+nodeRadius, y+nodeRadius, outputx+nodeRadius, outputy+nodeRadius, lineWidth, "#0099ff")
+	// For each connected neuron, store it with the distance from the output neuron as the key in a map
+	layerNeurons := make(map[int][]*Neuron)
+	maxDistance := 0
+	net.ForEachConnected(func(n *Neuron, distanceFromOutput int) {
+		layerNeurons[distanceFromOutput] = append(layerNeurons[distanceFromOutput], n)
+		if distanceFromOutput > maxDistance {
+			maxDistance = distanceFromOutput
 		}
+	})
 
-		// Draw this input node
-		input := svg.AddCircle(x+nodeRadius, y+nodeRadius, nodeRadius)
-		input.Fill2(lightYellow)
-		input.Stroke2(tinysvg.ColorByName("black"))
+	// Draw the input nodes as circles, and connections to the output node as lines
+	//for i, n := range net.InputNodes {
+	columnOffset := 50
 
-		// Plot the activation function inside this node
-		startx := float64(x) + float64(nodeRadius)*0.5
-		stopx := float64(x+nodeRadius*2) - float64(nodeRadius)*0.5
-		ypos := float64(y)
-		var points []*tinysvg.Pos
-		for xpos := startx; xpos < stopx; xpos += 0.2 {
-			// xr is from 0 to 1
-			xr := float64(xpos-startx) / float64(stopx-startx)
-			// xv is from -5 to 3
-			//xv := (xr * 8.0) - 5.0
-			// xv is from -2 to 2
-			//xv := (xr * 4.0) - 2.0
-			// xv is from -5 to 5
-			xv := (xr - 0.5) * float64(nodeRadius)
-			yv := n.ActivationFunction(xv)
-			// plot, 3.0 is the amplitude along y
-			yp := float64(ypos) + float64(nodeRadius)*1.35 - (yv * 0.6 * float64(nodeRadius))
+	getPosition := func(givenNeuron *Neuron) (int, int) {
+		for outputDistance, neurons := range layerNeurons {
+			for neuronLayerIndex, otherNeuron := range neurons {
+				if otherNeuron == givenNeuron {
+					x := marginLeft + imgPadding + columnOffset*(maxDistance-outputDistance)
+					y := (neuronLayerIndex * (nodeRadius*2 + betweenPadding)) + marginTop + imgPadding
+					return x, y
+				}
+			}
+		}
+		panic("getPosition: neuron not found, this should never happen")
+		//return -1, -1
+	}
 
-			if yp < (ypos + float64(nodeRadius)*0.1) {
-				continue
-			} else if yp > (ypos + float64(nodeRadius)*1.9) {
+	// TODO: Once the diagram confirmed to be correct, draw the lines first and then the nodes
+	for _, neurons := range layerNeurons {
+		for _, n := range neurons {
+
+			if n == net.OutputNode {
+				// Skip
 				continue
 			}
-			p := tinysvg.NewPosf(xpos, yp)
-			points = append(points, p)
+
+			// Find the position of this node circle
+			x, y := getPosition(n)
+
+			// Draw the connection from the center of this node to the center of all input nodes, if applicable
+			for _, inputNeuron := range n.InputNeurons {
+				ix, iy := getPosition(inputNeuron)
+				svg.Line(ix+nodeRadius, iy+nodeRadius, x+nodeRadius, y+nodeRadius, lineWidth, "orange")
+			}
+
+			// Draw the connection to the output node, if it has this node as input
+			if net.OutputNode.HasInput(n) {
+				svg.Line(x+nodeRadius, y+nodeRadius, outputx+nodeRadius, outputy+nodeRadius, lineWidth, "#0099ff")
+			}
+
+			// Draw this input node
+			input := svg.AddCircle(x+nodeRadius, y+nodeRadius, nodeRadius)
+			input.Fill2(lightYellow)
+			input.Stroke2(tinysvg.ColorByName("black"))
+
+			// Plot the activation function inside this node
+			startx := float64(x) + float64(nodeRadius)*0.5
+			stopx := float64(x+nodeRadius*2) - float64(nodeRadius)*0.5
+			ypos := float64(y)
+			var points []*tinysvg.Pos
+			for xpos := startx; xpos < stopx; xpos += 0.2 {
+				// xr is from 0 to 1
+				xr := float64(xpos-startx) / float64(stopx-startx)
+				// xv is from -5 to 3
+				//xv := (xr * 8.0) - 5.0
+				// xv is from -2 to 2
+				//xv := (xr * 4.0) - 2.0
+				// xv is from -5 to 5
+				xv := (xr - 0.5) * float64(nodeRadius)
+				yv := n.ActivationFunction(xv)
+				// plot, 3.0 is the amplitude along y
+				yp := float64(ypos) + float64(nodeRadius)*1.35 - (yv * 0.6 * float64(nodeRadius))
+
+				if yp < (ypos + float64(nodeRadius)*0.1) {
+					continue
+				} else if yp > (ypos + float64(nodeRadius)*1.9) {
+					continue
+				}
+				p := tinysvg.NewPosf(xpos, yp)
+				points = append(points, p)
+			}
+			// Draw the polyline (graph)
+			pl := svg.Polyline(points, tinysvg.ColorByName("black"))
+			pl.Stroke2(tinysvg.ColorByName("black"))
+			pl.Fill2(tinysvg.ColorByName("none"))
+
 		}
-		// Draw the polyline (graph)
-		pl := svg.Polyline(points, tinysvg.ColorByName("black"))
-		pl.Stroke2(tinysvg.ColorByName("black"))
-		pl.Fill2(tinysvg.ColorByName("none"))
 	}
 
 	// Draw the output node

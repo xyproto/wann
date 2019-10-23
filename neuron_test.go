@@ -24,20 +24,8 @@ func TestNeuron(t *testing.T) {
 func TestString(t *testing.T) {
 	n := NewNeuron()
 	s := n.String()
-	if !strings.HasPrefix(s, "NEURON[") || !strings.HasSuffix(s, "]") {
+	if !strings.HasPrefix(s, "Neuron ") {
 		t.Errorf("could not convert neuron to a string")
-	}
-}
-
-func TestAddInput(t *testing.T) {
-	a := NewNeuron()
-	b := NewNeuron()
-	a.AddInput(b)
-	if !strings.HasSuffix(a.String(), ",1]") {
-		t.Errorf("a should have one connection")
-	}
-	if !strings.HasSuffix(b.String(), ",0]") {
-		t.Errorf("b should have zero connections")
 	}
 }
 

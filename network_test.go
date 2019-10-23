@@ -25,7 +25,35 @@ func TestNetwork(t *testing.T) {
 // func (net *Network) ChangeActivationFunction(n *Neuron, f func(float64) float64) {
 // func (net *Network) String() string {
 
-func TestUpDetection(t *testing.T) {
+func TestForEachConnected(t *testing.T) {
+	rand.Seed(currentTime)
+	net := NewNetwork(&Config{
+		Inputs:          5,
+		ConnectionRatio: 0.5,
+		SharedWeight:    0.5,
+	})
+	fmt.Println("<connected_nodes>")
+	net.ForEachConnected(func(n *Neuron, _ int) {
+		fmt.Println(n)
+	})
+	fmt.Println("</connected_nodes>")
+}
+
+func TestAll(t *testing.T) {
+	rand.Seed(currentTime)
+	net := NewNetwork(&Config{
+		Inputs:          5,
+		ConnectionRatio: 0.5,
+		SharedWeight:    0.5,
+	})
+	fmt.Println("<all_nodes>")
+	for _, node := range net.All() {
+		fmt.Println(node)
+	}
+	fmt.Println("</all_nodes>")
+}
+
+func testUpDetection(t *testing.T) {
 	fmt.Println("### Up detection ###")
 
 	//  o
@@ -222,10 +250,10 @@ func TestUpDetection(t *testing.T) {
 		////		}
 	}
 
-	err := bestNetwork.SaveDiagram("best.svg")
-	if err != nil {
-		panic(err)
-	}
+	//err := bestNetwork.SaveDiagram("best.svg")
+	//if err != nil {
+	//	panic(err)
+	//}
 
 	// Now test the best network on 4 different inputs
 

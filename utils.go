@@ -4,13 +4,14 @@ import (
 	"sort"
 )
 
+// Pair is used for sorting dictionaries by value.
 // Thanks https://stackoverflow.com/a/18695740/131264
-
 type Pair struct {
 	Key   int
 	Value float64
 }
 
+// PairList is a slice of Pair
 type PairList []Pair
 
 func (p PairList) Len() int           { return len(p) }

@@ -2,9 +2,10 @@ package wann
 
 import (
 	"fmt"
-	"github.com/xyproto/af"
 	"math/rand"
 	"testing"
+
+	"github.com/xyproto/af"
 )
 
 func TestDiagram(t *testing.T) {
@@ -22,9 +23,14 @@ func TestDiagram(t *testing.T) {
 	net.InputNodes[3].ActivationFunction = af.Sigmoid
 	net.InputNodes[4].ActivationFunction = af.ReLU
 
+	// Output the diagram
+	fmt.Println("--- <DIAGRAM> ---")
+	fmt.Println(net)
+
 	err := net.SaveDiagram("/tmp/output.svg")
 	if err != nil {
 		t.Error(err)
 	}
 	fmt.Println("xdg-open /tmp/output.svg")
+	fmt.Println("--- </DIAGRAM> ---")
 }

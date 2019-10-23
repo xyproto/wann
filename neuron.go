@@ -4,15 +4,17 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strings"
 
 	"github.com/xyproto/af"
 )
 
 // Neuron is a list of input-neurons, and an activation function.
 type Neuron struct {
-	InputNeurons       []*Neuron
-	ActivationFunction func(float64) float64
-	Value              *float64
+	InputNeurons           []*Neuron
+	ActivationFunction     func(float64) float64
+	Value                  *float64
+	distanceFromOutputNode int // Used when traversing nodes and drawing diagrams
 }
 
 // NewNeuron creates a new *Neuron
@@ -82,7 +84,20 @@ func (neuron *Neuron) RemoveInput(e *Neuron) error {
 
 // String will return a string containing both the pointer address and the number of input neurons
 func (neuron *Neuron) String() string {
-	return fmt.Sprintf("NEURON[%p,%d]", neuron, len(neuron.InputNeurons))
+	inputCount := len(neuron.InputNeurons)
+	switch inputCount {
+	case 0:
+		return fmt.Sprintf("Neuron (%p).", neuron)
+	case 1:
+		return fmt.Sprintf("Neuron (%p) has 1 input: %p", neuron, neuron.InputNeurons[0])
+	default:
+		var sb strings.Builder
+		sb.WriteString(fmt.Sprintf("Neuron (%p) has %d inputs:", neuron, len(neuron.InputNeurons)))
+		for _, inputNeuron := range neuron.InputNeurons {
+			sb.WriteString("\n\t" + inputNeuron.String())
+		}
+		return sb.String()
+	}
 }
 
 // evaluate will return a weighted sum of the input nodes,
