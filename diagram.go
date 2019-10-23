@@ -70,6 +70,7 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 	}
 
 	// TODO: Once the diagram confirmed to be correct, draw the lines first and then the nodes
+	// TODO: Draw unconnected nodes in gray
 	for _, neurons := range layerNeurons {
 		for _, n := range neurons {
 

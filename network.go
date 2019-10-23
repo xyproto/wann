@@ -213,28 +213,36 @@ func (node *Neuron) In(collection []*Neuron) bool {
 // connected nodes, where the distance from the output node has been stored in
 // node.distanceFromOutputNode.
 func getAllNodes(node *Neuron, distanceFromFirstNode int, allNodes *[]*Neuron, nodeCountdown uint) {
-	// First collect all the children, if any
+	if nodeCountdown <= 0 {
+		return
+	}
+
+	// Check if this node has already been collected
+	if !node.In(*allNodes) {
+		// No, store it
+		// Save the distance for later
+		node.distanceFromOutputNode = distanceFromFirstNode
+		// Then add this node to the list of all gathered nodes, if we should gather more
+		if nodeCountdown > 0 {
+			*allNodes = append(*allNodes, node)
+			nodeCountdown--
+		} else {
+			// This should never happen
+			panic("TOO MANY NODES")
+		}
+	}
+
+	// Collect all the children, if any
 	for _, child := range node.InputNeurons {
+		if child == node {
+			panic("Connected to self")
+		}
 		// TODO: Run this asynchronously, using a channel or a mutex
-		//if !child.In(*allNodes) {
+		//if !node.In(*allNodes) {
 		getAllNodes(child, distanceFromFirstNode+1, allNodes, nodeCountdown)
 		//}
 	}
-	// Then check if this node has already been collected
-	if node.In(*allNodes) {
-		// Yes, return with what we've got (stored in allNodes)
-		return
-	}
-	// If not, save the distance for later
-	node.distanceFromOutputNode = distanceFromFirstNode
-	// Then add this node to the list of all gathered nodes, if we should gather more
-	if nodeCountdown > 0 {
-		*allNodes = append(*allNodes, node)
-		nodeCountdown--
-	} else {
-		// This should never happen
-		panic("TOO MANY NODES")
-	}
+
 	// Return with what we've got (stored in allNodes)
 	return
 }
