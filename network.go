@@ -208,43 +208,38 @@ func (node *Neuron) In(collection []*Neuron) bool {
 	return false
 }
 
+func combine(a, b []*Neuron) []*Neuron {
+	lena := len(a)
+	lenb := len(b)
+	// Allocate the exact size needed
+	res := make([]*Neuron, lena+lenb)
+	// Add the elements from a
+	for i := 0; i < lena; i++ {
+		res[i] = a[i]
+	}
+	// Add the elements from b
+	for i := 0; i < lenb; i++ {
+		res[i+lena] = b[i]
+	}
+	return res
+}
+
+// TODO: Never add an input to the input nodes!
+
 // getAllNodes is a helper function for the recursive network traversal.
 // Given the output node and the number 0, it will return a slice of all
 // connected nodes, where the distance from the output node has been stored in
 // node.distanceFromOutputNode.
-func getAllNodes(node *Neuron, distanceFromFirstNode int, allNodes *[]*Neuron, nodeCountdown uint) {
-	if nodeCountdown <= 0 {
-		return
-	}
-
-	// Check if this node has already been collected
-	if !node.In(*allNodes) {
-		// No, store it
-		// Save the distance for later
-		node.distanceFromOutputNode = distanceFromFirstNode
-		// Then add this node to the list of all gathered nodes, if we should gather more
-		if nodeCountdown > 0 {
-			*allNodes = append(*allNodes, node)
-			nodeCountdown--
-		} else {
-			// This should never happen
-			panic("TOO MANY NODES")
+func getAllNodes(node *Neuron, distanceFromFirstNode int) []*Neuron {
+	allNodes := make([]*Neuron, 1)
+	node.distanceFromOutputNode = distanceFromFirstNode
+	allNodes[0] = node
+	for _, inputNode := range node.InputNeurons {
+		if !inputNode.In(allNodes) {
+			allNodes = combine(allNodes, getAllNodes(inputNode, distanceFromFirstNode+1))
 		}
 	}
-
-	// Collect all the children, if any
-	for _, child := range node.InputNeurons {
-		if child == node {
-			panic("Connected to self")
-		}
-		// TODO: Run this asynchronously, using a channel or a mutex
-		//if !node.In(*allNodes) {
-		getAllNodes(child, distanceFromFirstNode+1, allNodes, nodeCountdown)
-		//}
-	}
-
-	// Return with what we've got (stored in allNodes)
-	return
+	return allNodes
 }
 
 // ForEachConnected will only go through nodes that are connected to the output node (directly or indirectly)
@@ -252,8 +247,7 @@ func getAllNodes(node *Neuron, distanceFromFirstNode int, allNodes *[]*Neuron, n
 func (net *Network) ForEachConnected(f func(n *Neuron, distanceFromOutputNode int)) {
 	// Start at the output node, traverse left towards the input nodes
 	// The network has a counter for how many nodes has been added/removed, for quick memory allocation here
-	allNodes := make([]*Neuron, 0, net.nodeCount)
-	getAllNodes(net.OutputNode, 0, &allNodes, net.nodeCount)
+	allNodes := getAllNodes(net.OutputNode, 0)
 	for _, node := range allNodes {
 		f(node, node.distanceFromOutputNode)
 	}
