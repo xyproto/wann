@@ -82,7 +82,6 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		bestWeight = 0.0
 		bestScore = 0.0
 		averageScore = 0.0
-		lastAverageScore = 0.0
 		bestNetwork = nil
 
 		// For each weight, evaluate all networks
