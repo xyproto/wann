@@ -68,6 +68,9 @@ func (neuron *Neuron) AddInput(e *Neuron) error {
 	if neuron.HasInput(e) {
 		return errors.New("neuron already exists")
 	}
+	if neuron == e {
+		return errors.New("adding a neuron as input to itself")
+	}
 	neuron.InputNeurons = append(neuron.InputNeurons, e)
 	return nil
 }
@@ -126,14 +129,15 @@ func (neuron *Neuron) evaluate(weight float64) float64 {
 // Copy takes a deep copy of this neuron
 func (neuron *Neuron) Copy() *Neuron {
 	var newNeuron Neuron
-	for _, inputNeuron := range neuron.InputNeurons {
-		if inputNeuron == neuron {
-			newNeuron.InputNeurons = append(newNeuron.InputNeurons, inputNeuron.Copy())
-		} else {
-			// This neuron is an input to itself!? okay. Don't make a copy.
-			newNeuron.InputNeurons = append(newNeuron.InputNeurons, inputNeuron)
-		}
-	}
+	// for _, inputNeuron := range neuron.InputNeurons {
+	// 	if inputNeuron == neuron {
+	// 		newNeuron.InputNeurons = append(newNeuron.InputNeurons, inputNeuron.Copy())
+	// 	} else {
+	// 		// This neuron is an input to itself!? okay. Don't make a copy.
+	// 		newNeuron.InputNeurons = append(newNeuron.InputNeurons, inputNeuron)
+	// 	}
+	// }
+	newNeuron.InputNeurons = neuron.InputNeurons
 	newNeuron.ActivationFunction = neuron.ActivationFunction
 	if neuron.Value != nil {
 		v := *neuron.Value

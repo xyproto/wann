@@ -3,14 +3,13 @@ package main
 import (
 	"fmt"
 	"math/rand"
-	"time"
+	"strconv"
 
 	"github.com/xyproto/wann"
 )
 
-var currentTime = time.Now().UTC().UnixNano()
-
 func main() {
+
 	fmt.Println("### Up detection ###")
 
 	//  o
@@ -36,7 +35,13 @@ func main() {
 
 	// ---
 
-	rand.Seed(currentTime)
+	// Seed based on the current time
+	//seed := time.Now().UTC().UnixNano()
+
+	// Seed that makes the program crash
+	var seed int64 = 1571917826405889425
+
+	rand.Seed(seed)
 
 	inputNumbers := up
 
@@ -51,11 +56,12 @@ func main() {
 		SharedWeight:    1.0,
 	}
 
-	// 100 generations
-	G := 100
+	// number of generations to evolve
+	G := 500
 
-	// population of 100 networks
+	// the size of each population (number of networks)
 	N := 100
+
 	population := make([]*wann.Network, N)
 
 	// Initialize the population
@@ -65,14 +71,19 @@ func main() {
 
 	var bestNetwork *wann.Network
 
+	fmt.Printf("seed: %d\n", seed)
+
 	// For each generation, evaluate and modify the networks
 	for j := 0; j < G; j++ {
+
+		fmt.Println("------ generation " + strconv.Itoa(j) + ", population size " + strconv.Itoa(len(population)))
 
 		bestWeight := 0.0
 		bestScore := 0.0
 		bestNetwork = nil
 
 		// For each weight, evaluate all networks
+		first := true
 		for w := 0.0; w <= 1.0; w += 0.1 {
 
 			scoreMap := make(map[int]float64)
@@ -89,10 +100,11 @@ func main() {
 			// The scores for this weight
 			scoreList := wann.SortByValue(scoreMap)
 
-			if scoreList[0].Value > bestScore {
+			if first || scoreList[0].Value > bestScore {
 				bestScore = scoreList[0].Value
 				bestNetwork = population[scoreList[0].Key]
 				bestWeight = w
+				first = false
 			}
 
 		}
@@ -189,11 +201,11 @@ func main() {
 			// then modify it a bit (in a random way)
 			if !bestHalf {
 				// Take a deep copy, not just the the pointers
-				newNetwork := bestNetwork.Copy()
+				var newNetwork wann.Network = *bestNetwork
 				// Modify it a bit
 				newNetwork.Modify()
 				// Assign it to the population, replacing the low-scoring one
-				population[networkIndex] = newNetwork
+				population[networkIndex] = &newNetwork
 			}
 			//fmt.Println(networkIndex, "is in the best half?", bestHalf)
 		}
@@ -221,8 +233,8 @@ func main() {
 	rightScore := bestNetwork.Evaluate(right)
 
 	if upScore > downScore && upScore > leftScore && upScore > rightScore {
-		fmt.Println("Network success")
+		fmt.Println("Network training complete, the results are good.")
 	} else {
-		fmt.Println("Network failure")
+		fmt.Println("Network training incomplete, the results are not great.")
 	}
 }

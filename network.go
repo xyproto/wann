@@ -19,7 +19,6 @@ type Network struct {
 	InputNodes []*Neuron
 	OutputNode *Neuron
 	Weight     float64
-	nodeCount  uint
 }
 
 // NewNetwork creates a new minimal network with n input nodes and ratio of r connections
@@ -31,22 +30,18 @@ func NewNetwork(c *Config) *Network {
 		return nil
 	}
 	// Pre-allocate room for n neurons and set the shared weight to the configured value.
-	net := &Network{make([]*Neuron, n), NewRandomNeuron(), w, 0}
+	net := &Network{make([]*Neuron, n), NewRandomNeuron(), w}
 
 	// Initialize n input nodes that all are inputs to the one output node.
 	for i := 0; i < n; i++ {
 		net.InputNodes[i] = NewRandomNeuron()
 		// Make connections for all nodes where a random number between 0 and 1 are larger than r
 		if rand.Float64() > r {
-			err := net.OutputNode.AddInput(net.InputNodes[i])
-			if err != nil {
+			if err := net.OutputNode.AddInput(net.InputNodes[i]); err != nil {
 				panic(err)
 			}
 		}
 	}
-
-	// Store the total number of nodes so far
-	net.nodeCount = uint(n) + 1
 
 	return net
 }
@@ -56,31 +51,77 @@ func NewNetwork(c *Config) *Network {
 //
 
 // InsertNode takes two neurons and inserts a third neuron between them
+// Assumes that a is the leftmost node and the b is the rightmost node.
 func (net *Network) InsertNode(a, b, newNode *Neuron) error {
 	// This is done by first checking that a is an input node to b,
 	// then setting newNode to be an input node to b,
 	// then setting a to be an input node to a.
-	if !b.HasInput(a) {
-		return errors.New("can not insert node: a is not an input neuron to b")
+	if a == b {
+		return errors.New("the a and b nodes are the same")
 	}
-	err := b.RemoveInput(a)
-	if err != nil {
-		return errors.New("can not insert node: " + err.Error())
+	// Sort the nodes by where they place in the diagram
+	a, b = net.LeftRight(a, b)
+	if b.In(net.InputNodes) {
+		return errors.New("node b is a special input node")
 	}
-	err = b.AddInput(newNode)
-	if err != nil {
-		return errors.New("can not insert node: " + err.Error())
+	if b == net.OutputNode {
+		// this is fine
 	}
-	err = newNode.AddInput(a)
-	if err != nil {
-		return errors.New("can not insert node: " + err.Error())
+	if a.In(net.InputNodes) {
+		// this is fine
 	}
-	net.nodeCount++
+	if a == net.OutputNode {
+		// If now, after swapping, a is an output node, return with an error
+		return errors.New("the leftmost node is an output node")
+	}
+	// b already has a as an input (a -> b)
+	if b.HasInput(a) {
+		// Remove the old connection
+		if err := b.RemoveInput(a); err != nil {
+			return errors.New("error in InsertNode b.RemoveInput(a): " + err.Error())
+		}
+	}
+	// Connect the new node to b
+	if err := b.AddInput(newNode); err != nil {
+		return errors.New("error in InsertNode b.AddInput(newNode): " + err.Error())
+	}
+	// Connect a to the new node
+	if err := newNode.AddInput(a); err != nil {
+		return errors.New("error in InsertNode newNode.AddInput(a): " + err.Error())
+	}
+	// The situation should now be: a -> newNode -> b
 	return nil
 }
 
 // AddConnection adds a connection from a to b
 func (net *Network) AddConnection(a, b *Neuron) error {
+	if a == b {
+		return errors.New("can't connect to self")
+	}
+	// Sort the nodes by where they place in the diagram
+	a, b = net.LeftRight(a, b)
+	if a == net.OutputNode {
+		// Swap a and b
+		tmp := a
+		b = a
+		a = tmp
+	}
+	if a == net.OutputNode {
+		// If now, after swapping, a is an output node, return with an error
+		return errors.New("will not insert a node between the output node and another node")
+	}
+	if a.distanceFromOutputNode > b.distanceFromOutputNode {
+		// Swap a and b
+		tmp := a
+		b = a
+		a = tmp
+	}
+	if b.In(net.InputNodes) {
+		return errors.New("b is an input node")
+	}
+	//if b.Value != nil {
+	//return errors.New("b is a value node/input node"
+	//}
 	return b.AddInput(a)
 }
 
@@ -109,12 +150,29 @@ func (net *Network) String() string {
 // using the .Value field if it is set and no input nodes are available.
 // A shared weight can be given.
 func (net *Network) Evaluate(inputValues []float64) float64 {
+	inputLength := len(inputValues)
 	for i, n := range net.InputNodes {
-		if i < len(inputValues) {
+		if i < inputLength {
 			n.SetValue(inputValues[i])
 		}
 	}
 	return net.OutputNode.evaluate(net.Weight)
+}
+
+// Evaluate2 will return a weighted sum of the input nodes,
+// using the .Value field if it is set and no input nodes are available.
+// A shared weight can be given. An error might be returned.
+func (net *Network) Evaluate2(inputValues []float64) (float64, error) {
+	inputLength := len(inputValues)
+	if inputLength > len(net.InputNodes) {
+		return 0.0, errors.New("Too many input values compared to input nodes")
+	}
+	for i, n := range net.InputNodes {
+		if i < inputLength {
+			n.SetValue(inputValues[i])
+		}
+	}
+	return net.OutputNode.evaluate(net.Weight), nil
 }
 
 // SetWeight will set a shared weight for the entire network
@@ -125,35 +183,79 @@ func (net *Network) SetWeight(weight float64) {
 // Complexity measures the network complexity
 func (net *Network) Complexity() float64 {
 	// Just return the node count, for now
+	// TODO: Score the complexity of the various activation functions
+	// TODO: Add complexity for each connected node
 	return float64(len(net.InputNodes))
 }
 
-// Copy will take a deep copy of the network struct
-func (net *Network) Copy() *Network {
-	var newNet Network
-	for _, neuron := range net.InputNodes {
-		newNet.InputNodes = append(newNet.InputNodes, neuron.Copy())
+// // Copy will take a deep copy of the network struct
+// func (net *Network) Copy() *Network {
+// 	var newNet Network
+// 	for _, neuron := range net.InputNodes {
+// 		newNet.InputNodes = append(newNet.InputNodes, neuron.Copy())
+// 	}
+// 	newOutputNeuron := *(net.OutputNode)
+// 	newNet.OutputNode = &newOutputNeuron
+// 	newNet.Weight = net.Weight
+// 	return &newNet
+// }
+
+// LeftRight returns two neurons, such that the first on is the one that is
+// most to the left (towards the input neurons) and the second one is most to
+// the right (towards the output neuron). Assumes that a and b are not equal.
+func (net *Network) LeftRight(a, b *Neuron) (left *Neuron, right *Neuron) {
+	if a.In(net.InputNodes) {
+		left = a
+		right = b
+		return
 	}
-	newOutputNeuron := *(net.OutputNode)
-	newNet.OutputNode = &newOutputNeuron
-	newNet.Weight = net.Weight
-	newNet.nodeCount = net.nodeCount
-	return &newNet
+	if b.In(net.InputNodes) {
+		left = b
+		right = a
+		return
+	}
+	if a == net.OutputNode {
+		left = b
+		right = a
+		return
+	}
+	if b == net.OutputNode {
+		left = a
+		right = b
+		return
+	}
+	if a.distanceFromOutputNode <= b.distanceFromOutputNode {
+		left = b
+		right = a
+		return
+	}
+	left = a
+	right = b
+	return
+}
+
+type neuronList []*Neuron
+
+func (neurons neuronList) Copy() []*Neuron {
+	newList := make([]Neuron, len(neurons))
+	for i, neuron := range neurons {
+		newList[i] = *neuron
+	}
+	newList2 := make([]*Neuron, len(neurons))
+	for i, neuron := range newList2 {
+		newList2[i] = neuron
+	}
+	return newList2
 }
 
 // All returns a slice with pointers to all nodes in this network
 func (net *Network) All() []*Neuron {
-	allNodes := net.InputNodes[:]
+	allNodes := make([]*Neuron, 0)
 	// For each node that is connected to the output node
-	net.ForEachConnected(func(neuron *Neuron, _ int) {
-		for _, existingNode := range allNodes {
-			if neuron == existingNode {
-				// Skip this one by returning from the anonymouse function
-				return
-			}
+	net.ForEachConnected(func(node *Neuron, _ int) {
+		if !node.In(allNodes) {
+			allNodes = append(allNodes, node)
 		}
-		// Add this node to the collection
-		allNodes = append(allNodes, neuron)
 	})
 	// Return all nodes in this network
 	return allNodes
@@ -164,7 +266,14 @@ func (net *Network) All() []*Neuron {
 func (net *Network) GetRandomNeuron() *Neuron {
 	allNeurons := net.All()
 	chosenIndex := rand.Intn(len(allNeurons))
-	return allNeurons[chosenIndex]
+	if chosenIndex < 0 || chosenIndex >= len(allNeurons) {
+		panic("implementation error: the chosen Index is invalid")
+	}
+	chosenNeuron := allNeurons[chosenIndex]
+	if chosenNeuron == nil {
+		panic("implementation error: the chosen neuron is nil")
+	}
+	return chosenNeuron
 }
 
 // Modify this network a bit
@@ -175,26 +284,27 @@ func (net *Network) Modify() {
 	switch method {
 	case 0:
 		//fmt.Println("Modifying the network using method 1 - insert node")
-		nodeA := net.GetRandomNeuron()
-		nodeB := net.GetRandomNeuron()
-		if nodeA != nodeB {
-			// Insert a new node with a random activation function
-			newNode := NewRandomNeuron()
-			net.InsertNode(nodeA, nodeB, newNode)
+		nodeA, nodeB, newNode := net.GetRandomNeuron(), net.GetRandomNeuron(), NewRandomNeuron()
+		// A bit risky, time-wise, but continue finding random neurons until they work out
+		// Insert a new node with a random activation function
+		for net.InsertNode(nodeA, nodeB, newNode) != nil {
+			nodeA, nodeB, newNode = net.GetRandomNeuron(), net.GetRandomNeuron(), NewRandomNeuron()
 		}
 	case 1:
 		//fmt.Println("Modifying the network using method 2 - add connection")
-		nodeA := net.GetRandomNeuron()
-		nodeB := net.GetRandomNeuron()
-		if nodeA != nodeB {
-			// Create a new connection
-			net.AddConnection(nodeA, nodeB)
+
+		nodeA, nodeB := net.GetRandomNeuron(), net.GetRandomNeuron()
+		// A bit risky, time-wise, but continue finding random neurons until they work out
+		// Create a new connection
+		for net.AddConnection(nodeA, nodeB) != nil {
+			nodeA, nodeB = net.GetRandomNeuron(), net.GetRandomNeuron()
 		}
 	case 2:
 		//fmt.Println("Modifying the network using method 3 - change activation")
-		node := net.GetRandomNeuron()
 		// Change the activation function
-		node.RandomizeActivationFunction()
+		net.GetRandomNeuron().RandomizeActivationFunction()
+	default:
+		panic("implementation error: invalid method number: " + strconv.Itoa(method))
 	}
 }
 
@@ -235,6 +345,9 @@ func getAllNodes(node *Neuron, distanceFromFirstNode int) []*Neuron {
 	node.distanceFromOutputNode = distanceFromFirstNode
 	allNodes[0] = node
 	for _, inputNode := range node.InputNeurons {
+		if inputNode == node {
+			panic("implementation error: node is input node to self")
+		}
 		if !inputNode.In(allNodes) {
 			allNodes = combine(allNodes, getAllNodes(inputNode, distanceFromFirstNode+1))
 		}

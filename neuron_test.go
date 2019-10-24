@@ -100,5 +100,15 @@ func TestEvaluate(t *testing.T) {
 	net.InputNodes[3].ActivationFunction = af.Sigmoid
 	net.InputNodes[4].ActivationFunction = af.ReLU
 
-	fmt.Println(net.Evaluate([]float64{0.5, 0.5, 0.5, 0.5, 0.5}))
+	result := net.Evaluate([]float64{0.5, 0.5, 0.5, 0.5, 0.5})
+	result2, err := net.Evaluate2([]float64{0.5, 0.5, 0.5, 0.5, 0.5})
+	if err != nil {
+		t.Error(err)
+	}
+
+	if result != result2 {
+		t.Fail()
+	}
+
+	fmt.Println(result)
 }
