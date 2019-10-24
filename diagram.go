@@ -18,15 +18,13 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 		marginRight    = 10
 		nodeRadius     = 10
 		betweenPadding = 4
-		l              = len(net.InputNodes)
-		width          = marginLeft + nodeRadius + 100 + nodeRadius + marginRight
-		height         = marginTop + nodeRadius*2*l + betweenPadding*(l-1) + marginBottom
+		d              = float64(net.Depth()) * 2.5
+		width          = marginLeft + int(float64(nodeRadius)*2.0*d) + betweenPadding*(int(d)-1) + nodeRadius + marginRight
+		l              = float64(len(net.InputNodes)) * 2.5
+		height         = marginTop + int(float64(nodeRadius)*2.0*l) + betweenPadding*(int(l)-1) + marginBottom
 		imgPadding     = 5
 		lineWidth      = 2
 	)
-
-	// Prepare colors that will be used more than once
-	lightYellow := tinysvg.ColorByName("#ffffcc")
 
 	// Start a new SVG image
 	document, svg := tinysvg.NewTinySVG(width+imgPadding*2, height+imgPadding*2)
@@ -93,9 +91,32 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 				svg.Line(x+nodeRadius, y+nodeRadius, outputx+nodeRadius, outputy+nodeRadius, lineWidth, "#0099ff")
 			}
 
-			// Draw this input node
+			// Draw this node
 			input := svg.AddCircle(x+nodeRadius, y+nodeRadius, nodeRadius)
-			input.Fill2(lightYellow)
+			switch n.distanceFromOutputNode {
+			case 1:
+				input.Fill("lightblue")
+			case 2:
+				input.Fill("lightgreen")
+			case 3:
+				input.Fill("lightyellow")
+			case 4:
+				input.Fill("orange")
+			case 5:
+				input.Fill("red")
+			case 6:
+				input.Fill("lightblue")
+			case 7:
+				input.Fill("lightgreen")
+			case 8:
+				input.Fill("lightyellow")
+			case 9:
+				input.Fill("orange")
+			case 10:
+				input.Fill("red")
+			default:
+				input.Fill("gray")
+			}
 			input.Stroke2(tinysvg.ColorByName("black"))
 
 			// Plot the activation function inside this node
@@ -134,7 +155,7 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 
 	// Draw the output node
 	output := svg.AddCircle(outputx+nodeRadius, outputy+nodeRadius, nodeRadius)
-	output.Fill2(lightYellow)
+	output.Fill("magenta")
 	output.Stroke2(tinysvg.ColorByName("black"))
 
 	// Write the data to the given io.Writer

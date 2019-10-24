@@ -16,9 +16,10 @@ func init() {
 
 // Network is a collection of nodes, an output node and a shared weight.
 type Network struct {
-	InputNodes []*Neuron
-	OutputNode *Neuron
-	Weight     float64
+	InputNodes    []*Neuron
+	OutputNode    *Neuron
+	Weight        float64
+	maxIterations int // max interations when evaluating a network
 }
 
 // NewNetwork creates a new minimal network with n input nodes and ratio of r connections
@@ -30,7 +31,7 @@ func NewNetwork(c *Config) *Network {
 		return nil
 	}
 	// Pre-allocate room for n neurons and set the shared weight to the configured value.
-	net := &Network{make([]*Neuron, n), NewRandomNeuron(), w}
+	net := &Network{make([]*Neuron, n), NewRandomNeuron(), w, 100}
 
 	// Initialize n input nodes that all are inputs to the one output node.
 	for i := 0; i < n; i++ {
@@ -44,6 +45,12 @@ func NewNetwork(c *Config) *Network {
 	}
 
 	return net
+}
+
+// SetMaxEvaluationIterations sets the maximum number of iterations,
+// for when the network is evaluated.
+func (net *Network) SetMaxEvaluationIterations(n int) {
+	net.maxIterations = n
 }
 
 //
@@ -156,7 +163,9 @@ func (net *Network) Evaluate(inputValues []float64) float64 {
 			n.SetValue(inputValues[i])
 		}
 	}
-	return net.OutputNode.evaluate(net.Weight)
+	maxIterationCounter := net.maxIterations
+	result, _ := net.OutputNode.evaluate(net.Weight, &maxIterationCounter)
+	return result
 }
 
 // Evaluate2 will return a weighted sum of the input nodes,
@@ -172,7 +181,10 @@ func (net *Network) Evaluate2(inputValues []float64) (float64, error) {
 			n.SetValue(inputValues[i])
 		}
 	}
-	return net.OutputNode.evaluate(net.Weight), nil
+	maxIterationCounter := net.maxIterations
+	result, stopped := net.OutputNode.evaluate(net.Weight, &maxIterationCounter)
+	fmt.Println("Evaluation was stopped?", stopped)
+	return result, fmt.Errorf("evaluation was stopped after %d iterations", maxIterationCounter)
 }
 
 // SetWeight will set a shared weight for the entire network
@@ -234,6 +246,17 @@ func (net *Network) LeftRight(a, b *Neuron) (left *Neuron, right *Neuron) {
 	return
 }
 
+// Depth returns the maximum connection distance from the output node
+func (net *Network) Depth() int {
+	maxDepth := 0
+	for _, n := range net.All() {
+		if n.distanceFromOutputNode > maxDepth {
+			maxDepth = n.distanceFromOutputNode
+		}
+	}
+	return maxDepth
+}
+
 type neuronList []*Neuron
 
 func (neurons neuronList) Copy() []*Neuron {
@@ -277,7 +300,7 @@ func (net *Network) GetRandomNeuron() *Neuron {
 }
 
 // Modify this network a bit
-func (net *Network) Modify() {
+func (net *Network) Modify(maxIterations int) {
 	// Use method 0, 1 or 2
 	method := rand.Intn(3) // up to and not including 3
 	// TODO: Perform a modfification, using one of the three methods outlined in the paper
@@ -287,8 +310,14 @@ func (net *Network) Modify() {
 		nodeA, nodeB, newNode := net.GetRandomNeuron(), net.GetRandomNeuron(), NewRandomNeuron()
 		// A bit risky, time-wise, but continue finding random neurons until they work out
 		// Insert a new node with a random activation function
+		counter := 0
 		for net.InsertNode(nodeA, nodeB, newNode) != nil {
 			nodeA, nodeB, newNode = net.GetRandomNeuron(), net.GetRandomNeuron(), NewRandomNeuron()
+			counter++
+			if counter > maxIterations {
+				// Could not add a new node. This should never happen?
+				panic("implementation error: could not a add a new node, even after " + strconv.Itoa(maxIterations) + " iterations")
+			}
 		}
 	case 1:
 		//fmt.Println("Modifying the network using method 2 - add connection")
@@ -296,8 +325,14 @@ func (net *Network) Modify() {
 		nodeA, nodeB := net.GetRandomNeuron(), net.GetRandomNeuron()
 		// A bit risky, time-wise, but continue finding random neurons until they work out
 		// Create a new connection
+		counter := 0
 		for net.AddConnection(nodeA, nodeB) != nil {
 			nodeA, nodeB = net.GetRandomNeuron(), net.GetRandomNeuron()
+			counter++
+			if counter > maxIterations {
+				// Could not add a connection. The possibilities for connections might be saturated.
+				return
+			}
 		}
 	case 2:
 		//fmt.Println("Modifying the network using method 3 - change activation")
@@ -340,16 +375,18 @@ func combine(a, b []*Neuron) []*Neuron {
 // Given the output node and the number 0, it will return a slice of all
 // connected nodes, where the distance from the output node has been stored in
 // node.distanceFromOutputNode.
-func getAllNodes(node *Neuron, distanceFromFirstNode int) []*Neuron {
-	allNodes := make([]*Neuron, 1)
+func getAllNodes(node *Neuron, distanceFromFirstNode int, alreadyHaveThese []*Neuron) []*Neuron {
+	allNodes := make([]*Neuron, 0)
 	node.distanceFromOutputNode = distanceFromFirstNode
-	allNodes[0] = node
+	if !node.In(alreadyHaveThese) {
+		allNodes = append(allNodes, node)
+	}
 	for _, inputNode := range node.InputNeurons {
 		if inputNode == node {
 			panic("implementation error: node is input node to self")
 		}
-		if !inputNode.In(allNodes) {
-			allNodes = combine(allNodes, getAllNodes(inputNode, distanceFromFirstNode+1))
+		if !inputNode.In(allNodes) && !inputNode.In(alreadyHaveThese) {
+			allNodes = combine(allNodes, getAllNodes(inputNode, distanceFromFirstNode+1, append(allNodes, alreadyHaveThese...)))
 		}
 	}
 	return allNodes
@@ -360,7 +397,7 @@ func getAllNodes(node *Neuron, distanceFromFirstNode int) []*Neuron {
 func (net *Network) ForEachConnected(f func(n *Neuron, distanceFromOutputNode int)) {
 	// Start at the output node, traverse left towards the input nodes
 	// The network has a counter for how many nodes has been added/removed, for quick memory allocation here
-	allNodes := getAllNodes(net.OutputNode, 0)
+	allNodes := getAllNodes(net.OutputNode, 0, []*Neuron{})
 	for _, node := range allNodes {
 		f(node, node.distanceFromOutputNode)
 	}

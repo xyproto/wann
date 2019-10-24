@@ -105,25 +105,34 @@ func (neuron *Neuron) String() string {
 
 // evaluate will return a weighted sum of the input nodes,
 // using the .Value field if it is set and no input nodes are available.
-func (neuron *Neuron) evaluate(weight float64) float64 {
+func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64, bool) {
+	//fmt.Println("Evaluate. Countdown: ", *maxEvaluationLoops)
+	if *maxEvaluationLoops <= 0 {
+		return 0.0, true
+	}
 	// Assume this is the Output neuron, recursively evaluating the result
 	// For each input neuron, evaluate them
 	summed := 0.0
 	counter := 0
 	for _, inputNeuron := range neuron.InputNeurons {
 		// Let each input neuron do its own evauluation, using the given weight
-		summed += inputNeuron.evaluate(weight) * weight
+		(*maxEvaluationLoops)--
+		result, stopNow := inputNeuron.evaluate(weight, maxEvaluationLoops)
+		summed += result * weight
 		counter++
+		if stopNow || (*maxEvaluationLoops < 0) {
+			break
+		}
 	}
 	// No input neurons. Use the .Value field if it's not nil.
 	if counter == 0 && neuron.Value != nil {
-		return *(neuron.Value)
+		return *(neuron.Value), false
 	}
 	// Return the averaged sum, or 0
 	if counter == 0 {
-		return 0.0
+		return 0.0, false
 	}
-	return neuron.ActivationFunction(summed / float64(counter))
+	return neuron.ActivationFunction(summed / float64(counter)), false
 }
 
 // Copy takes a deep copy of this neuron
