@@ -201,11 +201,19 @@ func (net *Network) SetWeight(weight float64) {
 }
 
 // Complexity measures the network complexity
+// Will return 1.0 at a minimum
 func (net *Network) Complexity() float64 {
+	return float64(1.0 + len(net.All()))
 	// Just return the node count, for now
 	// TODO: Score the complexity of the various activation functions
-	// TODO: Add complexity for each connected node
-	return float64(len(net.InputNodes))
+	//baseScore := 1
+	//net.ForEachConnected(func(node *Neuron, distanceFromOutputNode int) {
+	//	baseScore += len(node.InputNeurons) * distanceFromOutputNode
+	//}
+	//net.ForEachConnected(func(_ *Neuron, _ int) {
+	//	baseScore += 1
+	//})
+	//return float64(baseScore)
 }
 
 // // Copy will take a deep copy of the network struct

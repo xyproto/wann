@@ -3,6 +3,7 @@ package wann
 import (
 	"errors"
 	"fmt"
+	"math/rand"
 	"strconv"
 )
 
@@ -80,39 +81,44 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		}
 
 		bestWeight = 0.0
+		bestNetwork = nil
+
 		bestScore = 0.0
 		averageScore = 0.0
-		bestNetwork = nil
 
 		// For each weight, evaluate all networks
 		first := true
-		for w := 0.0; w <= 1.0; w += 0.05 {
+		w := rand.Float64()
+		//for w := 0.0; w <= 1.0; w += 0.1 {
 
-			scoreMap := make(map[int]float64)
-			scoreSum := 0.0
-			for i := 0; i < config.PopulationSize; i++ {
-				net := population[i]
-				net.SetWeight(w)
-				result := 0.0
-				for i := 0; i < len(inputData); i++ {
-					result += net.Evaluate(inputData[i]) * correctOutputMultipliers[i]
-				}
-				score := result / (net.Complexity() * 0.1)
-				scoreSum += score
-				scoreMap[i] = score
+		scoreMap := make(map[int]float64)
+		scoreSum := 0.0
+		for i := 0; i < config.PopulationSize; i++ {
+			net := population[i]
+			net.SetWeight(w)
+			result := 0.0
+			for i := 0; i < len(inputData); i++ {
+				result += net.Evaluate(inputData[i]) * correctOutputMultipliers[i]
 			}
-
-			// The scores for this weight
-			scoreList := SortByValue(scoreMap)
-
-			if first || scoreList[0].Value > bestScore {
-				bestScore = scoreList[0].Value
-				bestNetwork = population[scoreList[0].Key]
-				bestWeight = w
-				first = false
+			score := result / net.Complexity()
+			if score <= 0 {
+				score = -net.Complexity()
 			}
-
+			scoreSum += score
+			scoreMap[i] = score
 		}
+
+		// The scores for this weight
+		scoreList := SortByValue(scoreMap)
+
+		if first || scoreList[0].Value > bestScore {
+			bestScore = scoreList[0].Value
+			bestNetwork = population[scoreList[0].Key]
+			bestWeight = w
+			first = false
+		}
+
+		//}
 
 		if bestNetwork == nil {
 			panic("implementation error: no best network")
@@ -138,10 +144,10 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 
 		// Now evaluate the network, but only for the best weight
 
-		w := bestWeight
+		w = bestWeight
 
-		scoreMap := make(map[int]float64)
-		scoreSum := 0.0
+		scoreMap = make(map[int]float64)
+		scoreSum = 0.0
 		for i := 0; i < config.PopulationSize; i++ {
 			net := population[i]
 			net.SetWeight(w)
@@ -149,7 +155,10 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 			for i := 0; i < len(inputData); i++ {
 				result += net.Evaluate(inputData[i]) * correctOutputMultipliers[i]
 			}
-			score := result / (net.Complexity() * 0.1)
+			score := result / net.Complexity()
+			if score <= 0 {
+				score = -net.Complexity()
+			}
 			scoreSum += score
 			scoreMap[i] = score
 		}
@@ -172,7 +181,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		}
 
 		// The scores for this weight
-		scoreList := SortByValue(scoreMap)
+		scoreList = SortByValue(scoreMap)
 
 		// Now take the best networks and make mutated offspring.
 		// Delete the worst networks.
