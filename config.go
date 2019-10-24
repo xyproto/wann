@@ -10,7 +10,7 @@ import (
 // The idea is that referring to fields by name is more explicit, and that it can
 // be re-used in connection with having a configuration file, in the future.
 type Config struct {
-	// Number of input neurons
+	// Number of input neurons (inputs per slice of floats in inputData in the Evolve function)
 	Inputs int
 	// When initializing a network, this is the propability that the node will be connected to the output node
 	ConnectionRatio float64
@@ -20,15 +20,18 @@ type Config struct {
 	Generations int
 	// How large population sizes to use per generation?
 	PopulationSize int
-	// For how many generations should the training go on, without any improvement in the score?
-	MaxIterationsWithoutImprovement int
-	// How many iterations can be performed in connection with modifying the network?
+	// For how many generations should the training go on, without any improvement in the best score? Disabled if 0.
+	MaxIterationsWithoutBestImprovement int
+	// For how many generations should the training go on, without any improvement in the average score? Disabled if 0.
+	MaxIterationsWithoutAverageImprovement int
+	// How many iterations can be performed in connection with modifying the network? Disabled if 0.
 	MaxModificationIterations int
 	// Verbose?
 	Verbose bool
 }
 
-// Evolve evolves a neural network, given a slice of training data and a slice of correct output values
+// Evolve evolves a neural network, given a slice of training data and a slice of correct output values.
+// Will overwrite config.Inputs.
 func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []float64) (*Network, error) {
 
 	inputLength := len(inputData)
@@ -47,6 +50,8 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		return nil, errors.New("the length of the input data and the slice of output multipliers differs")
 	}
 
+	config.Inputs = len(inputData[0])
+
 	population := make([]*Network, config.PopulationSize)
 
 	// Initialize the population
@@ -58,21 +63,31 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 
 	// For each generation, evaluate and modify the networks
 
-	noImprovementOfBestScoreCounter := 0
+	bestScore := 0.0
 	lastBestScore := 0.0
+	noImprovementOfBestScoreCounter := 0
+
+	bestWeight := 0.0
+
+	averageScore := 0.0
+	lastAverageScore := 0.0
+	noImprovementOfAverageScoreCounter := 0
+
 	for j := 0; j < config.Generations; j++ {
 
 		if config.Verbose {
 			fmt.Println("------ generation " + strconv.Itoa(j) + ", population size " + strconv.Itoa(len(population)))
 		}
 
-		bestWeight := 0.0
-		bestScore := 0.0
+		bestWeight = 0.0
+		bestScore = 0.0
+		averageScore = 0.0
+		lastAverageScore = 0.0
 		bestNetwork = nil
 
 		// For each weight, evaluate all networks
 		first := true
-		for w := 0.0; w <= 1.0; w += 0.1 {
+		for w := 0.0; w <= 1.0; w += 0.05 {
 
 			scoreMap := make(map[int]float64)
 			scoreSum := 0.0
@@ -115,9 +130,9 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		lastBestScore = bestScore
 
 		// No better score for 20 generations? Stop evolving.
-		if noImprovementOfBestScoreCounter > config.MaxIterationsWithoutImprovement {
+		if config.MaxIterationsWithoutBestImprovement > 0 && noImprovementOfBestScoreCounter > config.MaxIterationsWithoutBestImprovement {
 			if config.Verbose {
-				fmt.Println("No improvement for a while, done training.")
+				fmt.Println("No best score improvement for a while, done training.")
 			}
 			break
 		}
@@ -139,7 +154,19 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 			scoreSum += score
 			scoreMap[i] = score
 		}
-		averageScore := scoreSum / float64(config.PopulationSize)
+		lastAverageScore = averageScore
+		averageScore = scoreSum / float64(config.PopulationSize)
+		if averageScore == lastAverageScore {
+			noImprovementOfAverageScoreCounter++
+		}
+
+		// No better score for 20 generations? Stop evolving.
+		if config.MaxIterationsWithoutAverageImprovement > 0 && noImprovementOfAverageScoreCounter > config.MaxIterationsWithoutAverageImprovement {
+			if config.Verbose {
+				fmt.Println("No average score improvement for a while, done training.")
+			}
+			break
+		}
 
 		if config.Verbose {
 			fmt.Println("Average score:", averageScore)

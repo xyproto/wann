@@ -164,6 +164,10 @@ func (net *Network) Evaluate(inputValues []float64) float64 {
 		}
 	}
 	maxIterationCounter := net.maxIterations
+	if maxIterationCounter == 0 {
+		// If max iterations has not been configured, use 100
+		maxIterationCounter = 100
+	}
 	result, _ := net.OutputNode.evaluate(net.Weight, &maxIterationCounter)
 	return result
 }
@@ -182,9 +186,13 @@ func (net *Network) Evaluate2(inputValues []float64) (float64, error) {
 		}
 	}
 	maxIterationCounter := net.maxIterations
-	result, stopped := net.OutputNode.evaluate(net.Weight, &maxIterationCounter)
-	fmt.Println("Evaluation was stopped?", stopped)
-	return result, fmt.Errorf("evaluation was stopped after %d iterations", maxIterationCounter)
+	if maxIterationCounter == 0 {
+		// If max iterations has not been configured, use 100
+		maxIterationCounter = 100
+	}
+	result, _ := net.OutputNode.evaluate(net.Weight, &maxIterationCounter)
+	//fmt.Println("Evaluation was stopped?", stopped)
+	return result, nil //fmt.Errorf("evaluation was stopped after %d iterations", maxIterationCounter)
 }
 
 // SetWeight will set a shared weight for the entire network
@@ -314,7 +322,7 @@ func (net *Network) Modify(maxIterations int) {
 		for net.InsertNode(nodeA, nodeB, newNode) != nil {
 			nodeA, nodeB, newNode = net.GetRandomNeuron(), net.GetRandomNeuron(), NewRandomNeuron()
 			counter++
-			if counter > maxIterations {
+			if maxIterations > 0 && counter > maxIterations {
 				// Could not add a new node. This should never happen?
 				panic("implementation error: could not a add a new node, even after " + strconv.Itoa(maxIterations) + " iterations")
 			}
@@ -329,7 +337,7 @@ func (net *Network) Modify(maxIterations int) {
 		for net.AddConnection(nodeA, nodeB) != nil {
 			nodeA, nodeB = net.GetRandomNeuron(), net.GetRandomNeuron()
 			counter++
-			if counter > maxIterations {
+			if maxIterations > 0 && counter > maxIterations {
 				// Could not add a connection. The possibilities for connections might be saturated.
 				return
 			}
