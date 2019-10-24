@@ -68,7 +68,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 	lastBestScore := 0.0
 	noImprovementOfBestScoreCounter := 0
 
-	bestWeight := 0.0
+	//bestWeight := 0.0
 
 	averageScore := 0.0
 	lastAverageScore := 0.0
@@ -80,14 +80,14 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 			fmt.Println("------ generation " + strconv.Itoa(j) + ", population size " + strconv.Itoa(len(population)))
 		}
 
-		bestWeight = 0.0
+		//bestWeight = 0.0
 		bestNetwork = nil
 
 		bestScore = 0.0
 		averageScore = 0.0
 
 		// For each weight, evaluate all networks
-		first := true
+		//first := true
 		w := rand.Float64()
 		//for w := 0.0; w <= 1.0; w += 0.1 {
 
@@ -101,9 +101,9 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 				result += net.Evaluate(inputData[i]) * correctOutputMultipliers[i]
 			}
 			score := result / net.Complexity()
-			if score <= 0 {
-				score = -net.Complexity()
-			}
+			//if score <= 0 {
+			//	score = -net.Complexity()
+			//}
 			scoreSum += score
 			scoreMap[i] = score
 		}
@@ -111,11 +111,11 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		// The scores for this weight
 		scoreList := SortByValue(scoreMap)
 
-		if first || scoreList[0].Value > bestScore {
+		if bestNetwork == nil || scoreList[0].Value > bestScore {
 			bestScore = scoreList[0].Value
 			bestNetwork = population[scoreList[0].Key]
-			bestWeight = w
-			first = false
+			//bestWeight = w
+			//first = false
 		}
 
 		//}
@@ -125,8 +125,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		}
 
 		if config.Verbose {
-			fmt.Println("Best score:", bestScore)
-			fmt.Println("Best weight:", bestWeight)
+			fmt.Printf("Best score: %f, using weight: %f\n", bestScore, w)
 		}
 
 		if bestScore == lastBestScore {
@@ -144,24 +143,25 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 
 		// Now evaluate the network, but only for the best weight
 
-		w = bestWeight
+		//w = bestWeight
 
-		scoreMap = make(map[int]float64)
-		scoreSum = 0.0
-		for i := 0; i < config.PopulationSize; i++ {
-			net := population[i]
-			net.SetWeight(w)
-			result := 0.0
-			for i := 0; i < len(inputData); i++ {
-				result += net.Evaluate(inputData[i]) * correctOutputMultipliers[i]
-			}
-			score := result / net.Complexity()
-			if score <= 0 {
-				score = -net.Complexity()
-			}
-			scoreSum += score
-			scoreMap[i] = score
-		}
+		// scoreMap = make(map[int]float64)
+		// scoreSum = 0.0
+		// for i := 0; i < config.PopulationSize; i++ {
+		// 	net := population[i]
+		// 	net.SetWeight(w)
+		// 	result := 0.0
+		// 	for i := 0; i < len(inputData); i++ {
+		// 		result += net.Evaluate(inputData[i]) * correctOutputMultipliers[i]
+		// 	}
+		// 	score := result / net.Complexity()
+		// 	if score <= 0 {
+		// 		score = -net.Complexity()
+		// 	}
+		// 	scoreSum += score
+		// 	scoreMap[i] = score
+		// }
+
 		lastAverageScore = averageScore
 		averageScore = scoreSum / float64(config.PopulationSize)
 		if averageScore == lastAverageScore {
@@ -207,7 +207,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 			// If not in the best half, take a copy of the best network,
 			// then modify it a bit (in a random way)
 			if !bestHalf {
-				// Take a deep copy, not just the the pointers
+				// Take a proper copy, not just the the pointers, because the nodes will be changed
 				var newNetwork Network = *bestNetwork
 				// Modify it a bit, with a maximum number of iterations
 				newNetwork.Modify(config.MaxModificationIterations)

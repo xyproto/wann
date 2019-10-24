@@ -1,0 +1,5 @@
+Mutating the Network structs does not work right now, because the Neurons needs to be mutated too. And there are pointers everywhere to them.
+
+Storing all neurons within the network, but keeping pointers to input nodes and the output node might work.
+
+Then all those neurons can be modified when the Network mutates, but the pointers can be kept the same.

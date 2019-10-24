@@ -11,29 +11,28 @@ import (
 
 // Neuron is a list of input-neurons, and an activation function.
 type Neuron struct {
-	InputNeurons           []*Neuron
+	InputNeurons           []*Neuron // pointers to other neurons
 	ActivationFunction     func(float64) float64
 	Value                  *float64
 	distanceFromOutputNode int // Used when traversing nodes and drawing diagrams
 }
 
-// NewNeuron creates a new *Neuron
-func NewNeuron() *Neuron {
+// NewNeuron creates a new Neuron
+func NewNeuron() Neuron {
 	// Pre-allocate room for 64 connections and use Linear as the default activation function
-	return &Neuron{InputNeurons: make([]*Neuron, 0, 64), ActivationFunction: af.Linear}
+	return Neuron{InputNeurons: make([]*Neuron, 0, 64), ActivationFunction: af.Linear}
 }
 
 // NewRandomNeuron creates a new *Neuron, with a randomly chosen activation function
-func NewRandomNeuron() *Neuron {
-	neuron := NewNeuron()
-	neuron.RandomizeActivationFunction()
-	return neuron
+func NewRandomNeuron() Neuron {
+	return NewNeuron().RandomizeActivationFunction()
 }
 
 // RandomizeActivationFunction will choose a random activation function for this neuron
-func (neuron *Neuron) RandomizeActivationFunction() {
+func (neuron Neuron) RandomizeActivationFunction() Neuron {
 	chosenIndex := rand.Intn(len(ActivationFunctions))
 	neuron.ActivationFunction = ActivationFunctions[chosenIndex]
+	return neuron
 }
 
 // SetValue can be used for setting a value for this neuron instead of using input neutrons.

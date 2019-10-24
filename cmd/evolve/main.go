@@ -45,13 +45,13 @@ func main() {
 
 	config := &wann.Config{
 		Inputs:                                 0,
-		ConnectionRatio:                        0.2,
-		SharedWeight:                           0.5,
-		Generations:                            500,
-		PopulationSize:                         200,
-		MaxIterationsWithoutBestImprovement:    50,
-		MaxIterationsWithoutAverageImprovement: 50,
-		MaxModificationIterations:              100,
+		ConnectionRatio:                        0.1,
+		SharedWeight:                           0.0,
+		Generations:                            2000,
+		PopulationSize:                         42,
+		MaxIterationsWithoutBestImprovement:    1000,
+		MaxIterationsWithoutAverageImprovement: 10,
+		MaxModificationIterations:              20,
 		Verbose:                                true,
 	}
 

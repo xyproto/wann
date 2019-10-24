@@ -16,8 +16,9 @@ func init() {
 
 // Network is a collection of nodes, an output node and a shared weight.
 type Network struct {
-	InputNodes    []*Neuron
-	OutputNode    *Neuron
+	AllNodes      []Neuron  // Storing the actual neurons
+	InputNodes    []*Neuron // Pointers to the input nodes
+	OutputNode    *Neuron   // Pointer to the output node
 	Weight        float64
 	maxIterations int // max interations when evaluating a network
 }
@@ -31,11 +32,16 @@ func NewNetwork(c *Config) *Network {
 		return nil
 	}
 	// Pre-allocate room for n neurons and set the shared weight to the configured value.
-	net := &Network{make([]*Neuron, n), NewRandomNeuron(), w, 100}
+	outputNode := NewRandomNeuron()
+	allNodes := make([]Neuron, 0, n+1)
+	allNodes = append(allNodes, outputNode)
+	net := &Network{allNodes, make([]*Neuron, n), &outputNode, w, 100}
 
 	// Initialize n input nodes that all are inputs to the one output node.
 	for i := 0; i < n; i++ {
-		net.InputNodes[i] = NewRandomNeuron()
+		inputNode := NewRandomNeuron()
+		allNodes = append(allNodes, inputNode)
+		net.InputNodes[i] = &inputNode
 		// Make connections for all nodes where a random number between 0 and 1 are larger than r
 		if rand.Float64() > r {
 			if err := net.OutputNode.AddInput(net.InputNodes[i]); err != nil {
@@ -44,6 +50,7 @@ func NewNetwork(c *Config) *Network {
 		}
 	}
 
+	net.AllNodes = allNodes
 	return net
 }
 
@@ -59,7 +66,7 @@ func (net *Network) SetMaxEvaluationIterations(n int) {
 
 // InsertNode takes two neurons and inserts a third neuron between them
 // Assumes that a is the leftmost node and the b is the rightmost node.
-func (net *Network) InsertNode(a, b, newNode *Neuron) error {
+func (net *Network) InsertNode(a, b *Neuron, newNode Neuron) error {
 	// This is done by first checking that a is an input node to b,
 	// then setting newNode to be an input node to b,
 	// then setting a to be an input node to a.
@@ -88,8 +95,10 @@ func (net *Network) InsertNode(a, b, newNode *Neuron) error {
 			return errors.New("error in InsertNode b.RemoveInput(a): " + err.Error())
 		}
 	}
+	// Store the new node in this network
+	net.AllNodes = append(net.AllNodes, newNode)
 	// Connect the new node to b
-	if err := b.AddInput(newNode); err != nil {
+	if err := b.AddInput(&newNode); err != nil {
 		return errors.New("error in InsertNode b.AddInput(newNode): " + err.Error())
 	}
 	// Connect a to the new node
