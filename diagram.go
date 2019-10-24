@@ -40,9 +40,9 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 	outputy := (height-(nodeRadius*2))/2 + imgPadding
 
 	// For each connected neuron, store it with the distance from the output neuron as the key in a map
-	layerNeurons := make(map[int][]*Neuron)
+	layerNeurons := make(map[int][]NeuronIndex)
 	maxDistance := 0
-	net.ForEachConnected(func(n *Neuron, distanceFromOutput int) {
+	net.ForEachConnectedNodeIndex(func(n NeuronIndex, distanceFromOutput int) {
 		layerNeurons[distanceFromOutput] = append(layerNeurons[distanceFromOutput], n)
 		if distanceFromOutput > maxDistance {
 			maxDistance = distanceFromOutput
@@ -53,7 +53,7 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 	//for i, n := range net.InputNodes {
 	columnOffset := 50
 
-	getPosition := func(givenNeuron *Neuron) (int, int) {
+	getPosition := func(givenNeuron NeuronIndex) (int, int) {
 		for outputDistance, neurons := range layerNeurons {
 			for neuronLayerIndex, otherNeuron := range neurons {
 				if otherNeuron == givenNeuron {
@@ -81,19 +81,19 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 			x, y := getPosition(n)
 
 			// Draw the connection from the center of this node to the center of all input nodes, if applicable
-			for _, inputNeuron := range n.InputNeurons {
+			for _, inputNeuron := range net.AllNodes[n].InputNeurons {
 				ix, iy := getPosition(inputNeuron)
 				svg.Line(ix+nodeRadius, iy+nodeRadius, x+nodeRadius, y+nodeRadius, lineWidth, "orange")
 			}
 
 			// Draw the connection to the output node, if it has this node as input
-			if net.OutputNode.HasInput(n) {
+			if net.AllNodes[net.OutputNode].HasInput(n) {
 				svg.Line(x+nodeRadius, y+nodeRadius, outputx+nodeRadius, outputy+nodeRadius, lineWidth, "#0099ff")
 			}
 
 			// Draw this node
 			input := svg.AddCircle(x+nodeRadius, y+nodeRadius, nodeRadius)
-			switch n.distanceFromOutputNode {
+			switch net.AllNodes[n].distanceFromOutputNode {
 			case 1:
 				input.Fill("lightblue")
 			case 2:
@@ -133,7 +133,7 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 				//xv := (xr * 4.0) - 2.0
 				// xv is from -5 to 5
 				xv := (xr - 0.5) * float64(nodeRadius)
-				yv := n.ActivationFunction(xv)
+				yv := net.AllNodes[n].ActivationFunction(xv)
 				// plot, 3.0 is the amplitude along y
 				yp := float64(ypos) + float64(nodeRadius)*1.35 - (yv * 0.6 * float64(nodeRadius))
 

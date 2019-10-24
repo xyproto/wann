@@ -17,11 +17,11 @@ func TestDiagram(t *testing.T) {
 	})
 
 	// Set a few activation functions
-	net.InputNodes[0].ActivationFunction = af.Linear
-	net.InputNodes[1].ActivationFunction = af.Swish
-	net.InputNodes[2].ActivationFunction = af.Gaussian01
-	net.InputNodes[3].ActivationFunction = af.Sigmoid
-	net.InputNodes[4].ActivationFunction = af.ReLU
+	net.AllNodes[net.InputNodes[0]].ActivationFunction = af.Linear
+	net.AllNodes[net.InputNodes[1]].ActivationFunction = af.Swish
+	net.AllNodes[net.InputNodes[2]].ActivationFunction = af.Gaussian01
+	net.AllNodes[net.InputNodes[3]].ActivationFunction = af.Sigmoid
+	net.AllNodes[net.InputNodes[4]].ActivationFunction = af.ReLU
 
 	// Output the diagram
 	fmt.Println("--- <DIAGRAM> ---")

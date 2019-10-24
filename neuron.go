@@ -11,28 +11,30 @@ import (
 
 // Neuron is a list of input-neurons, and an activation function.
 type Neuron struct {
-	InputNeurons           []*Neuron // pointers to other neurons
+	Net                    *Network
+	InputNeurons           []NeuronIndex // pointers to other neurons
 	ActivationFunction     func(float64) float64
 	Value                  *float64
 	distanceFromOutputNode int // Used when traversing nodes and drawing diagrams
 }
 
 // NewNeuron creates a new Neuron
-func NewNeuron() Neuron {
+func NewNeuron(net *Network) Neuron {
 	// Pre-allocate room for 64 connections and use Linear as the default activation function
-	return Neuron{InputNeurons: make([]*Neuron, 0, 64), ActivationFunction: af.Linear}
+	return Neuron{Net: net, InputNeurons: make([]NeuronIndex, 0, 4), ActivationFunction: af.Linear}
 }
 
 // NewRandomNeuron creates a new *Neuron, with a randomly chosen activation function
-func NewRandomNeuron() Neuron {
-	return NewNeuron().RandomizeActivationFunction()
+func NewRandomNeuron(net *Network) Neuron {
+	n := NewNeuron(net)
+	n.RandomizeActivationFunction()
+	return n
 }
 
 // RandomizeActivationFunction will choose a random activation function for this neuron
-func (neuron Neuron) RandomizeActivationFunction() Neuron {
+func (neuron *Neuron) RandomizeActivationFunction() {
 	chosenIndex := rand.Intn(len(ActivationFunctions))
 	neuron.ActivationFunction = ActivationFunctions[chosenIndex]
-	return neuron
 }
 
 // SetValue can be used for setting a value for this neuron instead of using input neutrons.
@@ -42,9 +44,9 @@ func (neuron *Neuron) SetValue(x float64) {
 }
 
 // HasInput checks if the given neuron is an input neuron to this one
-func (neuron *Neuron) HasInput(e *Neuron) bool {
-	for _, n := range neuron.InputNeurons {
-		if n == e {
+func (neuron *Neuron) HasInput(e NeuronIndex) bool {
+	for _, ni := range neuron.InputNeurons {
+		if ni == e {
 			return true
 		}
 	}
@@ -53,7 +55,7 @@ func (neuron *Neuron) HasInput(e *Neuron) bool {
 
 // FindInput checks if the given neuron is an input neuron to this one,
 // and also returns the index to InputNeurons, if found.
-func (neuron *Neuron) FindInput(e *Neuron) (int, bool) {
+func (neuron *Neuron) FindInput(e NeuronIndex) (int, bool) {
 	for i, n := range neuron.InputNeurons {
 		if n == e {
 			return i, true
@@ -62,12 +64,17 @@ func (neuron *Neuron) FindInput(e *Neuron) (int, bool) {
 	return -1, false
 }
 
+// Is check if the given NeuronIndex points to this neuron
+func (neuron *Neuron) Is(e NeuronIndex) bool {
+	return neuron == &(neuron.Net.AllNodes[e])
+}
+
 // AddInput will add an input neuron
-func (neuron *Neuron) AddInput(e *Neuron) error {
+func (neuron *Neuron) AddInput(e NeuronIndex) error {
 	if neuron.HasInput(e) {
 		return errors.New("neuron already exists")
 	}
-	if neuron == e {
+	if neuron.Is(e) {
 		return errors.New("adding a neuron as input to itself")
 	}
 	neuron.InputNeurons = append(neuron.InputNeurons, e)
@@ -75,7 +82,7 @@ func (neuron *Neuron) AddInput(e *Neuron) error {
 }
 
 // RemoveInput will remove an input neuron
-func (neuron *Neuron) RemoveInput(e *Neuron) error {
+func (neuron *Neuron) RemoveInput(e NeuronIndex) error {
 	if i, found := neuron.FindInput(e); found {
 		// Found it, remove the neuron at index i
 		neuron.InputNeurons = append(neuron.InputNeurons[:i], neuron.InputNeurons[i+1:]...)
@@ -84,18 +91,34 @@ func (neuron *Neuron) RemoveInput(e *Neuron) error {
 	return errors.New("neuron does not exist")
 }
 
+// Index finds the NeuronIndex for this node, if available
+func (neuron *Neuron) Index() (NeuronIndex, error) {
+	for i := range neuron.Net.AllNodes {
+		neuronIndex := NeuronIndex(i)
+		if neuron.Is(neuronIndex) {
+			return neuronIndex, nil
+		}
+	}
+	return NeuronIndex(-1), errors.New("neuron not found")
+}
+
 // String will return a string containing both the pointer address and the number of input neurons
 func (neuron *Neuron) String() string {
+	neuronIndex, _ := neuron.Index()
+	//if err != nil {
+	//	panic("using .String() on a Neuron that does not have a NeuronIndex: " + err.Error())
+	//}
 	inputCount := len(neuron.InputNeurons)
 	switch inputCount {
 	case 0:
-		return fmt.Sprintf("Neuron (%p).", neuron)
+		return fmt.Sprintf("Neuron [%d].", neuronIndex)
 	case 1:
-		return fmt.Sprintf("Neuron (%p) has 1 input: %p", neuron, neuron.InputNeurons[0])
+		return fmt.Sprintf("Neuron [%d] has 1 input: %d", neuronIndex, neuron.InputNeurons[0])
 	default:
 		var sb strings.Builder
-		sb.WriteString(fmt.Sprintf("Neuron (%p) has %d inputs:", neuron, len(neuron.InputNeurons)))
-		for _, inputNeuron := range neuron.InputNeurons {
+		sb.WriteString(fmt.Sprintf("Neuron [%d] has %d inputs:", neuronIndex, len(neuron.InputNeurons)))
+		for _, inputNeuronIndex := range neuron.InputNeurons {
+			inputNeuron := neuron.Net.AllNodes[inputNeuronIndex]
 			sb.WriteString("\n\t" + inputNeuron.String())
 		}
 		return sb.String()
@@ -113,10 +136,10 @@ func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64
 	// For each input neuron, evaluate them
 	summed := 0.0
 	counter := 0
-	for _, inputNeuron := range neuron.InputNeurons {
+	for _, inputNeuronIndex := range neuron.InputNeurons {
 		// Let each input neuron do its own evauluation, using the given weight
 		(*maxEvaluationLoops)--
-		result, stopNow := inputNeuron.evaluate(weight, maxEvaluationLoops)
+		result, stopNow := neuron.Net.AllNodes[inputNeuronIndex].evaluate(weight, maxEvaluationLoops)
 		summed += result * weight
 		counter++
 		if stopNow || (*maxEvaluationLoops < 0) {

@@ -14,13 +14,21 @@ func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
 }
 
+// NeuronIndex is an index into the AllNodes slice
+type NeuronIndex int
+
 // Network is a collection of nodes, an output node and a shared weight.
 type Network struct {
-	AllNodes      []Neuron  // Storing the actual neurons
-	InputNodes    []*Neuron // Pointers to the input nodes
-	OutputNode    *Neuron   // Pointer to the output node
+	AllNodes      []Neuron      // Storing the actual neurons
+	InputNodes    []NeuronIndex // Pointers to the input nodes
+	OutputNode    NeuronIndex   // Pointer to the output node
 	Weight        float64
 	maxIterations int // max interations when evaluating a network
+}
+
+// Get returns a pointer to a neuron, based on the given NeuronIndex
+func (net *Network) Get(i NeuronIndex) *Neuron {
+	return &(net.AllNodes[i])
 }
 
 // NewNetwork creates a new minimal network with n input nodes and ratio of r connections
@@ -31,26 +39,33 @@ func NewNetwork(c *Config) *Network {
 	if n <= 0 {
 		return nil
 	}
-	// Pre-allocate room for n neurons and set the shared weight to the configured value.
-	outputNode := NewRandomNeuron()
-	allNodes := make([]Neuron, 0, n+1)
-	allNodes = append(allNodes, outputNode)
-	net := &Network{allNodes, make([]*Neuron, n), &outputNode, w, 100}
+	// Start out with just a random neuron, which is the output node
+	allNodes := make([]Neuron, n+1)
+
+	outputNodeIndex := NeuronIndex(0)
+	net := &Network{allNodes, make([]NeuronIndex, n), outputNodeIndex, w, 100}
+
+	outputNode := NewRandomNeuron(net)
+	allNodes[outputNodeIndex] = outputNode
 
 	// Initialize n input nodes that all are inputs to the one output node.
-	for i := 0; i < n; i++ {
-		inputNode := NewRandomNeuron()
-		allNodes = append(allNodes, inputNode)
-		net.InputNodes[i] = &inputNode
+	for i := 1; i <= n; i++ {
+		// Add a new input node
+		inputNodeIndex := NeuronIndex(i)
+		inputNode := NewRandomNeuron(net)
+		net.AllNodes[inputNodeIndex] = inputNode
+
+		// Register the input node index in the input node NeuronIndex slice
+		net.InputNodes[i-1] = inputNodeIndex
+
 		// Make connections for all nodes where a random number between 0 and 1 are larger than r
 		if rand.Float64() > r {
-			if err := net.OutputNode.AddInput(net.InputNodes[i]); err != nil {
+			if err := outputNode.AddInput(inputNodeIndex); err != nil {
 				panic(err)
 			}
 		}
 	}
 
-	net.AllNodes = allNodes
 	return net
 }
 
@@ -60,13 +75,23 @@ func (net *Network) SetMaxEvaluationIterations(n int) {
 	net.maxIterations = n
 }
 
+// IsInput checks if the given node is an input node
+func (net *Network) IsInput(ni NeuronIndex) bool {
+	for _, inputNodeIndex := range net.InputNodes {
+		if ni == inputNodeIndex {
+			return true
+		}
+	}
+	return false
+}
+
 //
 // Operators for searching the space of network topologies
 //
 
 // InsertNode takes two neurons and inserts a third neuron between them
 // Assumes that a is the leftmost node and the b is the rightmost node.
-func (net *Network) InsertNode(a, b *Neuron, newNode Neuron) error {
+func (net *Network) InsertNode(a, b NeuronIndex, newNode Neuron) error {
 	// This is done by first checking that a is an input node to b,
 	// then setting newNode to be an input node to b,
 	// then setting a to be an input node to a.
@@ -75,13 +100,13 @@ func (net *Network) InsertNode(a, b *Neuron, newNode Neuron) error {
 	}
 	// Sort the nodes by where they place in the diagram
 	a, b = net.LeftRight(a, b)
-	if b.In(net.InputNodes) {
+	if net.IsInput(b) {
 		return errors.New("node b is a special input node")
 	}
 	if b == net.OutputNode {
 		// this is fine
 	}
-	if a.In(net.InputNodes) {
+	if net.IsInput(a) {
 		// this is fine
 	}
 	if a == net.OutputNode {
@@ -89,16 +114,18 @@ func (net *Network) InsertNode(a, b *Neuron, newNode Neuron) error {
 		return errors.New("the leftmost node is an output node")
 	}
 	// b already has a as an input (a -> b)
-	if b.HasInput(a) {
+	if net.AllNodes[b].HasInput(a) {
 		// Remove the old connection
-		if err := b.RemoveInput(a); err != nil {
+		if err := net.AllNodes[b].RemoveInput(a); err != nil {
 			return errors.New("error in InsertNode b.RemoveInput(a): " + err.Error())
 		}
 	}
 	// Store the new node in this network
 	net.AllNodes = append(net.AllNodes, newNode)
+	newNodeIndex := NeuronIndex(len(net.AllNodes) - 1)
+
 	// Connect the new node to b
-	if err := b.AddInput(&newNode); err != nil {
+	if err := net.AllNodes[b].AddInput(newNodeIndex); err != nil {
 		return errors.New("error in InsertNode b.AddInput(newNode): " + err.Error())
 	}
 	// Connect a to the new node
@@ -110,7 +137,7 @@ func (net *Network) InsertNode(a, b *Neuron, newNode Neuron) error {
 }
 
 // AddConnection adds a connection from a to b
-func (net *Network) AddConnection(a, b *Neuron) error {
+func (net *Network) AddConnection(a, b NeuronIndex) error {
 	if a == b {
 		return errors.New("can't connect to self")
 	}
@@ -126,19 +153,19 @@ func (net *Network) AddConnection(a, b *Neuron) error {
 		// If now, after swapping, a is an output node, return with an error
 		return errors.New("will not insert a node between the output node and another node")
 	}
-	if a.distanceFromOutputNode > b.distanceFromOutputNode {
+	if net.AllNodes[a].distanceFromOutputNode > net.AllNodes[b].distanceFromOutputNode {
 		// Swap a and b
 		tmp := a
 		b = a
 		a = tmp
 	}
-	if b.In(net.InputNodes) {
+	if net.IsInput(b) {
 		return errors.New("b is an input node")
 	}
 	//if b.Value != nil {
 	//return errors.New("b is a value node/input node"
 	//}
-	return b.AddInput(a)
+	return net.AllNodes[b].AddInput(a)
 }
 
 // ChangeActivationFunction changes the activation function for a given node
@@ -154,8 +181,8 @@ func (net *Network) String() string {
 	var sb strings.Builder
 	sb.WriteString("Network\n")
 	sb.WriteString("\tInput nodes: " + strconv.Itoa(len(net.InputNodes)) + "\n")
-	sb.WriteString("\tConnections to output node: " + strconv.Itoa(len(net.OutputNode.InputNeurons)) + "\n")
-	sb.WriteString("\tOutput neuron: " + fmt.Sprintf("%p", net.OutputNode) + "\n")
+	sb.WriteString("\tConnections to output node: " + strconv.Itoa(len(net.AllNodes[net.OutputNode].InputNeurons)) + "\n")
+	sb.WriteString("\tOutput neuron: " + fmt.Sprintf("%d", net.OutputNode) + "\n")
 	for _, node := range net.All() {
 		sb.WriteString("\t" + node.String() + "\n")
 	}
@@ -167,9 +194,9 @@ func (net *Network) String() string {
 // A shared weight can be given.
 func (net *Network) Evaluate(inputValues []float64) float64 {
 	inputLength := len(inputValues)
-	for i, n := range net.InputNodes {
+	for i, nindex := range net.InputNodes {
 		if i < inputLength {
-			n.SetValue(inputValues[i])
+			net.AllNodes[nindex].SetValue(inputValues[i])
 		}
 	}
 	maxIterationCounter := net.maxIterations
@@ -177,7 +204,7 @@ func (net *Network) Evaluate(inputValues []float64) float64 {
 		// If max iterations has not been configured, use 100
 		maxIterationCounter = 100
 	}
-	result, _ := net.OutputNode.evaluate(net.Weight, &maxIterationCounter)
+	result, _ := net.AllNodes[net.OutputNode].evaluate(net.Weight, &maxIterationCounter)
 	return result
 }
 
@@ -189,9 +216,9 @@ func (net *Network) Evaluate2(inputValues []float64) (float64, error) {
 	if inputLength > len(net.InputNodes) {
 		return 0.0, errors.New("Too many input values compared to input nodes")
 	}
-	for i, n := range net.InputNodes {
+	for i, nindex := range net.InputNodes {
 		if i < inputLength {
-			n.SetValue(inputValues[i])
+			net.AllNodes[nindex].SetValue(inputValues[i])
 		}
 	}
 	maxIterationCounter := net.maxIterations
@@ -199,7 +226,7 @@ func (net *Network) Evaluate2(inputValues []float64) (float64, error) {
 		// If max iterations has not been configured, use 100
 		maxIterationCounter = 100
 	}
-	result, _ := net.OutputNode.evaluate(net.Weight, &maxIterationCounter)
+	result, _ := net.AllNodes[net.OutputNode].evaluate(net.Weight, &maxIterationCounter)
 	//fmt.Println("Evaluation was stopped?", stopped)
 	return result, nil //fmt.Errorf("evaluation was stopped after %d iterations", maxIterationCounter)
 }
@@ -240,13 +267,13 @@ func (net *Network) Complexity() float64 {
 // LeftRight returns two neurons, such that the first on is the one that is
 // most to the left (towards the input neurons) and the second one is most to
 // the right (towards the output neuron). Assumes that a and b are not equal.
-func (net *Network) LeftRight(a, b *Neuron) (left *Neuron, right *Neuron) {
-	if a.In(net.InputNodes) {
+func (net *Network) LeftRight(a, b NeuronIndex) (left NeuronIndex, right NeuronIndex) {
+	if net.AllNodes[a].In(net.InputNodes) {
 		left = a
 		right = b
 		return
 	}
-	if b.In(net.InputNodes) {
+	if net.AllNodes[b].In(net.InputNodes) {
 		left = b
 		right = a
 		return
@@ -261,7 +288,7 @@ func (net *Network) LeftRight(a, b *Neuron) (left *Neuron, right *Neuron) {
 		right = b
 		return
 	}
-	if a.distanceFromOutputNode <= b.distanceFromOutputNode {
+	if net.AllNodes[a].distanceFromOutputNode <= net.AllNodes[b].distanceFromOutputNode {
 		left = b
 		right = a
 		return
@@ -299,29 +326,17 @@ func (neurons neuronList) Copy() []*Neuron {
 // All returns a slice with pointers to all nodes in this network
 func (net *Network) All() []*Neuron {
 	allNodes := make([]*Neuron, 0)
-	// For each node that is connected to the output node
-	net.ForEachConnected(func(node *Neuron, _ int) {
-		if !node.In(allNodes) {
-			allNodes = append(allNodes, node)
-		}
-	})
-	// Return all nodes in this network
+	for _, node := range net.AllNodes {
+		allNodes = append(allNodes, &node)
+	}
+	// Return pointers to all nodes in this network
 	return allNodes
 }
 
 // GetRandomNeuron will select a random neuron.
 // This can be any node, including the output node.
-func (net *Network) GetRandomNeuron() *Neuron {
-	allNeurons := net.All()
-	chosenIndex := rand.Intn(len(allNeurons))
-	if chosenIndex < 0 || chosenIndex >= len(allNeurons) {
-		panic("implementation error: the chosen Index is invalid")
-	}
-	chosenNeuron := allNeurons[chosenIndex]
-	if chosenNeuron == nil {
-		panic("implementation error: the chosen neuron is nil")
-	}
-	return chosenNeuron
+func (net *Network) GetRandomNeuron() NeuronIndex {
+	return NeuronIndex(rand.Intn(len(net.AllNodes)))
 }
 
 // Modify this network a bit
@@ -332,12 +347,13 @@ func (net *Network) Modify(maxIterations int) {
 	switch method {
 	case 0:
 		//fmt.Println("Modifying the network using method 1 - insert node")
-		nodeA, nodeB, newNode := net.GetRandomNeuron(), net.GetRandomNeuron(), NewRandomNeuron()
+		nodeA, nodeB, newNode := net.GetRandomNeuron(), net.GetRandomNeuron(), NewRandomNeuron(net)
 		// A bit risky, time-wise, but continue finding random neurons until they work out
 		// Insert a new node with a random activation function
 		counter := 0
+		// InsertNode adds the new node to net.AllNodes
 		for net.InsertNode(nodeA, nodeB, newNode) != nil {
-			nodeA, nodeB, newNode = net.GetRandomNeuron(), net.GetRandomNeuron(), NewRandomNeuron()
+			nodeA, nodeB, newNode = net.GetRandomNeuron(), net.GetRandomNeuron(), NewRandomNeuron(net)
 			counter++
 			if maxIterations > 0 && counter > maxIterations {
 				// Could not add a new node. This should never happen?
@@ -362,27 +378,27 @@ func (net *Network) Modify(maxIterations int) {
 	case 2:
 		//fmt.Println("Modifying the network using method 3 - change activation")
 		// Change the activation function
-		net.GetRandomNeuron().RandomizeActivationFunction()
+		net.AllNodes[net.GetRandomNeuron()].RandomizeActivationFunction()
 	default:
 		panic("implementation error: invalid method number: " + strconv.Itoa(method))
 	}
 }
 
 // In checks if this neuron is in the given collection
-func (node *Neuron) In(collection []*Neuron) bool {
-	for _, existingNode := range collection {
-		if node == existingNode {
+func (node *Neuron) In(collection []NeuronIndex) bool {
+	for _, existingNodeIndex := range collection {
+		if node.Is(existingNodeIndex) {
 			return true
 		}
 	}
 	return false
 }
 
-func combine(a, b []*Neuron) []*Neuron {
+func combine(a, b []NeuronIndex) []NeuronIndex {
 	lena := len(a)
 	lenb := len(b)
 	// Allocate the exact size needed
-	res := make([]*Neuron, lena+lenb)
+	res := make([]NeuronIndex, lena+lenb)
 	// Add the elements from a
 	for i := 0; i < lena; i++ {
 		res[i] = a[i]
@@ -400,18 +416,20 @@ func combine(a, b []*Neuron) []*Neuron {
 // Given the output node and the number 0, it will return a slice of all
 // connected nodes, where the distance from the output node has been stored in
 // node.distanceFromOutputNode.
-func getAllNodes(node *Neuron, distanceFromFirstNode int, alreadyHaveThese []*Neuron) []*Neuron {
-	allNodes := make([]*Neuron, 0)
+func (net *Network) getAllNodes(nodeIndex NeuronIndex, distanceFromFirstNode int, alreadyHaveThese []NeuronIndex) []NeuronIndex {
+	allNodes := make([]NeuronIndex, 0, len(net.AllNodes))
+	node := net.AllNodes[nodeIndex]
 	node.distanceFromOutputNode = distanceFromFirstNode
 	if !node.In(alreadyHaveThese) {
-		allNodes = append(allNodes, node)
+		allNodes = append(allNodes, nodeIndex)
 	}
-	for _, inputNode := range node.InputNeurons {
-		if inputNode == node {
+	for _, inputNodeIndex := range node.InputNeurons {
+		if node.Is(inputNodeIndex) {
 			panic("implementation error: node is input node to self")
 		}
+		inputNode := net.AllNodes[inputNodeIndex]
 		if !inputNode.In(allNodes) && !inputNode.In(alreadyHaveThese) {
-			allNodes = combine(allNodes, getAllNodes(inputNode, distanceFromFirstNode+1, append(allNodes, alreadyHaveThese...)))
+			allNodes = combine(allNodes, net.getAllNodes(inputNodeIndex, distanceFromFirstNode+1, append(allNodes, alreadyHaveThese...)))
 		}
 	}
 	return allNodes
@@ -422,8 +440,21 @@ func getAllNodes(node *Neuron, distanceFromFirstNode int, alreadyHaveThese []*Ne
 func (net *Network) ForEachConnected(f func(n *Neuron, distanceFromOutputNode int)) {
 	// Start at the output node, traverse left towards the input nodes
 	// The network has a counter for how many nodes has been added/removed, for quick memory allocation here
-	allNodes := getAllNodes(net.OutputNode, 0, []*Neuron{})
-	for _, node := range allNodes {
-		f(node, node.distanceFromOutputNode)
+	allNodes := net.getAllNodes(net.OutputNode, 0, []NeuronIndex{})
+	for _, nodeIndex := range allNodes {
+		node := net.AllNodes[nodeIndex]
+		f(&node, node.distanceFromOutputNode)
+	}
+}
+
+// ForEachConnectedNodeIndex will only go through nodes that are connected to the output node (directly or indirectly)
+// Unconnected input nodes are not covered.
+func (net *Network) ForEachConnectedNodeIndex(f func(ni NeuronIndex, distanceFromOutputNode int)) {
+	// Start at the output node, traverse left towards the input nodes
+	// The network has a counter for how many nodes has been added/removed, for quick memory allocation here
+	allNodes := net.getAllNodes(net.OutputNode, 0, []NeuronIndex{})
+	for _, nodeIndex := range allNodes {
+		node := net.AllNodes[nodeIndex]
+		f(nodeIndex, node.distanceFromOutputNode)
 	}
 }
