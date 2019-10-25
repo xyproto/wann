@@ -31,36 +31,35 @@ func (net *Network) Get(i NeuronIndex) *Neuron {
 	return &(net.AllNodes[i])
 }
 
-// NewNetwork creates a new minimal network with n input nodes and ratio of r connections
-func NewNetwork(c *Config) *Network {
+// NewNetwork creates a new minimal network with n input nodes and ratio of r connections.
+// Passing "nil" as an argument is supported.
+func NewNetwork(cs ...*Config) *Network {
+	c := &Config{}
+	// If a single non-nil *Config struct is given, use that
+	if len(cs) == 1 && cs[0] != nil {
+		c = cs[0]
+	}
 	n := c.Inputs
 	r := c.ConnectionRatio
 	w := c.SharedWeight
-	if n <= 0 {
-		return nil
-	}
-	// Start out with just a random neuron, which is the output node
-	allNodes := make([]Neuron, n+1)
-
+	// Create a new network that has one node, the output node
 	outputNodeIndex := NeuronIndex(0)
-	net := &Network{allNodes, make([]NeuronIndex, n), outputNodeIndex, w, 100}
-
-	outputNode := NewRandomNeuron(net)
-	allNodes[outputNodeIndex] = outputNode
+	net := &Network{make([]Neuron, 0, n+1), make([]NeuronIndex, n), outputNodeIndex, w, 100}
+	outputNode := net.NewRandomNeuron()
 
 	// Initialize n input nodes that all are inputs to the one output node.
 	for i := 1; i <= n; i++ {
 		// Add a new input node
-		inputNodeIndex := NeuronIndex(i)
-		inputNode := NewRandomNeuron(net)
-		net.AllNodes[inputNodeIndex] = inputNode
+
+		node := net.NewRandomNeuron()
+		nodeIndex := node.neuronIndex
 
 		// Register the input node index in the input node NeuronIndex slice
-		net.InputNodes[i-1] = inputNodeIndex
+		net.InputNodes[i-1] = nodeIndex
 
 		// Make connections for all nodes where a random number between 0 and 1 are larger than r
 		if rand.Float64() > r {
-			if err := outputNode.AddInput(inputNodeIndex); err != nil {
+			if err := outputNode.AddInput(nodeIndex); err != nil {
 				panic(err)
 			}
 		}
@@ -91,7 +90,7 @@ func (net *Network) IsInput(ni NeuronIndex) bool {
 
 // InsertNode takes two neurons and inserts a third neuron between them
 // Assumes that a is the leftmost node and the b is the rightmost node.
-func (net *Network) InsertNode(a, b NeuronIndex, newNode Neuron) error {
+func (net *Network) InsertNode(a, b NeuronIndex, newNode *Neuron) error {
 	// This is done by first checking that a is an input node to b,
 	// then setting newNode to be an input node to b,
 	// then setting a to be an input node to a.
@@ -121,7 +120,7 @@ func (net *Network) InsertNode(a, b NeuronIndex, newNode Neuron) error {
 		}
 	}
 	// Store the new node in this network
-	net.AllNodes = append(net.AllNodes, newNode)
+	net.AllNodes = append(net.AllNodes, *newNode)
 	newNodeIndex := NeuronIndex(len(net.AllNodes) - 1)
 
 	// Connect the new node to b
@@ -183,8 +182,8 @@ func (net *Network) String() string {
 	sb.WriteString("\tInput nodes: " + strconv.Itoa(len(net.InputNodes)) + "\n")
 	sb.WriteString("\tConnections to output node: " + strconv.Itoa(len(net.AllNodes[net.OutputNode].InputNeurons)) + "\n")
 	sb.WriteString("\tOutput neuron: " + fmt.Sprintf("%d", net.OutputNode) + "\n")
-	for _, node := range net.All() {
-		sb.WriteString("\t" + node.String() + "\n")
+	for i, node := range net.All() {
+		sb.WriteString("\t" + strconv.Itoa(i) + ": " + node.String() + "\n")
 	}
 	return sb.String()
 }
@@ -326,8 +325,8 @@ func (neurons neuronList) Copy() []*Neuron {
 // All returns a slice with pointers to all nodes in this network
 func (net *Network) All() []*Neuron {
 	allNodes := make([]*Neuron, 0)
-	for _, node := range net.AllNodes {
-		allNodes = append(allNodes, &node)
+	for i := range net.AllNodes {
+		allNodes = append(allNodes, &net.AllNodes[i])
 	}
 	// Return pointers to all nodes in this network
 	return allNodes
@@ -347,13 +346,13 @@ func (net *Network) Modify(maxIterations int) {
 	switch method {
 	case 0:
 		//fmt.Println("Modifying the network using method 1 - insert node")
-		nodeA, nodeB, newNode := net.GetRandomNeuron(), net.GetRandomNeuron(), NewRandomNeuron(net)
+		nodeA, nodeB, newNode := net.GetRandomNeuron(), net.GetRandomNeuron(), net.NewRandomNeuron()
 		// A bit risky, time-wise, but continue finding random neurons until they work out
 		// Insert a new node with a random activation function
 		counter := 0
 		// InsertNode adds the new node to net.AllNodes
 		for net.InsertNode(nodeA, nodeB, newNode) != nil {
-			nodeA, nodeB, newNode = net.GetRandomNeuron(), net.GetRandomNeuron(), NewRandomNeuron(net)
+			nodeA, nodeB, newNode = net.GetRandomNeuron(), net.GetRandomNeuron(), net.NewRandomNeuron()
 			counter++
 			if maxIterations > 0 && counter > maxIterations {
 				// Could not add a new node. This should never happen?

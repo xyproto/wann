@@ -34,7 +34,7 @@ func TestForEachConnected(t *testing.T) {
 	})
 	fmt.Println("<connected_nodes>")
 	net.ForEachConnected(func(n *Neuron, _ int) {
-		fmt.Println(n)
+		fmt.Println(n, n.neuronIndex)
 	})
 	fmt.Println("</connected_nodes>")
 }
