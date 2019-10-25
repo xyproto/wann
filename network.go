@@ -59,16 +59,15 @@ func NewNetwork(cs ...*Config) *Network {
 
 		// Make connections for all nodes where a random number between 0 and 1 are larger than r
 		if rand.Float64() > r {
-			fmt.Println("ADDING A CONNECTION")
 			if err := outputNode.AddInput(nodeIndex); err != nil {
 				panic(err)
 			}
 		}
 	}
 
-	if c.Inputs > 0 {
-		net.AnyInputConnectionsOrPanic()
-	}
+	// Store the modified output node
+	net.AllNodes[outputNodeIndex] = *outputNode
+
 	return net
 }
 
@@ -244,30 +243,10 @@ func (net *Network) SetWeight(weight float64) {
 // Complexity measures the network complexity
 // Will return 1.0 at a minimum
 func (net *Network) Complexity() float64 {
-	return float64(1.0 + len(net.All()))
-	// Just return the node count, for now
 	// TODO: Score the complexity of the various activation functions
-	//baseScore := 1
-	//net.ForEachConnected(func(node *Neuron, distanceFromOutputNode int) {
-	//	baseScore += len(node.InputNeurons) * distanceFromOutputNode
-	//}
-	//net.ForEachConnected(func(_ *Neuron, _ int) {
-	//	baseScore += 1
-	//})
-	//return float64(baseScore)
+	// TODO: Score the amount of connections
+	return float64(1.0 + len(net.All()))
 }
-
-// // Copy will take a deep copy of the network struct
-// func (net *Network) Copy() *Network {
-// 	var newNet Network
-// 	for _, neuron := range net.InputNodes {
-// 		newNet.InputNodes = append(newNet.InputNodes, neuron.Copy())
-// 	}
-// 	newOutputNeuron := *(net.OutputNode)
-// 	newNet.OutputNode = &newOutputNeuron
-// 	newNet.Weight = net.Weight
-// 	return &newNet
-// }
 
 // LeftRight returns two neurons, such that the first on is the one that is
 // most to the left (towards the input neurons) and the second one is most to
