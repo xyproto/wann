@@ -165,6 +165,9 @@ func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64
 	for _, inputNeuronIndex := range neuron.InputNeurons {
 		// Let each input neuron do its own evauluation, using the given weight
 		(*maxEvaluationLoops)--
+		if int(inputNeuronIndex) >= len(neuron.Net.AllNodes) {
+			panic("TOO HIGH INPUT NEURON INDEX")
+		}
 		result, stopNow := neuron.Net.AllNodes[inputNeuronIndex].evaluate(weight, maxEvaluationLoops)
 		summed += result * weight
 		counter++
