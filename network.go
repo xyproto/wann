@@ -48,23 +48,27 @@ func NewNetwork(cs ...*Config) *Network {
 	outputNode := net.NewRandomNeuron()
 
 	// Initialize n input nodes that all are inputs to the one output node.
-	for i := 1; i <= n; i++ {
+	for i := 0; i < n; i++ {
 		// Add a new input node
 
 		node := net.NewRandomNeuron()
 		nodeIndex := node.neuronIndex
 
 		// Register the input node index in the input node NeuronIndex slice
-		net.InputNodes[i-1] = nodeIndex
+		net.InputNodes[i] = nodeIndex
 
 		// Make connections for all nodes where a random number between 0 and 1 are larger than r
 		if rand.Float64() > r {
+			fmt.Println("ADDING A CONNECTION")
 			if err := outputNode.AddInput(nodeIndex); err != nil {
 				panic(err)
 			}
 		}
 	}
 
+	if c.Inputs > 0 {
+		net.AnyInputConnectionsOrPanic()
+	}
 	return net
 }
 
@@ -198,6 +202,7 @@ func (net *Network) Evaluate(inputValues []float64) float64 {
 			net.AllNodes[nindex].SetValue(inputValues[i])
 		}
 	}
+
 	maxIterationCounter := net.maxIterations
 	if maxIterationCounter == 0 {
 		// If max iterations has not been configured, use 100
@@ -220,6 +225,7 @@ func (net *Network) Evaluate2(inputValues []float64) (float64, error) {
 			net.AllNodes[nindex].SetValue(inputValues[i])
 		}
 	}
+
 	maxIterationCounter := net.maxIterations
 	if maxIterationCounter == 0 {
 		// If max iterations has not been configured, use 100

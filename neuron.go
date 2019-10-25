@@ -150,6 +150,21 @@ func (neuron *Neuron) String() string {
 	// }
 }
 
+// AnyInputConnectionsOrPanic will check if there are any input nodes
+// in the network, or else just panic.
+func (net *Network) AnyInputConnectionsOrPanic() {
+	// DEBUG
+	maxLengthInputNode := 0
+	for _, node := range net.AllNodes {
+		if len(node.InputNeurons) > maxLengthInputNode {
+			maxLengthInputNode = len(node.InputNeurons)
+		}
+	}
+	if maxLengthInputNode == 0 {
+		panic("no input nodes in the entire network")
+	}
+}
+
 // evaluate will return a weighted sum of the input nodes,
 // using the .Value field if it is set and no input nodes are available.
 func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64, bool) {
@@ -161,6 +176,7 @@ func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64
 	// For each input neuron, evaluate them
 	summed := 0.0
 	counter := 0
+
 	for _, inputNeuronIndex := range neuron.InputNeurons {
 		// Let each input neuron do its own evauluation, using the given weight
 		(*maxEvaluationLoops)--
