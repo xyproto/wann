@@ -93,17 +93,23 @@ func (net *Network) IsInput(ni NeuronIndex) bool {
 
 // InsertNode takes two neurons and inserts a third neuron between them
 // Assumes that a is the leftmost node and the b is the rightmost node.
-func (net *Network) InsertNode(a, b NeuronIndex, newNode *Neuron) error {
+func (net *Network) InsertNode(a, b NeuronIndex, newNodeIndex NeuronIndex) error {
 	// This is done by first checking that a is an input node to b,
 	// then setting newNode to be an input node to b,
 	// then setting a to be an input node to a.
+
+	// TODO: When a neuron is inserted, the input index
+
 	if a == b {
 		return errors.New("the a and b nodes are the same")
 	}
 	// Sort the nodes by where they place in the diagram
 	a, b = net.LeftRight(a, b)
 	if net.IsInput(b) {
-		return errors.New("node b is a special input node")
+		if net.IsInput(a) {
+			return errors.New("both node a and b are special input nodes")
+		}
+		return errors.New("node b (but not a) is a special input node")
 	}
 	if b == net.OutputNode {
 		// this is fine
@@ -122,14 +128,14 @@ func (net *Network) InsertNode(a, b NeuronIndex, newNode *Neuron) error {
 			return errors.New("error in InsertNode b.RemoveInput(a): " + err.Error())
 		}
 	}
-	// Store the new node in this network
-	net.AllNodes = append(net.AllNodes, *newNode)
-	newNodeIndex := NeuronIndex(len(net.AllNodes) - 1)
 
 	// Connect the new node to b
 	if err := net.AllNodes[b].AddInput(newNodeIndex); err != nil {
 		return errors.New("error in InsertNode b.AddInput(newNode): " + err.Error())
 	}
+
+	newNode := net.Get(newNodeIndex)
+
 	// Connect a to the new node
 	if err := newNode.AddInput(a); err != nil {
 		return errors.New("error in InsertNode newNode.AddInput(a): " + err.Error())
@@ -323,6 +329,13 @@ func (net *Network) GetRandomNeuron() NeuronIndex {
 	return NeuronIndex(rand.Intn(len(net.AllNodes)))
 }
 
+// GetRandomInputNode returns a random input node
+func (net *Network) GetRandomInputNode() NeuronIndex {
+	inputPosition := rand.Intn(len(net.InputNodes))
+	inputNodeIndex := net.InputNodes[inputPosition]
+	return inputNodeIndex
+}
+
 // Modify this network a bit
 func (net *Network) Modify(maxIterations int) {
 	// Use method 0, 1 or 2
@@ -331,18 +344,31 @@ func (net *Network) Modify(maxIterations int) {
 	switch method {
 	case 0:
 		//fmt.Println("Modifying the network using method 1 - insert node")
-		nodeA, nodeB, newNode := net.GetRandomNeuron(), net.GetRandomNeuron(), net.NewRandomNeuron()
+		_ = net.NewRandomNeuron()
+		newNodeIndex := NeuronIndex(len(net.AllNodes) - 1)
+
+		nodeA, nodeB := net.GetRandomNeuron(), net.GetRandomNeuron()
+
 		// A bit risky, time-wise, but continue finding random neurons until they work out
 		// Insert a new node with a random activation function
 		counter := 0
 		// InsertNode adds the new node to net.AllNodes
-		for net.InsertNode(nodeA, nodeB, newNode) != nil {
-			nodeA, nodeB, newNode = net.GetRandomNeuron(), net.GetRandomNeuron(), net.NewRandomNeuron()
+		err := net.InsertNode(nodeA, nodeB, newNodeIndex)
+		for err != nil {
+			nodeA, nodeB = net.GetRandomNeuron(), net.GetRandomNeuron()
 			counter++
 			if maxIterations > 0 && counter > maxIterations {
-				// Could not add a new node. This should never happen?
-				panic("implementation error: could not a add a new node, even after " + strconv.Itoa(maxIterations) + " iterations")
+				// Could not add a new node. This may happen if the network is only input nodes and one output node
+				//panic("implementation error: could not a add a new node, even after " + strconv.Itoa(maxIterations) + " iterations: " + err.Error())
+				// Add a node between a random input node and the output node
+				err = net.InsertNode(net.GetRandomInputNode(), net.OutputNode, newNodeIndex)
+			} else {
+				err = net.InsertNode(nodeA, nodeB, newNodeIndex)
 			}
+		}
+		if err != nil {
+			// This should never happen, since adding a node between an input node and the output node should always work
+			panic("implementation error: " + err.Error())
 		}
 	case 1:
 		//fmt.Println("Modifying the network using method 2 - add connection")

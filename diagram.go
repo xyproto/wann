@@ -26,6 +26,13 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 		lineWidth      = 2
 	)
 
+	if width < 128 {
+		width = 128
+	}
+	if height < 128 {
+		height = 128
+	}
+
 	// Start a new SVG image
 	document, svg := tinysvg.NewTinySVG(width+imgPadding*2, height+imgPadding*2)
 	svg.Describe("generated with github.com/xyproto/wann")
