@@ -19,19 +19,19 @@ type Neuron struct {
 }
 
 // NewNeuron creates a new Neuron
-func (net *Network) NewNeuron() *Neuron {
+func (net *Network) NewNeuron() (*Neuron, NeuronIndex) {
 	// Pre-allocate room for 64 connections and use Linear as the default activation function
 	neuron := Neuron{Net: net, InputNeurons: make([]NeuronIndex, 0, 4), ActivationFunction: af.Linear}
 	neuron.neuronIndex = NeuronIndex(len(net.AllNodes))
 	net.AllNodes = append(net.AllNodes, neuron)
-	return &neuron
+	return &neuron, neuron.neuronIndex
 }
 
 // NewRandomNeuron creates a new *Neuron, with a randomly chosen activation function
-func (net *Network) NewRandomNeuron() *Neuron {
-	n := net.NewNeuron()
+func (net *Network) NewRandomNeuron() (*Neuron, NeuronIndex) {
+	n, ni := net.NewNeuron()
 	n.RandomizeActivationFunction()
-	return n
+	return n, ni
 }
 
 // RandomizeActivationFunction will choose a random activation function for this neuron
@@ -73,14 +73,15 @@ func (neuron *Neuron) Is(e NeuronIndex) bool {
 }
 
 // AddInput will add an input neuron
-func (neuron *Neuron) AddInput(e NeuronIndex) error {
-	if neuron.HasInput(e) {
-		return errors.New("neuron already exists")
-	}
-	if neuron.Is(e) {
+func (neuron *Neuron) AddInput(ni NeuronIndex) error {
+	//fmt.Println("ADD INPUT", ni, "TO", neuron.neuronIndex)
+	if neuron.Is(ni) {
 		return errors.New("adding a neuron as input to itself")
 	}
-	neuron.InputNeurons = append(neuron.InputNeurons, e)
+	if neuron.HasInput(ni) {
+		return errors.New("neuron already exists")
+	}
+	neuron.InputNeurons = append(neuron.InputNeurons, ni)
 	return nil
 }
 
@@ -187,13 +188,14 @@ func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64
 }
 
 // Copy takes a deep copy of this neuron
-func (neuron *Neuron) Copy() *Neuron {
-	var newNeuron Neuron
-	newNeuron.InputNeurons = neuron.InputNeurons
-	newNeuron.ActivationFunction = neuron.ActivationFunction
-	if neuron.Value != nil {
-		v := *neuron.Value
-		newNeuron.Value = &v
-	}
-	return &newNeuron
-}
+// func (neuron *Neuron) Copy() *Neuron {
+// 	var newNeuron Neuron
+// 	newNeuron.neuronIndex = neuron.neuronIndex
+// 	newNeuron.InputNeurons = neuron.InputNeurons
+// 	newNeuron.ActivationFunction = neuron.ActivationFunction
+// 	if neuron.Value != nil {
+// 		v := *neuron.Value
+// 		newNeuron.Value = &v
+// 	}
+// 	return &newNeuron
+// }

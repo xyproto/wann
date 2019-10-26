@@ -13,7 +13,7 @@ import (
 func TestNeuron(t *testing.T) {
 	rand.Seed(currentTime)
 	net := NewNetwork()
-	n := net.NewNeuron()
+	n, _ := net.NewNeuron()
 	n.ActivationFunction = swish.Swish
 	result := n.ActivationFunction(0.5)
 	diff := math.Abs(result - 0.311287)
@@ -26,15 +26,15 @@ func TestNeuron(t *testing.T) {
 
 func TestString(t *testing.T) {
 	rand.Seed(currentTime)
-	n := NewNetwork().NewNeuron()
+	n, _ := NewNetwork().NewNeuron()
 	_ = n.String()
 }
 
 func TestHasInput(t *testing.T) {
 	rand.Seed(currentTime)
-	net := NewNetwork()  // 0
-	a := net.NewNeuron() // 1
-	b := net.NewNeuron() // 2
+	net := NewNetwork()     // 0
+	a, _ := net.NewNeuron() // 1
+	b, _ := net.NewNeuron() // 2
 	fmt.Println("a is 1?", a)
 	fmt.Println("b is 2?", b)
 	a.AddInput(0)
@@ -50,23 +50,23 @@ func TestFindInput(t *testing.T) {
 	rand.Seed(currentTime)
 	net := NewNetwork()
 
-	a := net.NewNeuron() // a, 1
-	_ = net.NewNeuron()  // b, 2
-	c := net.NewNeuron() // c, 3
-	_ = net.NewNeuron()  //  d, 4
+	a, _ := net.NewNeuron()  // a, 1
+	_, bi := net.NewNeuron() // b, 2
+	c, ci := net.NewNeuron() // c, 3
+	_, di := net.NewNeuron() //  d, 4
 
-	a.AddInput(2)       // b
+	a.AddInput(bi)      // b
 	a.AddInputNeuron(c) // c
 
-	if _, found := a.FindInput(4); found {
+	if _, found := a.FindInput(di); found {
 		t.Errorf("a should not have d as an input")
 	}
-	if pos, found := a.FindInput(2); !found {
+	if pos, found := a.FindInput(bi); !found {
 		t.Errorf("a should have b as an input")
 	} else if found && pos != 0 {
 		t.Errorf("a should have b as an input at position 0")
 	}
-	if pos, found := a.FindInput(3); !found {
+	if pos, found := a.FindInput(ci); !found {
 		t.Errorf("a should have c as an input")
 	} else if found && pos != 1 {
 		t.Errorf("a should have c as an input at position 1")
@@ -81,7 +81,7 @@ func TestRemoveInput(t *testing.T) {
 		SharedWeight:    0.5,
 	})
 
-	a := net.NewNeuron() // 0
+	a, _ := net.NewNeuron() // 0
 	a.AddInput(1)
 	a.AddInput(2)
 	if a.RemoveInput(1) != nil {

@@ -45,14 +45,14 @@ func NewNetwork(cs ...*Config) *Network {
 	// Create a new network that has one node, the output node
 	outputNodeIndex := NeuronIndex(0)
 	net := &Network{make([]Neuron, 0, n+1), make([]NeuronIndex, n), outputNodeIndex, w, 100}
-	outputNode := net.NewRandomNeuron()
+	outputNode, outputNodeIndex := net.NewRandomNeuron()
+	net.OutputNode = outputNodeIndex
 
 	// Initialize n input nodes that all are inputs to the one output node.
 	for i := 0; i < n; i++ {
 		// Add a new input node
 
-		node := net.NewRandomNeuron()
-		nodeIndex := node.neuronIndex
+		_, nodeIndex := net.NewRandomNeuron()
 
 		// Register the input node index in the input node NeuronIndex slice
 		net.InputNodes[i] = nodeIndex
@@ -104,7 +104,9 @@ func (net *Network) InsertNode(a, b NeuronIndex, newNodeIndex NeuronIndex) error
 		return errors.New("the a and b nodes are the same")
 	}
 	// Sort the nodes by where they place in the diagram
+	//fmt.Println("InsertNode: BEFORE LEFT RIGHT:", a, b)
 	a, b = net.LeftRight(a, b)
+	//fmt.Println("InsertNode: AFTER LEFT RIGHT:", a, b)
 	if net.IsInput(b) {
 		if net.IsInput(a) {
 			return errors.New("both node a and b are special input nodes")
@@ -258,16 +260,6 @@ func (net *Network) Complexity() float64 {
 // most to the left (towards the input neurons) and the second one is most to
 // the right (towards the output neuron). Assumes that a and b are not equal.
 func (net *Network) LeftRight(a, b NeuronIndex) (left NeuronIndex, right NeuronIndex) {
-	if net.AllNodes[a].In(net.InputNodes) {
-		left = a
-		right = b
-		return
-	}
-	if net.AllNodes[b].In(net.InputNodes) {
-		left = b
-		right = a
-		return
-	}
 	if a == net.OutputNode {
 		left = b
 		right = a
@@ -276,6 +268,16 @@ func (net *Network) LeftRight(a, b NeuronIndex) (left NeuronIndex, right NeuronI
 	if b == net.OutputNode {
 		left = a
 		right = b
+		return
+	}
+	if net.AllNodes[a].In(net.InputNodes) {
+		left = a
+		right = b
+		return
+	}
+	if net.AllNodes[b].In(net.InputNodes) {
+		left = b
+		right = a
 		return
 	}
 	if net.AllNodes[a].distanceFromOutputNode <= net.AllNodes[b].distanceFromOutputNode {
@@ -301,7 +303,7 @@ func (net *Network) Depth() int {
 
 type neuronList []*Neuron
 
-func (neurons neuronList) Copy() []*Neuron {
+func (neurons neuronList) Copy(alsoUpdateNeuronIndexes bool) []*Neuron {
 	newList := make([]Neuron, len(neurons))
 	for i, neuron := range neurons {
 		newList[i] = *neuron
@@ -309,6 +311,22 @@ func (neurons neuronList) Copy() []*Neuron {
 	newList2 := make([]*Neuron, len(neurons))
 	for i, neuron := range newList2 {
 		newList2[i] = neuron
+	}
+	// Now correct all index numbers
+	if alsoUpdateNeuronIndexes {
+		moved := make(map[NeuronIndex]NeuronIndex) // keep track of which indexes were moved
+		lastIndex := NeuronIndex(len(newList2) - 1)
+		// Update the neuron indexes for all neurons
+		for i := NeuronIndex(0); i <= lastIndex; i++ {
+			moved[newList2[i].neuronIndex] = i
+			newList[i].neuronIndex = i
+		}
+		// Update the neuron indexes for the input neurons too
+		for _, neuron := range newList2 {
+			for i := 0; i < len(neuron.InputNeurons); i++ {
+				neuron.InputNeurons[i] = moved[neuron.InputNeurons[i]]
+			}
+		}
 	}
 	return newList2
 }
@@ -339,37 +357,58 @@ func (net *Network) GetRandomInputNode() NeuronIndex {
 // Modify this network a bit
 func (net *Network) Modify(maxIterations int) {
 	// Use method 0, 1 or 2
-	method := rand.Intn(3) // up to and not including 3
+	//method := rand.Intn(3) // up to and not including 3
+	method := 0
 	// TODO: Perform a modfification, using one of the three methods outlined in the paper
 	switch method {
 	case 0:
 		//fmt.Println("Modifying the network using method 1 - insert node")
-		_ = net.NewRandomNeuron()
-		newNodeIndex := NeuronIndex(len(net.AllNodes) - 1)
 
+		// It's important that GetRandomNeuron is used before NewRandomNeuron is called
 		nodeA, nodeB := net.GetRandomNeuron(), net.GetRandomNeuron()
+
+		//fmt.Println("MODIFY METHOD 0, START, MAX ITERATIONS:", maxIterations)
+		_, newNodeIndex := net.NewRandomNeuron()
+		//fmt.Println("NEW NEURON AT INDEX", newNodeIndex)
+
+		//fmt.Println("USING NODE A AND B:", nodeA, nodeB)
 
 		// A bit risky, time-wise, but continue finding random neurons until they work out
 		// Insert a new node with a random activation function
 		counter := 0
 		// InsertNode adds the new node to net.AllNodes
 		err := net.InsertNode(nodeA, nodeB, newNodeIndex)
+
+		if err != nil {
+			//fmt.Println("INSERT NODE ERROR: " + err.Error())
+		}
+
 		for err != nil {
+			//(fmt.Println("COUNTER", counter)
 			nodeA, nodeB = net.GetRandomNeuron(), net.GetRandomNeuron()
 			counter++
+			//fmt.Println("COUNTER", counter, "MAX ITERATIONS", maxIterations)
 			if maxIterations > 0 && counter > maxIterations {
 				// Could not add a new node. This may happen if the network is only input nodes and one output node
 				//panic("implementation error: could not a add a new node, even after " + strconv.Itoa(maxIterations) + " iterations: " + err.Error())
 				// Add a node between a random input node and the output node
 				err = net.InsertNode(net.GetRandomInputNode(), net.OutputNode, newNodeIndex)
-			} else {
-				err = net.InsertNode(nodeA, nodeB, newNodeIndex)
+				if err != nil {
+					//fmt.Println("INSERT NODE, LAST DITCH ERROR: " + err.Error())
+				}
+				// if the randomly chosen input node already connects to the output node, then that's fine, let`s move on
+				return
+			}
+			err = net.InsertNode(nodeA, nodeB, newNodeIndex)
+			if err != nil {
+				//fmt.Println("INSERT NODE ERROR: " + err.Error())
 			}
 		}
 		if err != nil {
 			// This should never happen, since adding a node between an input node and the output node should always work
-			panic("implementation error: " + err.Error())
+			//panic("implementation error : " + err.Error())
 		}
+		//fmt.Println("MODIFY METHOD 0, STOP")
 	case 1:
 		//fmt.Println("Modifying the network using method 2 - add connection")
 

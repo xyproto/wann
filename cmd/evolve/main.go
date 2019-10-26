@@ -51,7 +51,6 @@ func main() {
 		PopulationSize:                         500,
 		MaxIterationsWithoutBestImprovement:    1000,
 		MaxIterationsWithoutAverageImprovement: 10,
-		MaxModificationIterations:              20,
 		Verbose:                                true,
 	}
 

@@ -25,8 +25,6 @@ type Config struct {
 	MaxIterationsWithoutBestImprovement int
 	// For how many generations should the training go on, without any improvement in the average score? Disabled if 0.
 	MaxIterationsWithoutAverageImprovement int
-	// How many iterations can be performed in connection with modifying the network? Disabled if 0.
-	MaxModificationIterations int
 	// Verbose?
 	Verbose bool
 }
@@ -210,7 +208,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 				// Take a proper copy, not just the the pointers, because the nodes will be changed
 				var newNetwork Network = *bestNetwork
 				// Modify it a bit, with a maximum number of iterations
-				newNetwork.Modify(config.MaxModificationIterations)
+				newNetwork.Modify(config.PopulationSize)
 				// Assign it to the population, replacing the low-scoring one
 				population[networkIndex] = &newNetwork
 			}
