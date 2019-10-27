@@ -225,7 +225,6 @@ func (net *Network) Evaluate(inputValues []float64) float64 {
 			net.AllNodes[nindex].SetValue(inputValues[i])
 		}
 	}
-
 	maxIterationCounter := net.maxIterations
 	if maxIterationCounter == 0 {
 		// If max iterations has not been configured, use 100
@@ -233,30 +232,6 @@ func (net *Network) Evaluate(inputValues []float64) float64 {
 	}
 	result, _ := net.AllNodes[net.OutputNode].evaluate(net.Weight, &maxIterationCounter)
 	return result
-}
-
-// Evaluate2 will return a weighted sum of the input nodes,
-// using the .Value field if it is set and no input nodes are available.
-// A shared weight can be given. An error might be returned.
-func (net *Network) Evaluate2(inputValues []float64) (float64, error) {
-	inputLength := len(inputValues)
-	if inputLength > len(net.InputNodes) {
-		return 0.0, errors.New("Too many input values compared to input nodes")
-	}
-	for i, nindex := range net.InputNodes {
-		if i < inputLength {
-			net.AllNodes[nindex].SetValue(inputValues[i])
-		}
-	}
-
-	maxIterationCounter := net.maxIterations
-	if maxIterationCounter == 0 {
-		// If max iterations has not been configured, use 100
-		maxIterationCounter = 100
-	}
-	result, _ := net.AllNodes[net.OutputNode].evaluate(net.Weight, &maxIterationCounter)
-	//fmt.Println("Evaluation was stopped?", stopped)
-	return result, nil //fmt.Errorf("evaluation was stopped after %d iterations", maxIterationCounter)
 }
 
 // SetWeight will set a shared weight for the entire network

@@ -170,22 +170,14 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		// Now take the best networks and make mutated offspring.
 		// Delete the worst networks.
 
-		// For now, don't weight anything, just delete the bad half,
-		// then add modified versions of the best 3 until the population is full.
-		//
-		// This method is probably buggy, since the score is the key for the indexes.
-		//
 		for networkIndex := 0; networkIndex < config.PopulationSize; networkIndex++ {
+			networkScore := scoreMap[networkIndex]
 			// Is this network in the best half?
-			bestHalf := false
-			for _, pair := range scoreList {
-				score := pair.Value
-				scoreIndex := pair.Key
-				if scoreIndex == networkIndex {
-					if score >= averageScore {
-						bestHalf = true
-						break
-					}
+			bestHalf := networkScore >= averageScore
+			// If the average score is 0, then modify an arbitrary half of the population
+			if averageScore == 0 {
+				if networkIndex > (config.PopulationSize / 2) {
+					bestHalf = false
 				}
 			}
 			// If not in the best half, take a copy of the best network,
@@ -197,8 +189,8 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 				for i := range newNetwork.AllNodes {
 					newNetwork.AllNodes[i].Net = &newNetwork
 				}
-				// Modify it a bit, with a maximum number of iterations
-				newNetwork.Modify(config.PopulationSize)
+				// Modify it a bit, with the maximum number of iterations being the same as the network size
+				newNetwork.Modify(len(newNetwork.AllNodes))
 				// Assign it to the population, replacing the low-scoring one
 				population[networkIndex] = &newNetwork
 			}

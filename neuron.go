@@ -125,21 +125,6 @@ func (net *Network) Exists(ni NeuronIndex) bool {
 // String will return a string containing both the pointer address and the number of input neurons
 func (neuron *Neuron) String() string {
 	return fmt.Sprintf("node [%d] with %d inputs", neuron.neuronIndex, len(neuron.InputNeurons))
-	// inputCount := len(neuron.InputNeurons)
-	// switch inputCount {
-	// case 0:
-	// 	return fmt.Sprintf("Neuron [%d].", neuron.neuronIndex)
-	// case 1:
-	// 	return fmt.Sprintf("Neuron [%d] has 1 input: %d", neuron.neuronIndex, neuron.InputNeurons[0])
-	// default:
-	// 	var sb strings.Builder
-	// 	sb.WriteString(fmt.Sprintf("Neuron [%d] has %d inputs:", neuron.neuronIndex, len(neuron.InputNeurons)))
-	// 	for _, inputNeuronIndex := range neuron.InputNeurons {
-	// 		inputNeuron := neuron.Net.AllNodes[inputNeuronIndex]
-	// 		sb.WriteString("\n\t" + inputNeuron.String())
-	// 	}
-	// 	return sb.String()
-	// }
 }
 
 // InputNeuronsAreGood checks if all input neurons of this neuron exists in neuron.Net
@@ -169,6 +154,7 @@ func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64
 		(*maxEvaluationLoops)--
 		if int(inputNeuronIndex) >= len(neuron.Net.AllNodes) {
 			panic("TOO HIGH INPUT NEURON INDEX")
+			//inputNeuronIndex = NeuronIndex(len(neuron.Net.AllNodes) - 1)
 		}
 		result, stopNow := neuron.Net.AllNodes[inputNeuronIndex].evaluate(weight, maxEvaluationLoops)
 		summed += result * weight
@@ -187,16 +173,3 @@ func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64
 	}
 	return neuron.ActivationFunction(summed / float64(counter)), false
 }
-
-// Copy takes a deep copy of this neuron
-// func (neuron *Neuron) Copy() *Neuron {
-// 	var newNeuron Neuron
-// 	newNeuron.neuronIndex = neuron.neuronIndex
-// 	newNeuron.InputNeurons = neuron.InputNeurons
-// 	newNeuron.ActivationFunction = neuron.ActivationFunction
-// 	if neuron.Value != nil {
-// 		v := *neuron.Value
-// 		newNeuron.Value = &v
-// 	}
-// 	return &newNeuron
-// }

@@ -116,14 +116,5 @@ func TestEvaluate(t *testing.T) {
 	net.AllNodes[net.InputNodes[4]].ActivationFunction = af.ReLU
 
 	result := net.Evaluate([]float64{0.5, 0.5, 0.5, 0.5, 0.5})
-	result2, err := net.Evaluate2([]float64{0.5, 0.5, 0.5, 0.5, 0.5})
-	if err != nil {
-		t.Error(err)
-	}
-
-	if result != result2 {
-		t.Fail()
-	}
-
 	fmt.Println(result)
 }
