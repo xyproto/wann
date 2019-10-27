@@ -26,7 +26,8 @@ func TestNeuron(t *testing.T) {
 
 func TestString(t *testing.T) {
 	rand.Seed(currentTime)
-	n, _ := NewNetwork().NewNeuron()
+	net := NewNetwork()
+	n, _ := net.NewNeuron()
 	_ = n.String()
 }
 

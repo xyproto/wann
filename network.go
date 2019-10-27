@@ -33,7 +33,7 @@ func (net *Network) Get(i NeuronIndex) *Neuron {
 
 // NewNetwork creates a new minimal network with n input nodes and ratio of r connections.
 // Passing "nil" as an argument is supported.
-func NewNetwork(cs ...*Config) *Network {
+func NewNetwork(cs ...*Config) Network {
 	c := &Config{}
 	// If a single non-nil *Config struct is given, use that
 	if len(cs) == 1 && cs[0] != nil {
@@ -44,7 +44,7 @@ func NewNetwork(cs ...*Config) *Network {
 	w := c.SharedWeight
 	// Create a new network that has one node, the output node
 	outputNodeIndex := NeuronIndex(0)
-	net := &Network{make([]Neuron, 0, n+1), make([]NeuronIndex, n), outputNodeIndex, w, 100}
+	net := Network{make([]Neuron, 0, n+1), make([]NeuronIndex, n), outputNodeIndex, w, 100}
 	outputNode, outputNodeIndex := net.NewRandomNeuron()
 	net.OutputNode = outputNodeIndex
 
@@ -292,35 +292,27 @@ func (net *Network) Depth() int {
 	return maxDepth
 }
 
+func (net *Network) checkInputNeurons() {
+	for _, n := range net.All() {
+		n.checkInputNeurons()
+	}
+}
+
 type neuronList []*Neuron
 
-// Not in use
-func (neurons neuronList) copy(alsoUpdateNeuronIndexes bool) []*Neuron {
-	newList := make([]Neuron, len(neurons))
-	for i, neuron := range neurons {
-		newList[i] = *neuron
+// Copy a Network to a new network
+func (net Network) Copy() Network {
+	var newNet Network
+	newNet.AllNodes = make([]Neuron, len(net.AllNodes))
+	for i, node := range net.AllNodes {
+		newNet.AllNodes[i] = node.Copy(&newNet)
 	}
-	newList2 := make([]*Neuron, len(neurons))
-	for i, neuron := range newList2 {
-		newList2[i] = neuron
-	}
-	// Now correct all index numbers
-	if alsoUpdateNeuronIndexes {
-		moved := make(map[NeuronIndex]NeuronIndex) // keep track of which indexes were moved
-		lastIndex := NeuronIndex(len(newList2) - 1)
-		// Update the neuron indexes for all neurons
-		for i := NeuronIndex(0); i <= lastIndex; i++ {
-			moved[newList2[i].neuronIndex] = i
-			newList[i].neuronIndex = i
-		}
-		// Update the neuron indexes for the input neurons too
-		for _, neuron := range newList2 {
-			for i := 0; i < len(neuron.InputNeurons); i++ {
-				neuron.InputNeurons[i] = moved[neuron.InputNeurons[i]]
-			}
-		}
-	}
-	return newList2
+	newNet.InputNodes = net.InputNodes
+	newNet.OutputNode = net.OutputNode
+	//newNet.checkInputNeurons()
+	newNet.Weight = net.Weight
+	newNet.maxIterations = net.maxIterations
+	return newNet
 }
 
 // All returns a slice with pointers to all nodes in this network
@@ -348,6 +340,9 @@ func (net *Network) GetRandomInputNode() NeuronIndex {
 
 // Modify this network a bit
 func (net *Network) Modify(maxIterations int) {
+
+	//fmt.Println("A")
+	//net.checkInputNeurons()
 
 	// Use method 0, 1 or 2
 	//method := rand.Intn(3) // up to and not including 3
@@ -431,6 +426,9 @@ func (net *Network) Modify(maxIterations int) {
 	default:
 		panic("implementation error: invalid method number: " + strconv.Itoa(method))
 	}
+
+	//fmt.Println("B")
+	//net.checkInputNeurons()
 }
 
 // In checks if this neuron is in the given collection
