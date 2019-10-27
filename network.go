@@ -19,11 +19,10 @@ type NeuronIndex int
 
 // Network is a collection of nodes, an output node and a shared weight.
 type Network struct {
-	AllNodes      []Neuron      // Storing the actual neurons
-	InputNodes    []NeuronIndex // Pointers to the input nodes
-	OutputNode    NeuronIndex   // Pointer to the output node
-	Weight        float64
-	maxIterations int // max interations when evaluating a network
+	AllNodes   []Neuron      // Storing the actual neurons
+	InputNodes []NeuronIndex // Pointers to the input nodes
+	OutputNode NeuronIndex   // Pointer to the output node
+	Weight     float64       // Shared weight
 }
 
 // Get returns a pointer to a neuron, based on the given NeuronIndex
@@ -44,7 +43,7 @@ func NewNetwork(cs ...*Config) Network {
 	w := c.SharedWeight
 	// Create a new network that has one node, the output node
 	outputNodeIndex := NeuronIndex(0)
-	net := Network{make([]Neuron, 0, n+1), make([]NeuronIndex, n), outputNodeIndex, w, 100}
+	net := Network{make([]Neuron, 0, n+1), make([]NeuronIndex, n), outputNodeIndex, w}
 	outputNode, outputNodeIndex := net.NewRandomNeuron()
 	net.OutputNode = outputNodeIndex
 
@@ -69,12 +68,6 @@ func NewNetwork(cs ...*Config) Network {
 	net.AllNodes[outputNodeIndex] = *outputNode
 
 	return net
-}
-
-// SetMaxEvaluationIterations sets the maximum number of iterations,
-// for when the network is evaluated.
-func (net *Network) SetMaxEvaluationIterations(n int) {
-	net.maxIterations = n
 }
 
 // IsInput checks if the given node is an input node
@@ -225,11 +218,7 @@ func (net *Network) Evaluate(inputValues []float64) float64 {
 			net.AllNodes[nindex].SetValue(inputValues[i])
 		}
 	}
-	maxIterationCounter := net.maxIterations
-	if maxIterationCounter == 0 {
-		// If max iterations has not been configured, use 100
-		maxIterationCounter = 100
-	}
+	maxIterationCounter := len(net.AllNodes)
 	result, _ := net.AllNodes[net.OutputNode].evaluate(net.Weight, &maxIterationCounter)
 	return result
 }
@@ -311,7 +300,6 @@ func (net Network) Copy() Network {
 	newNet.OutputNode = net.OutputNode
 	//newNet.checkInputNeurons()
 	newNet.Weight = net.Weight
-	newNet.maxIterations = net.maxIterations
 	return newNet
 }
 
@@ -345,8 +333,8 @@ func (net *Network) Modify(maxIterations int) {
 	//net.checkInputNeurons()
 
 	// Use method 0, 1 or 2
-	//method := rand.Intn(3) // up to and not including 3
-	method := 0
+	method := rand.Intn(3) // up to and not including 3
+	//method := 0
 	// TODO: Perform a modfification, using one of the three methods outlined in the paper
 	switch method {
 	case 0:
@@ -365,15 +353,15 @@ func (net *Network) Modify(maxIterations int) {
 		// Insert a new node with a random activation function
 		counter := 0
 
-		if !net.AllNodes[net.OutputNode].InputNeuronsAreGood() {
-			panic("implementation error: Modify: input neurons are not good")
-		}
-
 		// InsertNode adds the new node to net.AllNodes
 		err := net.InsertNode(nodeA, nodeB, newNodeIndex)
 
 		if err != nil {
 			//fmt.Println("INSERT NODE ERROR: " + err.Error())
+		}
+
+		if !net.AllNodes[net.OutputNode].InputNeuronsAreGood() {
+			//panic("implementation error: Modify: input neurons are not good")
 		}
 
 		for err != nil {
@@ -473,6 +461,9 @@ func (net *Network) getAllNodes(nodeIndex NeuronIndex, distanceFromFirstNode int
 	for _, inputNodeIndex := range node.InputNeurons {
 		if node.Is(inputNodeIndex) {
 			panic("implementation error: node is input node to self")
+		}
+		if int(inputNodeIndex) >= len(net.AllNodes) {
+			continue
 		}
 		inputNode := net.AllNodes[inputNodeIndex]
 		if !inputNode.In(allNodes) && !inputNode.In(alreadyHaveThese) {

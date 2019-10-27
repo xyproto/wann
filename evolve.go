@@ -151,19 +151,21 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		for networkIndex := 0; networkIndex < config.PopulationSize; networkIndex++ {
 			networkScore := scoreMap[networkIndex]
 			// Is this network in the best half?
-			bestHalf := networkScore >= averageScore
+			bestHalf := (networkScore >= averageScore) && (networkScore > 0)
 			// If the average score is 0, then modify an arbitrary half of the population
-			if averageScore == 0 {
-				if networkIndex > (config.PopulationSize / 2) {
-					bestHalf = false
-				}
-			}
+			// if bestScore == 0 || averageScore == 0 {
+			// 	if networkIndex > (config.PopulationSize / 2) {
+			// 		//population[networkIndex] = NewNetwork(config)
+			// 		//continue
+			// 	}
+			// }
 			// If not in the best half, take a copy of the best network,
 			// then modify it a bit (in a random way)
 			if !bestHalf {
 				// Take a proper copy, not just the the pointers, because the nodes will be changed
-				newNetwork := bestNetwork.Copy()
 				// Assign it to the population, replacing the low-scoring one
+				newNetwork := bestNetwork.Copy()
+				newNetwork.Modify(100)
 				population[networkIndex] = newNetwork
 			}
 			//fmt.Println(networkIndex, "is in the best half?", bestHalf)
