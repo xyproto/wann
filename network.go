@@ -113,16 +113,20 @@ func (net *Network) InsertNode(a, b NeuronIndex, newNodeIndex NeuronIndex) error
 		}
 		return errors.New("node b (but not a) is a special input node")
 	}
+
 	if b == net.OutputNode {
 		// this is fine
+		//fmt.Println("b is the output node")
 	}
 	if net.IsInput(a) {
 		// this is fine
+		//fmt.Println("a is an input node")
 	}
 	if a == net.OutputNode {
 		// If now, after swapping, a is an output node, return with an error
 		return errors.New("the leftmost node is an output node")
 	}
+
 	// b already has a as an input (a -> b)
 	if net.AllNodes[b].HasInput(a) {
 		// Remove the old connection
@@ -131,8 +135,19 @@ func (net *Network) InsertNode(a, b NeuronIndex, newNodeIndex NeuronIndex) error
 		}
 	}
 
+	// b already has newNodeIndex as an input (newIndex -> b)
+	if net.AllNodes[b].HasInput(newNodeIndex) {
+		// Remove the old connection
+		if err := net.AllNodes[b].RemoveInput(a); err != nil {
+			return errors.New("error in InsertNode b.RemoveInput(a): " + err.Error())
+		}
+	}
+
+	//net.AllNodes[net.OutputNode].Net = net
+
 	// Connect the new node to b
 	if err := net.AllNodes[b].AddInput(newNodeIndex); err != nil {
+		// This does not kick in, the problem must be in AddInput!
 		return errors.New("error in InsertNode b.AddInput(newNode): " + err.Error())
 	}
 
@@ -142,6 +157,7 @@ func (net *Network) InsertNode(a, b NeuronIndex, newNodeIndex NeuronIndex) error
 	if err := newNode.AddInput(a); err != nil {
 		return errors.New("error in InsertNode newNode.AddInput(a): " + err.Error())
 	}
+
 	// The situation should now be: a -> newNode -> b
 	return nil
 }
@@ -303,7 +319,8 @@ func (net *Network) Depth() int {
 
 type neuronList []*Neuron
 
-func (neurons neuronList) Copy(alsoUpdateNeuronIndexes bool) []*Neuron {
+// Not in use
+func (neurons neuronList) copy(alsoUpdateNeuronIndexes bool) []*Neuron {
 	newList := make([]Neuron, len(neurons))
 	for i, neuron := range neurons {
 		newList[i] = *neuron
@@ -356,6 +373,7 @@ func (net *Network) GetRandomInputNode() NeuronIndex {
 
 // Modify this network a bit
 func (net *Network) Modify(maxIterations int) {
+
 	// Use method 0, 1 or 2
 	//method := rand.Intn(3) // up to and not including 3
 	method := 0
@@ -376,6 +394,11 @@ func (net *Network) Modify(maxIterations int) {
 		// A bit risky, time-wise, but continue finding random neurons until they work out
 		// Insert a new node with a random activation function
 		counter := 0
+
+		if !net.AllNodes[net.OutputNode].InputNeuronsAreGood() {
+			panic("implementation error: Modify: input neurons are not good")
+		}
+
 		// InsertNode adds the new node to net.AllNodes
 		err := net.InsertNode(nodeA, nodeB, newNodeIndex)
 
@@ -393,6 +416,7 @@ func (net *Network) Modify(maxIterations int) {
 				//panic("implementation error: could not a add a new node, even after " + strconv.Itoa(maxIterations) + " iterations: " + err.Error())
 				// Add a node between a random input node and the output node
 				err = net.InsertNode(net.GetRandomInputNode(), net.OutputNode, newNodeIndex)
+
 				if err != nil {
 					//fmt.Println("INSERT NODE, LAST DITCH ERROR: " + err.Error())
 				}
@@ -400,15 +424,16 @@ func (net *Network) Modify(maxIterations int) {
 				return
 			}
 			err = net.InsertNode(nodeA, nodeB, newNodeIndex)
-			if err != nil {
-				//fmt.Println("INSERT NODE ERROR: " + err.Error())
-			}
+			//if err != nil {
+			//	fmt.Println("INSERT NODE ERROR: " + err.Error())
+			//}
+
 		}
 		if err != nil {
 			// This should never happen, since adding a node between an input node and the output node should always work
 			//panic("implementation error : " + err.Error())
 		}
-		//fmt.Println("MODIFY METHOD 0, STOP")
+
 	case 1:
 		//fmt.Println("Modifying the network using method 2 - add connection")
 

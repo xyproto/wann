@@ -74,6 +74,7 @@ func (neuron *Neuron) Is(e NeuronIndex) bool {
 
 // AddInput will add an input neuron
 func (neuron *Neuron) AddInput(ni NeuronIndex) error {
+
 	//fmt.Println("ADD INPUT", ni, "TO", neuron.neuronIndex)
 	if neuron.Is(ni) {
 		return errors.New("adding a neuron as input to itself")
@@ -82,6 +83,7 @@ func (neuron *Neuron) AddInput(ni NeuronIndex) error {
 		return errors.New("neuron already exists")
 	}
 	neuron.InputNeurons = append(neuron.InputNeurons, ni)
+
 	return nil
 }
 
@@ -107,17 +109,6 @@ func (neuron *Neuron) RemoveInput(e NeuronIndex) error {
 		return nil
 	}
 	return errors.New("neuron does not exist")
-}
-
-// Index finds the NeuronIndex for this node, if available
-func (net *Network) Index(neuron *Neuron) NeuronIndex {
-	return neuron.neuronIndex
-	//for i := range net.AllNodes {
-	//	if neuron.Is(NeuronIndex(i)) {
-	//		return NeuronIndex(i), nil
-	//	}
-	//}
-	//return NeuronIndex(-1), errors.New("neuron not found")
 }
 
 // Exists checks if the given NeuronIndex exists in this Network
@@ -149,6 +140,16 @@ func (neuron *Neuron) String() string {
 	// 	}
 	// 	return sb.String()
 	// }
+}
+
+// InputNeuronsAreGood checks if all input neurons of this neuron exists in neuron.Net
+func (neuron *Neuron) InputNeuronsAreGood() bool {
+	for _, inputNeuronIndex := range neuron.InputNeurons {
+		if !neuron.Net.Exists(inputNeuronIndex) {
+			return false
+		}
+	}
+	return true
 }
 
 // evaluate will return a weighted sum of the input nodes,

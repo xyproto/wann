@@ -93,6 +93,13 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		scoreSum := 0.0
 		for i := 0; i < config.PopulationSize; i++ {
 			net := population[i]
+
+			// if net.AllNodes[net.OutputNode].InputNeuronsAreGood() {
+			// 	fmt.Println("input neurons are good")
+			// } else {
+			// 	panic("input neurons are not good")
+			// }
+
 			net.SetWeight(w)
 			result := 0.0
 			for i := 0; i < len(inputData); i++ {
@@ -138,27 +145,6 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 			}
 			break
 		}
-
-		// Now evaluate the network, but only for the best weight
-
-		//w = bestWeight
-
-		// scoreMap = make(map[int]float64)
-		// scoreSum = 0.0
-		// for i := 0; i < config.PopulationSize; i++ {
-		// 	net := population[i]
-		// 	net.SetWeight(w)
-		// 	result := 0.0
-		// 	for i := 0; i < len(inputData); i++ {
-		// 		result += net.Evaluate(inputData[i]) * correctOutputMultipliers[i]
-		// 	}
-		// 	score := result / net.Complexity()
-		// 	if score <= 0 {
-		// 		score = -net.Complexity()
-		// 	}
-		// 	scoreSum += score
-		// 	scoreMap[i] = score
-		// }
 
 		lastAverageScore = averageScore
 		averageScore = scoreSum / float64(config.PopulationSize)
@@ -207,6 +193,10 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 			if !bestHalf {
 				// Take a proper copy, not just the the pointers, because the nodes will be changed
 				var newNetwork Network = *bestNetwork
+				// Update all the Network pointers
+				for i := range newNetwork.AllNodes {
+					newNetwork.AllNodes[i].Net = &newNetwork
+				}
 				// Modify it a bit, with a maximum number of iterations
 				newNetwork.Modify(config.PopulationSize)
 				// Assign it to the population, replacing the low-scoring one
