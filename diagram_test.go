@@ -27,7 +27,7 @@ func TestDiagram(t *testing.T) {
 	net.AllNodes[net.InputNodes[4]].ActivationFunctionIndex = ReLU
 
 	// Save the diagram as an image
-	err := net.SaveDiagram("test.svg")
+	err := net.WriteSVG("test.svg")
 	if err != nil {
 		t.Error(err)
 	}
