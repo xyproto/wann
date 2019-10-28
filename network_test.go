@@ -102,7 +102,28 @@ func TestInsertNode(t *testing.T) {
 	}
 }
 
-// 	func (net *Network) AddConnection(a, b NeuronIndex) error {
+func TestAddConnection(t *testing.T) {
+	rand.Seed(commonSeed)
+	net := NewNetwork(&Config{
+		Inputs:          5,
+		ConnectionRatio: 0.5,
+		SharedWeight:    0.5,
+	})
+	_, newNeuronIndex := net.NewRandomNeuron()
+	if err := net.InsertNode(net.OutputNode, 2, newNeuronIndex); err != nil {
+		t.Error(err)
+	}
+	// Add a connection from 1 to the new neuron.
+	// This is the same as making the new neuron have an additional input neuron: index 1
+	if err := net.AddConnection(1, newNeuronIndex); err != nil {
+		t.Error(err)
+	}
+	// Add a connection from the output node to the output node. Should fail.
+	if err := net.AddConnection(net.OutputNode, net.OutputNode); err == nil {
+		t.Fail()
+	}
+}
+
 // 	func (net *Network) ChangeActivationFunction(n *Neuron, f func(float64) float64) {
 // 	func (net *Network) String() string {
 // 	func (net *Network) SetWeight(weight float64) {
