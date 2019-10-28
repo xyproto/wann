@@ -202,7 +202,7 @@ func TestLeftRight(t *testing.T) {
 		t.Fail()
 	}
 	fmt.Println("D")
-	net.WriteSVG("c.svg")
+	//net.WriteSVG("c.svg")
 	fmt.Println(net)
 	a, b = net.LeftRight(nodeIndex, 1)
 	fmt.Println("nodeIndex:", nodeIndex)

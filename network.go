@@ -103,10 +103,9 @@ func (net *Network) InsertNode(a, b NeuronIndex, newNodeIndex NeuronIndex) error
 	//fmt.Println("InsertNode: BEFORE LEFT RIGHT:", a, b)
 	a, b = net.LeftRight(a, b)
 	//fmt.Println("InsertNode: AFTER LEFT RIGHT:", a, b)
-	if net.IsInput(b) {
-		if net.IsInput(a) {
-			return errors.New("both node a and b are special input nodes")
-		}
+	if net.IsInput(a) && net.IsInput(b) {
+		return errors.New("both node a and b are special input nodes")
+	} else if !net.IsInput(a) && net.IsInput(b) {
 		return errors.New("node b (but not a) is a special input node")
 	}
 
@@ -147,10 +146,8 @@ func (net *Network) InsertNode(a, b NeuronIndex, newNodeIndex NeuronIndex) error
 		return errors.New("error in InsertNode b.AddInput(newNode): " + err.Error())
 	}
 
-	newNode := net.Get(newNodeIndex)
-
 	// Connect a to the new node
-	if err := newNode.AddInput(a); err != nil {
+	if err := net.AllNodes[newNodeIndex].AddInput(a); err != nil {
 		return errors.New("error in InsertNode newNode.AddInput(a): " + err.Error())
 	}
 
