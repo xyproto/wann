@@ -164,6 +164,50 @@ func TestComplexity(t *testing.T) {
 	}
 }
 
+func TestLeftRight(t *testing.T) {
+	rand.Seed(commonSeed)
+	net := NewNetwork(&Config{
+		Inputs:          5,
+		ConnectionRatio: 0.0,
+	})
+	a, b := net.LeftRight(0, 1)
+	if a != 1 || b != 0 {
+		t.Fail()
+	}
+	a, b = net.LeftRight(1, 0)
+	if a != 1 || b != 0 {
+		t.Fail()
+	}
+	_, nodeIndex := net.NewRandomNeuron()
+	err := net.InsertNode(0, 1, nodeIndex)
+	if err != nil {
+		t.Error(err)
+	}
+	a, b = net.LeftRight(0, nodeIndex)
+	if a != nodeIndex || b != 0 {
+		t.Fail()
+	}
+	a, b = net.LeftRight(nodeIndex, 0)
+	if a != nodeIndex || b != 0 {
+		t.Fail()
+	}
+	a, b = net.LeftRight(1, nodeIndex)
+	if a != nodeIndex || b != 1 {
+		t.FailNow()
+	}
+	fmt.Println("C")
+	fmt.Println(net)
+	a, b = net.LeftRight(nodeIndex, 1)
+	fmt.Println("nodeIndex:", nodeIndex)
+	fmt.Println("1:", 1)
+	fmt.Println("a:", a)
+	fmt.Println("b:", b)
+
+	if a != nodeIndex || b != 1 {
+		t.FailNow()
+	}
+}
+
 // 	func (net *Network) LeftRight(a, b NeuronIndex) (left NeuronIndex, right NeuronIndex) {
 // 	func (net *Network) Depth() int {
 // 	func (net *Network) checkInputNeurons() {

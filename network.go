@@ -239,7 +239,7 @@ func (net *Network) Complexity() float64 {
 // LeftRight returns two neurons, such that the first on is the one that is
 // most to the left (towards the input neurons) and the second one is most to
 // the right (towards the output neuron). Assumes that a and b are not equal.
-func (net *Network) LeftRight(a, b NeuronIndex) (left NeuronIndex, right NeuronIndex) {
+func (net *Network) LeftRight(a, b NeuronIndex) (left, right NeuronIndex) {
 	if a == net.OutputNode {
 		left = b
 		right = a
