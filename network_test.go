@@ -167,9 +167,10 @@ func TestComplexity(t *testing.T) {
 func TestLeftRight(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 0.0,
+		Inputs:          3,
+		ConnectionRatio: 1.0,
 	})
+	net.AllNodes[1].ActivationFunctionIndex = Swish
 	a, b := net.LeftRight(0, 1)
 	if a != 1 || b != 0 {
 		t.Fail()
@@ -178,24 +179,30 @@ func TestLeftRight(t *testing.T) {
 	if a != 1 || b != 0 {
 		t.Fail()
 	}
+	net.WriteSVG("before.svg")
 	_, nodeIndex := net.NewRandomNeuron()
 	err := net.InsertNode(0, 1, nodeIndex)
 	if err != nil {
 		t.Error(err)
 	}
+	net.WriteSVG("after.svg")
+	fmt.Println("A")
 	a, b = net.LeftRight(0, nodeIndex)
 	if a != nodeIndex || b != 0 {
 		t.Fail()
 	}
+	fmt.Println("B")
 	a, b = net.LeftRight(nodeIndex, 0)
 	if a != nodeIndex || b != 0 {
 		t.Fail()
 	}
+	fmt.Println("C")
 	a, b = net.LeftRight(1, nodeIndex)
 	if a != nodeIndex || b != 1 {
-		t.FailNow()
+		t.Fail()
 	}
-	fmt.Println("C")
+	fmt.Println("D")
+	net.WriteSVG("c.svg")
 	fmt.Println(net)
 	a, b = net.LeftRight(nodeIndex, 1)
 	fmt.Println("nodeIndex:", nodeIndex)
