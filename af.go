@@ -5,10 +5,10 @@ import (
 )
 
 const (
-	// Linear is the linear activation function. Gradually from 0 to 1.
-	Linear = iota
 	// Step is a step. First 0 and then abrubtly up to 1.
-	Step
+	Step = iota
+	// Linear is the linear activation function. Gradually from 0 to 1.
+	Linear
 	// Sin is the sinoid activation function
 	Sin
 	// Gauss is the Gaussian function, with a mean of 0 and a sigma of 1
@@ -32,8 +32,8 @@ const (
 // ActivationFunctions is a collection of activation functions, where the keys are constants that are defined above
 // https://github.com/google/brain-tokyo-workshop/blob/master/WANNRelease/WANN/wann_src/ind.py
 var ActivationFunctions = map[int](func(float64) float64){
-	Linear:  af.Linear,     // Linear
 	Step:    af.Step,       // Unsigned Step Function
+	Linear:  af.Linear,     // Linear
 	Sin:     af.Sin,        // Sin
 	Gauss:   af.Gaussian01, // Gaussian with mean 0 and sigma 1
 	Tanh:    af.Tanh,       // Hyperbolic Tangent (signed?)
@@ -45,9 +45,9 @@ var ActivationFunctions = map[int](func(float64) float64){
 	Squared: af.Squared,    // Squared
 }
 
-// Calc runs an activation function with the given float64 value.
+// Call runs an activation function with the given float64 value.
 // The activation function is chosen by one of the constants above.
-func Calc(functionIndex int, x float64) float64 {
+func Call(functionIndex int, x float64) float64 {
 	if f, ok := ActivationFunctions[functionIndex]; ok {
 		return f(x)
 	}

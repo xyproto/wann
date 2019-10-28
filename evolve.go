@@ -177,3 +177,96 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 	}
 	return bestNetwork, nil
 }
+
+// Modify this network a bit
+func (net *Network) Modify(maxIterations int) {
+
+	//fmt.Println("A")
+	//net.checkInputNeurons()
+
+	// Use method 0, 1 or 2
+	method := rand.Intn(3) // up to and not including 3
+	//method := 0
+	// TODO: Perform a modfification, using one of the three methods outlined in the paper
+	switch method {
+	case 0:
+		//fmt.Println("Modifying the network using method 1 - insert node")
+
+		// It's important that GetRandomNeuron is used before NewRandomNeuron is called
+		nodeA, nodeB := net.GetRandomNeuron(), net.GetRandomNeuron()
+
+		//fmt.Println("MODIFY METHOD 0, START, MAX ITERATIONS:", maxIterations)
+		_, newNodeIndex := net.NewRandomNeuron()
+		//fmt.Println("NEW NEURON AT INDEX", newNodeIndex)
+
+		//fmt.Println("USING NODE A AND B:", nodeA, nodeB)
+
+		// A bit risky, time-wise, but continue finding random neurons until they work out
+		// Insert a new node with a random activation function
+		counter := 0
+
+		// InsertNode adds the new node to net.AllNodes
+		err := net.InsertNode(nodeA, nodeB, newNodeIndex)
+
+		if err != nil {
+			//fmt.Println("INSERT NODE ERROR: " + err.Error())
+		}
+
+		if !net.AllNodes[net.OutputNode].InputNeuronsAreGood() {
+			//panic("implementation error: Modify: input neurons are not good")
+		}
+
+		for err != nil {
+			//(fmt.Println("COUNTER", counter)
+			nodeA, nodeB = net.GetRandomNeuron(), net.GetRandomNeuron()
+			counter++
+			//fmt.Println("COUNTER", counter, "MAX ITERATIONS", maxIterations)
+			if maxIterations > 0 && counter > maxIterations {
+				// Could not add a new node. This may happen if the network is only input nodes and one output node
+				//panic("implementation error: could not a add a new node, even after " + strconv.Itoa(maxIterations) + " iterations: " + err.Error())
+				// Add a node between a random input node and the output node
+				err = net.InsertNode(net.GetRandomInputNode(), net.OutputNode, newNodeIndex)
+
+				if err != nil {
+					//fmt.Println("INSERT NODE, LAST DITCH ERROR: " + err.Error())
+				}
+				// if the randomly chosen input node already connects to the output node, then that's fine, let`s move on
+				return
+			}
+			err = net.InsertNode(nodeA, nodeB, newNodeIndex)
+			//if err != nil {
+			//	fmt.Println("INSERT NODE ERROR: " + err.Error())
+			//}
+
+		}
+		if err != nil {
+			// This should never happen, since adding a node between an input node and the output node should always work
+			//panic("implementation error : " + err.Error())
+		}
+
+	case 1:
+		//fmt.Println("Modifying the network using method 2 - add connection")
+
+		nodeA, nodeB := net.GetRandomNeuron(), net.GetRandomNeuron()
+		// A bit risky, time-wise, but continue finding random neurons until they work out
+		// Create a new connection
+		counter := 0
+		for net.AddConnection(nodeA, nodeB) != nil {
+			nodeA, nodeB = net.GetRandomNeuron(), net.GetRandomNeuron()
+			counter++
+			if maxIterations > 0 && counter > maxIterations {
+				// Could not add a connection. The possibilities for connections might be saturated.
+				return
+			}
+		}
+	case 2:
+		//fmt.Println("Modifying the network using method 3 - change activation")
+		// Change the activation function
+		net.AllNodes[net.GetRandomNeuron()].RandomizeActivationFunction()
+	default:
+		panic("implementation error: invalid method number: " + strconv.Itoa(method))
+	}
+
+	//fmt.Println("B")
+	//net.checkInputNeurons()
+}

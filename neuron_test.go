@@ -11,7 +11,7 @@ import (
 )
 
 func TestNeuron(t *testing.T) {
-	rand.Seed(currentTime)
+	rand.Seed(commonSeed)
 	net := NewNetwork()
 	n, _ := net.NewNeuron()
 	n.ActivationFunction = swish.Swish
@@ -25,14 +25,14 @@ func TestNeuron(t *testing.T) {
 }
 
 func TestString(t *testing.T) {
-	rand.Seed(currentTime)
+	rand.Seed(commonSeed)
 	net := NewNetwork()
 	n, _ := net.NewNeuron()
 	_ = n.String()
 }
 
 func TestHasInput(t *testing.T) {
-	rand.Seed(currentTime)
+	rand.Seed(commonSeed)
 	net := NewNetwork()     // 0
 	a, _ := net.NewNeuron() // 1
 	b, _ := net.NewNeuron() // 2
@@ -48,7 +48,7 @@ func TestHasInput(t *testing.T) {
 }
 
 func TestFindInput(t *testing.T) {
-	rand.Seed(currentTime)
+	rand.Seed(commonSeed)
 	net := NewNetwork()
 
 	a, _ := net.NewNeuron()  // a, 1
@@ -75,7 +75,7 @@ func TestFindInput(t *testing.T) {
 }
 
 func TestRemoveInput(t *testing.T) {
-	rand.Seed(currentTime)
+	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
 		Inputs:          5,
 		ConnectionRatio: 0.5,
@@ -102,9 +102,9 @@ func TestRemoveInput(t *testing.T) {
 // func (neuron *Neuron) RemoveInput(e *Neuron) error {
 
 func TestEvaluate(t *testing.T) {
-	rand.Seed(currentTime)
+	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
+		Inputs:          7,
 		ConnectionRatio: 0.5,
 		SharedWeight:    0.5,
 	})
@@ -115,7 +115,9 @@ func TestEvaluate(t *testing.T) {
 	net.AllNodes[net.InputNodes[2]].ActivationFunction = af.Gaussian01
 	net.AllNodes[net.InputNodes[3]].ActivationFunction = af.Sigmoid
 	net.AllNodes[net.InputNodes[4]].ActivationFunction = af.ReLU
+	net.AllNodes[net.InputNodes[5]].ActivationFunction = af.Step
+	net.AllNodes[net.InputNodes[6]].ActivationFunction = af.Inv
 
-	result := net.Evaluate([]float64{0.5, 0.5, 0.5, 0.5, 0.5})
+	result := net.Evaluate([]float64{0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5})
 	fmt.Println(result)
 }

@@ -9,7 +9,7 @@ import (
 )
 
 func TestDiagram(t *testing.T) {
-	rand.Seed(currentTime)
+	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
 		Inputs:          5,
 		ConnectionRatio: 0.5,
