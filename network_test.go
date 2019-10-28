@@ -122,6 +122,10 @@ func TestAddConnection(t *testing.T) {
 	if err := net.AddConnection(net.OutputNode, net.OutputNode); err == nil {
 		t.Fail()
 	}
+	// Adding a made-up index should fail as well
+	if err := net.AddConnection(net.OutputNode, 999); err == nil {
+		t.Fail()
+	}
 }
 
 // 	func (net *Network) ChangeActivationFunction(n *Neuron, f func(float64) float64) {
