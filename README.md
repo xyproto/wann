@@ -12,6 +12,8 @@ This is a work in progress. The current state is that working neural networks ca
 
 ![work in progress](img/wip.svg)
 
+The activation functions are plotted directly onto the nodes.
+
 Here's a more tidy SVG image, also created by this package:
 
 <img alt=diagram src=img/diagram.svg width=128 />
