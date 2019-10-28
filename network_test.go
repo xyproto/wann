@@ -54,8 +54,8 @@ func TestForEachConnected(t *testing.T) {
 		ConnectionRatio: 0.5,
 		SharedWeight:    0.5,
 	})
-	net.ForEachConnected(func(n *Neuron, distance int) {
-		fmt.Printf("%d: %s, distance from output node: %d\n", n.neuronIndex, n, distance)
+	net.ForEachConnected(func(n *Neuron) {
+		fmt.Printf("%d: %s, distance from output node: %d\n", n.neuronIndex, n, n.distanceFromOutputNode)
 	})
 }
 
@@ -102,7 +102,6 @@ func TestInsertNode(t *testing.T) {
 	}
 }
 
-// 	func (net *Network) InsertNode(a, b NeuronIndex, newNodeIndex NeuronIndex) error {
 // 	func (net *Network) AddConnection(a, b NeuronIndex) error {
 // 	func (net *Network) ChangeActivationFunction(n *Neuron, f func(float64) float64) {
 // 	func (net *Network) String() string {

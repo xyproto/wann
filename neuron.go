@@ -122,11 +122,6 @@ func (net *Network) Exists(ni NeuronIndex) bool {
 	return false
 }
 
-// String will return a string containing both the pointer address and the number of input neurons
-func (neuron *Neuron) String() string {
-	return fmt.Sprintf("node ID %d has these input connections: %v", neuron.neuronIndex, neuron.InputNeurons)
-}
-
 // InputNeuronsAreGood checks if all input neurons of this neuron exists in neuron.Net
 func (neuron *Neuron) InputNeuronsAreGood() bool {
 	for _, inputNeuronIndex := range neuron.InputNeurons {
@@ -193,4 +188,9 @@ func (neuron Neuron) Copy(net *Network) Neuron {
 	newNeuron.distanceFromOutputNode = neuron.distanceFromOutputNode
 	newNeuron.neuronIndex = neuron.neuronIndex
 	return newNeuron
+}
+
+// String will return a string containing both the pointer address and the number of input neurons
+func (neuron *Neuron) String() string {
+	return fmt.Sprintf("node ID %d has these input connections: %v", neuron.neuronIndex, neuron.InputNeurons)
 }

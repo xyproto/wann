@@ -271,20 +271,6 @@ func (net *Network) checkInputNeurons() {
 	}
 }
 
-// Copy a Network to a new network
-func (net Network) Copy() Network {
-	var newNet Network
-	newNet.AllNodes = make([]Neuron, len(net.AllNodes))
-	for i, node := range net.AllNodes {
-		newNet.AllNodes[i] = node.Copy(&newNet)
-	}
-	newNet.InputNodes = net.InputNodes
-	newNet.OutputNode = net.OutputNode
-	//newNet.checkInputNeurons()
-	newNet.Weight = net.Weight
-	return newNet
-}
-
 // All returns a slice with pointers to all nodes in this network
 func (net *Network) All() []*Neuron {
 	allNodes := make([]*Neuron, 0)
@@ -339,7 +325,7 @@ func Combine(a, b []NeuronIndex) []NeuronIndex {
 // Given the output node and the number 0, it will return a slice of all
 // connected nodes, where the distance from the output node has been stored in
 // node.distanceFromOutputNode.
-func (net *Network) getAllNodes(nodeIndex NeuronIndex, distanceFromFirstNode int, alreadyHaveThese []NeuronIndex) []NeuronIndex {
+func (net *Network) getAllConnectedNodes(nodeIndex NeuronIndex, distanceFromFirstNode int, alreadyHaveThese []NeuronIndex) []NeuronIndex {
 	allNodes := make([]NeuronIndex, 0, len(net.AllNodes))
 	node := net.AllNodes[nodeIndex]
 	if nodeIndex != net.OutputNode {
@@ -358,7 +344,7 @@ func (net *Network) getAllNodes(nodeIndex NeuronIndex, distanceFromFirstNode int
 		}
 		inputNode := net.AllNodes[inputNodeIndex]
 		if !inputNode.In(allNodes) && !inputNode.In(alreadyHaveThese) {
-			allNodes = Combine(allNodes, net.getAllNodes(inputNodeIndex, distanceFromFirstNode+1, append(allNodes, alreadyHaveThese...)))
+			allNodes = Combine(allNodes, net.getAllConnectedNodes(inputNodeIndex, distanceFromFirstNode+1, append(allNodes, alreadyHaveThese...)))
 		}
 	}
 	return allNodes
@@ -366,26 +352,39 @@ func (net *Network) getAllNodes(nodeIndex NeuronIndex, distanceFromFirstNode int
 
 // ForEachConnected will only go through nodes that are connected to the output node (directly or indirectly)
 // Unconnected input nodes are not covered.
-func (net *Network) ForEachConnected(f func(n *Neuron, distanceFromOutputNode int)) {
+func (net *Network) ForEachConnected(f func(n *Neuron)) {
 	// Start at the output node, traverse left towards the input nodes
 	// The network has a counter for how many nodes has been added/removed, for quick memory allocation here
-	allNodes := net.getAllNodes(net.OutputNode, 0, []NeuronIndex{})
-	for _, nodeIndex := range allNodes {
-		node := net.AllNodes[nodeIndex]
-		f(&node, node.distanceFromOutputNode)
+	// the final slice is to avoid circular connections
+	for _, nodeIndex := range net.getAllConnectedNodes(net.OutputNode, 0, []NeuronIndex{}) {
+		f(&(net.AllNodes[nodeIndex]))
 	}
 }
 
 // ForEachConnectedNodeIndex will only go through nodes that are connected to the output node (directly or indirectly)
 // Unconnected input nodes are not covered.
+// Used by the functions that draw diagrams
 func (net *Network) ForEachConnectedNodeIndex(f func(ni NeuronIndex, distanceFromOutputNode int)) {
-	// Start at the output node, traverse left towards the input nodes
-	// The network has a counter for how many nodes has been added/removed, for quick memory allocation here
-	allNodes := net.getAllNodes(net.OutputNode, 0, []NeuronIndex{})
-	for _, nodeIndex := range allNodes {
-		node := net.AllNodes[nodeIndex]
-		f(nodeIndex, node.distanceFromOutputNode)
+	net.ForEachConnected(func(n *Neuron) {
+		f(n.neuronIndex, n.distanceFromOutputNode)
+	})
+}
+
+// Copy a Network to a new network
+func (net Network) Copy() Network {
+	var newNet Network
+	newNet.AllNodes = make([]Neuron, len(net.AllNodes))
+	for i, node := range net.AllNodes {
+		newNet.AllNodes[i] = node.Copy(&newNet)
 	}
+	newNet.InputNodes = net.InputNodes
+	newNet.OutputNode = net.OutputNode
+	newNet.Weight = net.Weight
+
+	// For debugging
+	//newNet.checkInputNeurons()
+
+	return newNet
 }
 
 // String creates a simple and not very useful ASCII representation of the input nodes and the output node.
@@ -395,7 +394,7 @@ func (net *Network) ForEachConnectedNodeIndex(f func(ni NeuronIndex, distanceFro
 func (net Network) String() string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Network (%d nodes, %d input nodes, %d output node)\n", len(net.AllNodes), len(net.InputNodes), 1))
-	sb.WriteString("\tInputs to output node: " + strconv.Itoa(len(net.AllNodes[net.OutputNode].InputNeurons)) + "\n")
+	sb.WriteString("\tConnected inputs to output node: " + strconv.Itoa(len(net.AllNodes[net.OutputNode].InputNeurons)) + "\n")
 	for _, node := range net.All() {
 		sb.WriteString("\t" + node.String() + "\n")
 	}

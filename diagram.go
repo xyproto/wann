@@ -70,7 +70,7 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 				}
 			}
 		}
-		panic("getPosition: neuron not found, this should never happen")
+		panic("getPosition: neuron index not found, this should never happen")
 		//return -1, -1
 	}
 

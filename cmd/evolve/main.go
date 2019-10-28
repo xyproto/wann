@@ -48,9 +48,9 @@ func main() {
 		ConnectionRatio:                        0.1,
 		SharedWeight:                           0.0,
 		Generations:                            2000,
-		PopulationSize:                         500,
+		PopulationSize:                         100,
 		MaxIterationsWithoutBestImprovement:    1000,
-		MaxIterationsWithoutAverageImprovement: 10,
+		MaxIterationsWithoutAverageImprovement: 1000,
 		Verbose:                                true,
 	}
 
