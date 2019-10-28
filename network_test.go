@@ -47,38 +47,6 @@ func TestIsInput(t *testing.T) {
 	}
 }
 
-func TestInsertNode(t *testing.T) {
-	rand.Seed(commonSeed)
-	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 0.5,
-		SharedWeight:    0.5,
-	})
-	_, newNeuronIndex := net.NewRandomNeuron()
-	if err := net.InsertNode(1, 2, newNeuronIndex); err != nil {
-		t.Error(err)
-	}
-	fmt.Println(net)
-}
-
-// 	func (net *Network) InsertNode(a, b NeuronIndex, newNodeIndex NeuronIndex) error {
-// 	func (net *Network) AddConnection(a, b NeuronIndex) error {
-// 	func (net *Network) ChangeActivationFunction(n *Neuron, f func(float64) float64) {
-// 	func (net *Network) String() string {
-// 	func (net *Network) SetWeight(weight float64) {
-// 	func (net *Network) Complexity() float64 {
-// 	func (net *Network) LeftRight(a, b NeuronIndex) (left NeuronIndex, right NeuronIndex) {
-// 	func (net *Network) Depth() int {
-// 	func (net *Network) checkInputNeurons() {
-// 	func (net Network) Copy() Network {
-// 	func (net *Network) GetRandomNeuron() NeuronIndex {
-// 	func (net *Network) GetRandomInputNode() NeuronIndex {
-// 	func (node *Neuron) In(collection []NeuronIndex) bool {
-// 	func Combine(a, b []NeuronIndex) []NeuronIndex {
-// 	func (net *Network) getAllNodes(nodeIndex NeuronIndex, distanceFromFirstNode int, alreadyHaveThese []NeuronIndex) []NeuronIndex {
-// 	func (net *Network) ForEachConnected(f func(n *Neuron, distanceFromOutputNode int)) {
-// 	func (net *Network) ForEachConnectedNodeIndex(f func(ni NeuronIndex, distanceFromOutputNode int)) {
-
 func TestForEachConnected(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
@@ -115,3 +83,38 @@ func TestEvaluate2(t *testing.T) {
 		t.Fail()
 	}
 }
+
+func TestInsertNode(t *testing.T) {
+	rand.Seed(commonSeed)
+	net := NewNetwork(&Config{
+		Inputs:          5,
+		ConnectionRatio: 0.5,
+		SharedWeight:    0.5,
+	})
+	_, newNeuronIndex := net.NewRandomNeuron()
+	if err := net.InsertNode(0, 2, newNeuronIndex); err != nil {
+		t.Error(err)
+	}
+	//fmt.Println(net)
+	result := net.Evaluate([]float64{0.1, 0.2, 0.3, 0.4, 0.5})
+	if result != 0.5 {
+		t.Fail()
+	}
+}
+
+// 	func (net *Network) InsertNode(a, b NeuronIndex, newNodeIndex NeuronIndex) error {
+// 	func (net *Network) AddConnection(a, b NeuronIndex) error {
+// 	func (net *Network) ChangeActivationFunction(n *Neuron, f func(float64) float64) {
+// 	func (net *Network) String() string {
+// 	func (net *Network) SetWeight(weight float64) {
+// 	func (net *Network) Complexity() float64 {
+// 	func (net *Network) LeftRight(a, b NeuronIndex) (left NeuronIndex, right NeuronIndex) {
+// 	func (net *Network) Depth() int {
+// 	func (net *Network) checkInputNeurons() {
+// 	func (net Network) Copy() Network {
+// 	func (net *Network) GetRandomNeuron() NeuronIndex {
+// 	func (net *Network) GetRandomInputNode() NeuronIndex {
+// 	func (node *Neuron) In(collection []NeuronIndex) bool {
+// 	func Combine(a, b []NeuronIndex) []NeuronIndex {
+// 	func (net *Network) getAllNodes(nodeIndex NeuronIndex, distanceFromFirstNode int, alreadyHaveThese []NeuronIndex) []NeuronIndex {
+// 	func (net *Network) ForEachConnectedNodeIndex(f func(ni NeuronIndex, distanceFromOutputNode int)) {

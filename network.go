@@ -192,22 +192,6 @@ func (net *Network) ChangeActivationFunction(n *Neuron, f func(float64) float64)
 	n.ActivationFunction = f
 }
 
-// String creates a simple and not very useful ASCII representation of the input nodes and the output node.
-// Nodes that are not input nodes are skipped.
-// Input nodes that are not connected directly to the output node are drawn as non-connected,
-// even if they are connected via another node.
-func (net *Network) String() string {
-	var sb strings.Builder
-	sb.WriteString("Network\n")
-	sb.WriteString("\tInput nodes: " + strconv.Itoa(len(net.InputNodes)) + "\n")
-	sb.WriteString("\tConnections to output node: " + strconv.Itoa(len(net.AllNodes[net.OutputNode].InputNeurons)) + "\n")
-	sb.WriteString("\tOutput neuron index: " + fmt.Sprintf("%d", net.OutputNode) + "\n")
-	for i, node := range net.All() {
-		sb.WriteString("\t" + strconv.Itoa(i) + ": " + node.String() + "\n")
-	}
-	return sb.String()
-}
-
 // Evaluate will return a weighted sum of the input nodes,
 // using the .Value field if it is set and no input nodes are available.
 // A shared weight can be given.
@@ -402,4 +386,18 @@ func (net *Network) ForEachConnectedNodeIndex(f func(ni NeuronIndex, distanceFro
 		node := net.AllNodes[nodeIndex]
 		f(nodeIndex, node.distanceFromOutputNode)
 	}
+}
+
+// String creates a simple and not very useful ASCII representation of the input nodes and the output node.
+// Nodes that are not input nodes are skipped.
+// Input nodes that are not connected directly to the output node are drawn as non-connected,
+// even if they are connected via another node.
+func (net Network) String() string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Network (%d nodes, %d input nodes, %d output node)\n", len(net.AllNodes), len(net.InputNodes), 1))
+	sb.WriteString("\tInputs to output node: " + strconv.Itoa(len(net.AllNodes[net.OutputNode].InputNeurons)) + "\n")
+	for _, node := range net.All() {
+		sb.WriteString("\t" + node.String() + "\n")
+	}
+	return sb.String()
 }

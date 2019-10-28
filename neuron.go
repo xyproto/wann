@@ -124,7 +124,7 @@ func (net *Network) Exists(ni NeuronIndex) bool {
 
 // String will return a string containing both the pointer address and the number of input neurons
 func (neuron *Neuron) String() string {
-	return fmt.Sprintf("node index [%d] has %d input connections", neuron.neuronIndex, len(neuron.InputNeurons))
+	return fmt.Sprintf("node ID %d has these input connections: %v", neuron.neuronIndex, neuron.InputNeurons)
 }
 
 // InputNeuronsAreGood checks if all input neurons of this neuron exists in neuron.Net
