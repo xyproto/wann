@@ -20,7 +20,7 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 		betweenPadding = 4
 		d              = float64(net.Depth()) * 2.5
 		width          = marginLeft + int(float64(nodeRadius)*2.0*d) + betweenPadding*(int(d)-1) + nodeRadius + marginRight
-		l              = float64(len(net.InputNodes)) * 2.5
+		l              = float64(len(net.InputNodes))
 		height         = marginTop + int(float64(nodeRadius)*2.0*l) + betweenPadding*(int(l)-1) + marginBottom
 		imgPadding     = 5
 		lineWidth      = 2
