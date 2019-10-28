@@ -361,12 +361,20 @@ func (net *Network) ForEachConnected(f func(n *Neuron)) {
 	}
 }
 
+// Connected returns a slice of neuron indexes, that are all connected to the output node (directly or indirectly)
+func (net *Network) Connected() []NeuronIndex {
+	allConnected := make([]NeuronIndex, 0, len(net.AllNodes)) // Use a bit more memory, but don't allocate at every iteration
+	net.ForEachConnectedNodeIndex(func(ni NeuronIndex) {
+		allConnected = append(allConnected, ni)
+	})
+	return allConnected
+}
+
 // ForEachConnectedNodeIndex will only go through nodes that are connected to the output node (directly or indirectly)
 // Unconnected input nodes are not covered.
-// Used by the functions that draw diagrams
-func (net *Network) ForEachConnectedNodeIndex(f func(ni NeuronIndex, distanceFromOutputNode int)) {
+func (net *Network) ForEachConnectedNodeIndex(f func(ni NeuronIndex)) {
 	net.ForEachConnected(func(n *Neuron) {
-		f(n.neuronIndex, n.distanceFromOutputNode)
+		f(n.neuronIndex)
 	})
 }
 

@@ -49,8 +49,9 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 	// For each connected neuron, store it with the distance from the output neuron as the key in a map
 	layerNeurons := make(map[int][]NeuronIndex)
 	maxDistance := 0
-	net.ForEachConnectedNodeIndex(func(n NeuronIndex, distanceFromOutput int) {
-		layerNeurons[distanceFromOutput] = append(layerNeurons[distanceFromOutput], n)
+	net.ForEachConnectedNodeIndex(func(ni NeuronIndex) {
+		distanceFromOutput := net.AllNodes[ni].distanceFromOutputNode
+		layerNeurons[distanceFromOutput] = append(layerNeurons[distanceFromOutput], ni)
 		if distanceFromOutput > maxDistance {
 			maxDistance = distanceFromOutput
 		}
