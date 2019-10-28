@@ -1,7 +1,6 @@
 package wann
 
 import (
-	"fmt"
 	"math/rand"
 	"testing"
 
@@ -23,14 +22,10 @@ func TestDiagram(t *testing.T) {
 	net.AllNodes[net.InputNodes[3]].ActivationFunction = af.Sigmoid
 	net.AllNodes[net.InputNodes[4]].ActivationFunction = af.ReLU
 
-	// Output the diagram
-	fmt.Println("--- <DIAGRAM> ---")
-	fmt.Println(net)
-
-	err := net.SaveDiagram("/tmp/output.svg")
+	// Save the diagram as an image
+	err := net.SaveDiagram("test.svg")
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println("xdg-open /tmp/output.svg")
-	fmt.Println("--- </DIAGRAM> ---")
+	//os.Remove("test.svg")
 }
