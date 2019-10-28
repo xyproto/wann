@@ -9,9 +9,12 @@ import (
 	"time"
 )
 
-// init will initialize the random number generator with the current time
+// init will
 func init() {
+	// initialize the random number generator with the current time
 	rand.Seed(time.Now().UTC().UnixNano())
+	// estimate the complexity of each activation function
+	estimateComplexity()
 }
 
 // NeuronIndex is an index into the AllNodes slice
@@ -187,9 +190,11 @@ func (net *Network) AddConnection(a, b NeuronIndex) error {
 	return net.AllNodes[b].AddInput(a)
 }
 
-// ChangeActivationFunction changes the activation function for a given node
-func (net *Network) ChangeActivationFunction(n *Neuron, f func(float64) float64) {
-	n.ActivationFunction = f
+// RandomizeActivationFunctionForRandomNeuron randomizes the activation function for a randomly selected neuron
+func (net *Network) RandomizeActivationFunctionForRandomNeuron() {
+	chosenNeuronIndex := net.GetRandomNeuron()
+	chosenActivationFunctionIndex := rand.Intn(len(ActivationFunctions))
+	net.AllNodes[chosenNeuronIndex].ActivationFunctionIndex = chosenActivationFunctionIndex
 }
 
 // Evaluate will return a weighted sum of the input nodes,
@@ -202,8 +207,9 @@ func (net *Network) Evaluate(inputValues []float64) float64 {
 			net.AllNodes[nindex].SetValue(inputValues[i])
 		}
 	}
-	maxIterationCounter := len(net.AllNodes)
-	result, _ := net.AllNodes[net.OutputNode].evaluate(net.Weight, &maxIterationCounter)
+	outputNode := net.AllNodes[net.OutputNode]
+	maxIterationCounter := inputLength
+	result, _ := outputNode.evaluate(net.Weight, &maxIterationCounter)
 	return result
 }
 
@@ -215,9 +221,19 @@ func (net *Network) SetWeight(weight float64) {
 // Complexity measures the network complexity
 // Will return 1.0 at a minimum
 func (net *Network) Complexity() float64 {
-	// TODO: Score the complexity of the various activation functions
-	// TODO: Score the amount of connections
-	return float64(1.0 + len(net.All()))
+	sum := 0.0
+	// Sum the complexity of all activation functions.
+	// This penalizes both slow activation functions and
+	// unconnected nodes.
+	for _, n := range net.AllNodes {
+		if n.Value == nil {
+			sum += ComplexityEstimate[n.ActivationFunctionIndex] * 10.0
+		}
+	}
+	// The number of connected nodes should also carry some weight
+	connectedNodes := float64(len(net.Connected()))
+	// This must always be larger than 0, to avoid divide by zero later
+	return connectedNodes + sum
 }
 
 // LeftRight returns two neurons, such that the first on is the one that is
