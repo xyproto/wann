@@ -17,3 +17,7 @@ The activation functions are plotted directly onto the nodes.
 Here's a more tidy SVG image, also created by this package:
 
 <img alt=diagram src=img/diagram.svg width=128 />
+
+This diagram is created when running the tests:
+
+<img alt=diagram src=img/test.svg width=128 />

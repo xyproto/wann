@@ -10,7 +10,5 @@
 *.dblite
 *.so
 .vscode
-best.svg
-test.svg
-after.svg
-before.svg
+*.svg
+!img/*
