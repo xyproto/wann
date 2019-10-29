@@ -9,17 +9,14 @@ import (
 
 // ScorePopulation evaluates a population, given a slice of input numbers.
 // It returns a map with scores, together with the sum of scores.
-func ScorePopulation(population []Network, inputData [][]float64, correctOutputMultipliers []float64) (map[int]float64, float64) {
-	// Use a shared random weight
-	w := rand.Float64()
-
+func ScorePopulation(population []*Network, weight float64, inputData [][]float64, correctOutputMultipliers []float64) (map[int]float64, float64) {
 	scoreMap := make(map[int]float64)
 	scoreSum := 0.0
 
 	for i := 0; i < len(population); i++ {
 		net := population[i]
 
-		net.SetWeight(w)
+		net.SetWeight(weight)
 		result := 0.0
 		for i := 0; i < len(inputData); i++ {
 			result += net.Evaluate(inputData[i]) * correctOutputMultipliers[i]
@@ -53,11 +50,12 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 
 	config.Inputs = len(inputData[0])
 
-	population := make([]Network, config.PopulationSize)
+	population := make([]*Network, config.PopulationSize)
 
 	// Initialize the population
 	for i := 0; i < config.PopulationSize; i++ {
-		population[i] = NewNetwork(config)
+		n := NewNetwork(config)
+		population[i] = &n
 	}
 
 	var bestNetwork *Network
@@ -92,10 +90,12 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 			fmt.Println("------ generation " + strconv.Itoa(j) + ", population size " + strconv.Itoa(len(population)))
 		}
 
+		w := rand.Float64()
+
 		// The scores for this generation (using a random shared weight within ScorePopulation).
 		// CorrectOutputMultipliers gives weight to the "correct" or "wrong" results, with the same index as the inputData
 		// Score each network in the population.
-		scoreMap, scoreSum := ScorePopulation(population, inputData, correctOutputMultipliers)
+		scoreMap, scoreSum := ScorePopulation(population, w, inputData, correctOutputMultipliers)
 
 		// Sort by score
 		scoreList := SortByValue(scoreMap)
@@ -104,7 +104,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		lastBestScore = bestScore
 		if scoreList[0].Value > bestScore {
 			bestScore = scoreList[0].Value
-			bestNetwork = &(population[scoreList[0].Key])
+			bestNetwork = population[scoreList[0].Key]
 		}
 		if bestScore >= lastBestScore {
 			noImprovementOfBestScoreCounter++
@@ -143,7 +143,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 
 		bestThirdCountdown := len(population) / 3
 
-		goodNetworks := make([]Network, 0)
+		goodNetworks := make([]*Network, 0)
 
 		// Now loop over all networks, sorted by score (descending order)
 		for _, p := range scoreList {
@@ -161,7 +161,8 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 				randomGoodNetworkCopy.Modify(1)
 				randomGoodNetworkCopy.checkInputNeurons()
 				// Replace the "bad" network with the modified copy of a "good" one
-				// FIX THIS BUT ALSO UPDATE .Net pointers for all nodes!
+				// It's important that this is a pointer to a Network and not
+				// a bare Network, so that the node .Net pointers are correct.
 				population[networkIndex] = randomGoodNetworkCopy
 			}
 		}
