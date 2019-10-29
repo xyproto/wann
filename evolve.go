@@ -28,6 +28,50 @@ func ScorePopulation(population []*Network, weight float64, inputData [][]float6
 	return scoreMap, scoreSum
 }
 
+// Modify the network using one of the three methods outlined in the paper:
+// * Insert node
+// * Add connection
+// * Change activation function
+func (net *Network) Modify(maxIterations int) {
+
+	// Use method 0, 1 or 2
+	// Method 1 and 2 are always fine, method 0 has had issues
+	method := rand.Intn(3) // up to and not including 3
+
+	// Perform a modfification, using one of the three methods outlined in the paper
+	switch method {
+	case 0:
+		// Insert a node, replacing a randomly chosen existing connection
+		counter := 0
+		for net.InsertRandomNode() == false {
+			counter++
+			if counter > maxIterations {
+				break
+			}
+		}
+	case 1:
+		//net.checkInputNeurons()
+		nodeA, nodeB := net.GetRandomNode(), net.GetRandomNode()
+		// A bit risky, time-wise, but continue finding random neurons until they work out
+		// Create a new connection
+		counter := 0
+		for net.AddConnection(nodeA, nodeB) != nil {
+			nodeA, nodeB = net.GetRandomNode(), net.GetRandomNode()
+			counter++
+			if maxIterations > 0 && counter > maxIterations {
+				// Could not add a connection. The possibilities for connections might be saturated.
+				return
+			}
+		}
+		//net.checkInputNeurons()
+	case 2:
+		// Change the activation function to a randomly selected one
+		net.RandomizeActivationFunctionForRandomNeuron()
+	default:
+		panic("implementation error: invalid method number: " + strconv.Itoa(method))
+	}
+}
+
 // Evolve evolves a neural network, given a slice of training data and a slice of correct output values.
 // Will overwrite config.Inputs.
 // TODO: Fewer "magic constants"
@@ -165,7 +209,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 				//randomGoodNetworkCopy.UpdateNetworkPointers()
 				//randomGoodNetworkCopy.checkInputNeurons()
 				//randomGoodNetworkCopy.UpdateNetworkPointers()
-				randomGoodNetworkCopy.Modify(1)
+				randomGoodNetworkCopy.Modify(10)
 				//randomGoodNetworkCopy.UpdateNetworkPointers()
 				//randomGoodNetworkCopy.checkInputNeurons()
 				// Replace the "bad" network with the modified copy of a "good" one
@@ -180,39 +224,4 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		return nil, errors.New("the best network is nil")
 	}
 	return bestNetwork, nil
-}
-
-// Modify this network a bit
-func (net *Network) Modify(maxIterations int) {
-
-	// Use method 0, 1 or 2
-	// Method 1 and 2 are always fine, method 0 has had issues
-	method := rand.Intn(3) // up to and not including 3
-
-	// Perform a modfification, using one of the three methods outlined in the paper
-	switch method {
-	case 0:
-		// Insert a node, replacing a randomly chosen existing connection
-		net.InsertRandomNode()
-	case 1:
-		//net.checkInputNeurons()
-		nodeA, nodeB := net.GetRandomNode(), net.GetRandomNode()
-		// A bit risky, time-wise, but continue finding random neurons until they work out
-		// Create a new connection
-		counter := 0
-		for net.AddConnection(nodeA, nodeB) != nil {
-			nodeA, nodeB = net.GetRandomNode(), net.GetRandomNode()
-			counter++
-			if maxIterations > 0 && counter > maxIterations {
-				// Could not add a connection. The possibilities for connections might be saturated.
-				return
-			}
-		}
-		//net.checkInputNeurons()
-	case 2:
-		// Change the activation function to a randomly selected one
-		net.RandomizeActivationFunctionForRandomNeuron()
-	default:
-		panic("implementation error: invalid method number: " + strconv.Itoa(method))
-	}
 }

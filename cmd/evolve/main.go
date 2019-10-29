@@ -19,6 +19,7 @@ func init() {
 	rand.Seed(seed)
 }
 
+// TODO: Save the all time best network and weight
 func main() {
 	// Here are four shapes, up, down, left and right:
 
@@ -47,8 +48,8 @@ func main() {
 		Inputs:                                 0,
 		ConnectionRatio:                        0.1,
 		SharedWeight:                           0.0,
-		Generations:                            2000,
-		PopulationSize:                         100,
+		Generations:                            100,
+		PopulationSize:                         500,
 		MaxIterationsWithoutBestImprovement:    1000,
 		MaxIterationsWithoutAverageImprovement: 1000,
 		Verbose:                                true,
@@ -81,7 +82,10 @@ func main() {
 	}
 
 	// Save the image as an SVG image
+	fmt.Print("Writing best.svg...")
 	if err := bestNetwork.WriteSVG("best.svg"); err != nil {
+		fmt.Println("failed")
 		panic(err)
 	}
+	fmt.Println("ok")
 }
