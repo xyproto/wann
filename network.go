@@ -42,14 +42,14 @@ func NewNetwork(cs ...*Config) Network {
 	// Create a new network that has one node, the output node
 	outputNodeIndex := NeuronIndex(0)
 	net := Network{make([]Neuron, 0, n+1), make([]NeuronIndex, n), outputNodeIndex, w}
-	outputNode, outputNodeIndex := net.NewRandomNeuron()
+	outputNode, outputNodeIndex := net.NewNeuron()
 	net.OutputNode = outputNodeIndex
 
 	// Initialize n input nodes that all are inputs to the one output node.
 	for i := 0; i < n; i++ {
 		// Add a new input node
 
-		_, nodeIndex := net.NewRandomNeuron()
+		_, nodeIndex := net.NewNeuron()
 
 		// Register the input node index in the input node NeuronIndex slice
 		net.InputNodes[i] = nodeIndex
@@ -182,7 +182,7 @@ func (net *Network) AddConnection(a, b NeuronIndex) error {
 
 // RandomizeActivationFunctionForRandomNeuron randomizes the activation function for a randomly selected neuron
 func (net *Network) RandomizeActivationFunctionForRandomNeuron() {
-	chosenNeuronIndex := net.GetRandomNeuron()
+	chosenNeuronIndex := net.GetRandomNode()
 	chosenActivationFunctionIndex := rand.Intn(len(ActivationFunctions))
 	net.AllNodes[chosenNeuronIndex].ActivationFunctionIndex = chosenActivationFunctionIndex
 }
@@ -295,9 +295,9 @@ func (net *Network) All() []*Neuron {
 	return allNodes
 }
 
-// GetRandomNeuron will select a random neuron.
+// GetRandomNode will select a random neuron.
 // This can be any node, including the output node.
-func (net *Network) GetRandomNeuron() NeuronIndex {
+func (net *Network) GetRandomNode() NeuronIndex {
 	return NeuronIndex(rand.Intn(len(net.AllNodes)))
 }
 
@@ -372,6 +372,19 @@ func (net *Network) Connected() []NeuronIndex {
 		allConnected = append(allConnected, ni)
 	})
 	return allConnected
+}
+
+// Unconnected returns a slice of all unconnected neurons
+func (net *Network) Unconnected() []NeuronIndex {
+	connected := net.Connected()
+	// TODO: Benchmark if using len(net.AllNodes) here is faster or not
+	unconnected := make([]NeuronIndex, 0, len(net.AllNodes))
+	for i, node := range net.AllNodes {
+		if !node.In(connected) {
+			unconnected = append(unconnected, NeuronIndex(i))
+		}
+	}
+	return unconnected
 }
 
 // ForEachConnectedNodeIndex will only go through nodes that are connected to the output node (directly or indirectly)

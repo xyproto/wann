@@ -10,7 +10,7 @@ import (
 func TestNeuron(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork()
-	n, _ := net.NewNeuron()
+	n, _ := net.NewBlankNeuron()
 	n.ActivationFunctionIndex = Swish
 	result := n.ActivationFunction()(0.5)
 	diff := math.Abs(result - 0.311287)
@@ -24,15 +24,15 @@ func TestNeuron(t *testing.T) {
 func TestString(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork()
-	n, _ := net.NewNeuron()
+	n, _ := net.NewBlankNeuron()
 	_ = n.String()
 }
 
 func TestHasInput(t *testing.T) {
 	rand.Seed(commonSeed)
-	net := NewNetwork()     // 0
-	a, _ := net.NewNeuron() // 1
-	b, _ := net.NewNeuron() // 2
+	net := NewNetwork()          // 0
+	a, _ := net.NewBlankNeuron() // 1
+	b, _ := net.NewBlankNeuron() // 2
 	fmt.Println("a is 1?", a)
 	fmt.Println("b is 2?", b)
 	a.AddInput(0)
@@ -48,10 +48,10 @@ func TestFindInput(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork()
 
-	a, _ := net.NewNeuron()  // a, 1
-	_, bi := net.NewNeuron() // b, 2
-	c, ci := net.NewNeuron() // c, 3
-	_, di := net.NewNeuron() //  d, 4
+	a, _ := net.NewBlankNeuron()  // a, 1
+	_, bi := net.NewBlankNeuron() // b, 2
+	c, ci := net.NewBlankNeuron() // c, 3
+	_, di := net.NewBlankNeuron() //  d, 4
 
 	a.AddInput(bi)      // b
 	a.AddInputNeuron(c) // c
@@ -79,7 +79,7 @@ func TestRemoveInput(t *testing.T) {
 		SharedWeight:    0.5,
 	})
 
-	a, _ := net.NewNeuron() // 0
+	a, _ := net.NewBlankNeuron() // 0
 	a.AddInput(1)
 	a.AddInput(2)
 	if a.RemoveInput(1) != nil {

@@ -183,10 +183,10 @@ func (net *Network) Modify(maxIterations int) {
 		//fmt.Println("Modifying the network using method 1 - insert node")
 
 		// It's important that GetRandomNeuron is used before NewRandomNeuron is called
-		nodeA, nodeB := net.GetRandomNeuron(), net.GetRandomNeuron()
+		nodeA, nodeB := net.GetRandomNode(), net.GetRandomNode()
 
 		//fmt.Println("MODIFY METHOD 0, START, MAX ITERATIONS:", maxIterations)
-		_, newNodeIndex := net.NewRandomNeuron()
+		_, newNodeIndex := net.NewNeuron()
 		//fmt.Println("NEW NEURON AT INDEX", newNodeIndex)
 
 		//fmt.Println("USING NODE A AND B:", nodeA, nodeB)
@@ -208,7 +208,7 @@ func (net *Network) Modify(maxIterations int) {
 
 		for err != nil {
 			//(fmt.Println("COUNTER", counter)
-			nodeA, nodeB = net.GetRandomNeuron(), net.GetRandomNeuron()
+			nodeA, nodeB = net.GetRandomNode(), net.GetRandomNode()
 			counter++
 			//fmt.Println("COUNTER", counter, "MAX ITERATIONS", maxIterations)
 			if maxIterations > 0 && counter > maxIterations {
@@ -237,12 +237,12 @@ func (net *Network) Modify(maxIterations int) {
 	case 1:
 		//fmt.Println("Modifying the network using method 2 - add connection")
 
-		nodeA, nodeB := net.GetRandomNeuron(), net.GetRandomNeuron()
+		nodeA, nodeB := net.GetRandomNode(), net.GetRandomNode()
 		// A bit risky, time-wise, but continue finding random neurons until they work out
 		// Create a new connection
 		counter := 0
 		for net.AddConnection(nodeA, nodeB) != nil {
-			nodeA, nodeB = net.GetRandomNeuron(), net.GetRandomNeuron()
+			nodeA, nodeB = net.GetRandomNode(), net.GetRandomNode()
 			counter++
 			if maxIterations > 0 && counter > maxIterations {
 				// Could not add a connection. The possibilities for connections might be saturated.

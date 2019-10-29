@@ -16,20 +16,63 @@ type Neuron struct {
 	neuronIndex             NeuronIndex
 }
 
-// NewNeuron creates a new Neuron
-func (net *Network) NewNeuron() (*Neuron, NeuronIndex) {
-	// Pre-allocate room for 64 connections and use Linear as the default activation function
-	neuron := Neuron{Net: net, InputNodes: make([]NeuronIndex, 0, 4), ActivationFunctionIndex: Linear}
+// NewBlankNeuron creates a new Neuron, with the Step activation function as the default
+func (net *Network) NewBlankNeuron() (*Neuron, NeuronIndex) {
+	// Pre-allocate room for 16 connections and use Linear as the default activation function
+	neuron := Neuron{Net: net, InputNodes: make([]NeuronIndex, 0, 16), ActivationFunctionIndex: Step}
 	neuron.neuronIndex = NeuronIndex(len(net.AllNodes))
 	net.AllNodes = append(net.AllNodes, neuron)
 	return &neuron, neuron.neuronIndex
 }
 
-// NewRandomNeuron creates a new *Neuron, with a randomly chosen activation function
-func (net *Network) NewRandomNeuron() (*Neuron, NeuronIndex) {
-	n, ni := net.NewNeuron()
-	n.RandomizeActivationFunction()
-	return n, ni
+// NewNeuron creates a new *Neuron, with a randomly chosen activation function
+func (net *Network) NewNeuron() (*Neuron, NeuronIndex) {
+	chosenActivationFunctionIndex := rand.Intn(len(ActivationFunctions))
+	inputNodes := make([]NeuronIndex, 0, 16)
+	neuron := Neuron{
+		Net:                     net,
+		InputNodes:              inputNodes,
+		ActivationFunctionIndex: chosenActivationFunctionIndex,
+	}
+	// The length of net.AllNodes is what will be the last index
+	neuronIndex := NeuronIndex(len(net.AllNodes))
+	// Assign the neuron index in the net to the neuron
+	neuron.neuronIndex = neuronIndex
+	// Add this neuron to the net
+	net.AllNodes = append(net.AllNodes, neuron)
+	return &neuron, neuronIndex
+}
+
+// NewUnconnectedNeuron returns a new unconnected neuron with neuronIndex -1 and net pointer set to nil
+func NewUnconnectedNeuron() *Neuron {
+	// Pre-allocate room for 16 connections and use Linear as the default activation function
+	neuron := Neuron{Net: nil, InputNodes: make([]NeuronIndex, 0, 16), ActivationFunctionIndex: Linear}
+	neuron.neuronIndex = -1
+	return &neuron
+}
+
+// Connect this neuron to a network, overwriting any existing connections.
+// This will also clear any input nodes to this neuron, since the net is different.
+// TODO: Find the input nodes from the neuron.Net, save those and re-assign if there are matches?
+func (neuron *Neuron) Connect(net *Network) {
+	neuron.InputNodes = []NeuronIndex{}
+	neuron.Net = net
+	for ni := range net.AllNodes {
+		// Check if this network already has a pointer to this neuron
+		if &net.AllNodes[ni] == neuron {
+			// Yes, assign the index
+			neuron.neuronIndex = NeuronIndex(ni)
+			// All good, bail
+			return
+		}
+	}
+	// The neuron was not found in the network
+	// Find what will be the last index in net.AllNodes
+	neuronIndex := len(net.AllNodes)
+	// Add this neuron to the network
+	net.AllNodes = append(net.AllNodes, *neuron)
+	// Assign the index
+	net.AllNodes[neuronIndex].neuronIndex = NeuronIndex(neuronIndex)
 }
 
 // RandomizeActivationFunction will choose a random activation function for this neuron

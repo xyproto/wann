@@ -20,6 +20,11 @@ func TestNewNetwork(t *testing.T) {
 		SharedWeight:    0.5,
 	})
 	fmt.Println(net)
+	for i, n := range net.AllNodes {
+		if NeuronIndex(i) != n.neuronIndex {
+			t.Fail()
+		}
+	}
 }
 
 func TestGet(t *testing.T) {
@@ -88,7 +93,7 @@ func TestInsertNode(t *testing.T) {
 		ConnectionRatio: 0.5,
 		SharedWeight:    0.5,
 	})
-	_, newNeuronIndex := net.NewRandomNeuron()
+	_, newNeuronIndex := net.NewNeuron()
 	if err := net.InsertNode(0, 2, newNeuronIndex); err != nil {
 		t.Error(err)
 	}
@@ -102,7 +107,7 @@ func TestAddConnection(t *testing.T) {
 		Inputs:          5,
 		ConnectionRatio: 0.5,
 	})
-	_, newNeuronIndex := net.NewRandomNeuron()
+	_, newNeuronIndex := net.NewNeuron()
 	if err := net.InsertNode(net.OutputNode, 2, newNeuronIndex); err != nil {
 		t.Error(err)
 	}
@@ -186,32 +191,27 @@ func TestLeftRight(t *testing.T) {
 		t.Fail()
 	}
 	net.WriteSVG("before.svg")
-	_, nodeIndex := net.NewRandomNeuron()
+	_, nodeIndex := net.NewNeuron()
 	err := net.InsertNode(0, 1, nodeIndex)
 	if err != nil {
 		t.Error(err)
 	}
 	net.WriteSVG("after.svg")
-	fmt.Println("A")
-	fmt.Println("NEW NODE INDEX IS", nodeIndex)
 	a, b, _ = net.LeftRight(0, nodeIndex)
 	// output node to the right
 	if a != nodeIndex || b != 0 {
 		t.Fail()
 	}
-	fmt.Println("B")
 	a, b, _ = net.LeftRight(nodeIndex, 0)
 	// output node to the right
 	if a != nodeIndex || b != 0 {
 		t.Fail()
 	}
-	fmt.Println("C")
 	a, b, _ = net.LeftRight(1, nodeIndex)
 	// Here, the new node should be to the right, since it's between node 1 and the output node
 	if a != 1 || b != nodeIndex {
 		t.Fail()
 	}
-	fmt.Println("D")
 	//net.WriteSVG("c.svg")
 	fmt.Println(net)
 	a, b, _ = net.LeftRight(nodeIndex, 1)
@@ -232,7 +232,7 @@ func TestDepth(t *testing.T) {
 		ConnectionRatio: 1.0,
 	})
 	fmt.Println(net.Depth())
-	_, nodeIndex := net.NewNeuron()
+	_, nodeIndex := net.NewBlankNeuron()
 	_ = net.InsertNode(0, 1, nodeIndex)
 	fmt.Println(net.Depth())
 }
@@ -245,9 +245,106 @@ func ExampleCombine() {
 	// [0 1 2 3 4 5 6 7 8 9]
 }
 
-// 	func (net *Network) checkInputNeurons() {
-// 	func (net Network) Copy() Network {
-// 	func (net *Network) GetRandomNeuron() NeuronIndex {
-// 	func (net *Network) GetRandomInputNode() NeuronIndex {
-// 	func (net *Network) getAllNodes(nodeIndex NeuronIndex, distanceFromFirstNode int, alreadyHaveThese []NeuronIndex) []NeuronIndex {
-// 	func (net *Network) ForEachConnectedNodeIndex(f func(ni NeuronIndex, distanceFromOutputNode int)) {
+func TestGetRandomNeuron(t *testing.T) {
+	rand.Seed(commonSeed)
+	net := NewNetwork(&Config{
+		Inputs:          5,
+		ConnectionRatio: 1.0,
+	})
+	stats := make(map[NeuronIndex]uint)
+	for i := 0; i < 1000; i++ {
+		ni := net.GetRandomNode()
+		if _, ok := stats[ni]; !ok {
+			stats[ni] = 0
+		} else {
+			stats[ni]++
+		}
+	}
+	fmt.Println(stats)
+	// Check that the output node exists in the stats
+	if _, ok := stats[0]; !ok {
+		t.Fail()
+	}
+
+	// This is more a test of the random number generator than anything. Disable:
+	// // This isn't 00% watertight, but each element should have been chosen around 160 times, +- 30
+	// center := uint(160)
+	// margin := uint(30)
+	// for _, chosenCount := range stats {
+	// 	if chosenCount < (center-margin) || chosenCount > (center+margin) {
+	// 		t.Fail()
+	// 	}
+	// }
+}
+
+func TestGetRandomInputNode(t *testing.T) {
+	rand.Seed(commonSeed)
+	net := NewNetwork(&Config{
+		Inputs:          5,
+		ConnectionRatio: 1.0,
+	})
+	stats := make(map[NeuronIndex]uint)
+	for i := 0; i < 1000; i++ {
+		ni := net.GetRandomInputNode()
+		if _, ok := stats[ni]; !ok {
+			stats[ni] = 0
+		} else {
+			stats[ni]++
+		}
+	}
+	fmt.Println(stats)
+	// Check that the output node does not exist in the stats
+	if _, ok := stats[0]; ok {
+		t.Fail()
+	}
+}
+
+func TestConnected(t *testing.T) {
+	rand.Seed(commonSeed)
+	net := NewNetwork(&Config{
+		Inputs:          5,
+		ConnectionRatio: 0.1,
+	})
+	connected := net.Connected()
+	if connected[0] != 0 || connected[1] != 2 {
+		t.Fail()
+	}
+}
+
+func TestUnconnected(t *testing.T) {
+	rand.Seed(commonSeed)
+	net := NewNetwork(&Config{
+		Inputs:          5,
+		ConnectionRatio: 0.5,
+	})
+	unconnected := net.Unconnected()
+	correct := []NeuronIndex{1, 3, 4}
+	for i := 0; i < len(unconnected); i++ {
+		if unconnected[i] != correct[i] {
+			t.Fail()
+		}
+	}
+}
+
+func TestCopy(t *testing.T) {
+	rand.Seed(commonSeed)
+	net := NewNetwork(&Config{
+		Inputs:          5,
+		ConnectionRatio: 0.5,
+	})
+	net2 := net.Copy()
+	n := NewUnconnectedNeuron()
+	net2.AllNodes[1] = *n
+	if net.String() != net2.String() {
+		t.Fail()
+	}
+	net3 := net
+	if net.String() != net3.String() {
+		t.Fail()
+	}
+
+}
+
+func TestForEachConnectedNodeIndex(t *testing.T) {
+	//ForEachConnectedNodeIndex(f func(ni NeuronIndex, distanceFromOutputNode int))
+}
