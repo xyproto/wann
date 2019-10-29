@@ -30,6 +30,8 @@ func ScorePopulation(population []*Network, weight float64, inputData [][]float6
 
 // Evolve evolves a neural network, given a slice of training data and a slice of correct output values.
 // Will overwrite config.Inputs.
+// TODO: Fewer "magic constants"
+// TODO: Compare using a random weight with iterating over the weight for each network. Compare with the code associated with the WANN paper.
 func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []float64) (*Network, error) {
 
 	inputLength := len(inputData)
@@ -148,7 +150,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		// Now loop over all networks, sorted by score (descending order)
 		for _, p := range scoreList {
 			networkIndex := p.Key
-			networkScore := p.Value
+			//networkScore := p.Value
 			if bestThirdCountdown > 0 {
 				bestThirdCountdown--
 				// In the best third of the networks
@@ -193,7 +195,7 @@ func (net *Network) Modify(maxIterations int) {
 		// Insert a node, replacing a randomly chosen existing connection
 		net.InsertRandomNode()
 	case 1:
-		net.checkInputNeurons()
+		//net.checkInputNeurons()
 		nodeA, nodeB := net.GetRandomNode(), net.GetRandomNode()
 		// A bit risky, time-wise, but continue finding random neurons until they work out
 		// Create a new connection
@@ -206,7 +208,7 @@ func (net *Network) Modify(maxIterations int) {
 				return
 			}
 		}
-		net.checkInputNeurons()
+		//net.checkInputNeurons()
 	case 2:
 		// Change the activation function to a randomly selected one
 		net.RandomizeActivationFunctionForRandomNeuron()

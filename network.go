@@ -401,8 +401,8 @@ func (net *Network) ForEachConnectedNodeIndex(f func(ni NeuronIndex)) {
 // Returns true if one was inserted or false if the randomly chosen location wasn't fruitful
 func (net *Network) InsertRandomNode() bool {
 
-	fmt.Println("Network before inserting random node")
-	fmt.Println(net)
+	//fmt.Println("Network before inserting random node")
+	//fmt.Println(net)
 
 	// Find a random node among the nodes that are connected to the output node (directly or indirectly)
 	connectedNodes := net.Connected()
@@ -438,7 +438,7 @@ func (net *Network) InsertRandomNode() bool {
 
 	// Create a new node and connect it with the left node
 	newNode, newNodeIndex := net.NewNeuron()
-	fmt.Println("NEW NODE INDEX", newNode.neuronIndex, "RETURNED INDEX", newNodeIndex)
+	//fmt.Println("NEW NODE INDEX", newNode.neuronIndex, "RETURNED INDEX", newNodeIndex)
 	err := newNode.AddInput(leftIndex)
 	if err != nil {
 		panic(err)
@@ -455,11 +455,11 @@ func (net *Network) InsertRandomNode() bool {
 	}
 
 	// Output the network
-	fmt.Println("Network after inserting random node:")
-	fmt.Println(net)
+	//fmt.Println("Network after inserting random node:")
+	//fmt.Println(net)
 
 	// Check that the network is still good
-	net.checkInputNeurons()
+	//net.checkInputNeurons()
 
 	return true
 }
