@@ -8,8 +8,8 @@ Inspired by: https://ai.googleblog.com/2019/08/exploring-weight-agnostic-neural.
 
 ## Features and limitations
 
-* Neural networks can be trained, and they work, but I have only tried this on very simple training data and there is surely a lot of room for improvement, both in term of benchmarking/profiling and improving how the rate of mutation is controlled.
-* Currently, a random weight is chosen when training, instead of looping over the range of the weight, as described in the paper. It's unclear to me what the ideal step size for the weight is, when looping.
+* Neural networks can be trained, and they work, but I have only tried this on very simple training data and there is surely a lot of room for improvement, both in term of benchmarking/profiling and controlling the rate of mutation.
+* Currently, a random weight is chosen when training, instead of looping over the range of the weight. The paper describes the latter, but it's unclear to me what the ideal step size for the weight is, when looping.
 
 ## Quick start
 
@@ -53,7 +53,7 @@ Here are a few examples:
 
 <img alt=diagram src=img/before.svg width=128 />
 
-This one happened during debugging, and is included just for fun:
+This one is from a debugging session and is included just for fun:
 
 <img alt=diagram src=img/wip.svg />
 
