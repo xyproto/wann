@@ -81,7 +81,7 @@ func main() {
 	}
 
 	// Save the image as an SVG image
-	if err := bestNetwork.SaveDiagram("best.svg"); err != nil {
+	if err := bestNetwork.WriteSVG("best.svg"); err != nil {
 		panic(err)
 	}
 }

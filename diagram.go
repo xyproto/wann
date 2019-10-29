@@ -8,8 +8,8 @@ import (
 	"github.com/xyproto/tinysvg"
 )
 
-// WriteSVG will output the current network as an SVG image to the given io.Writer
-func (net *Network) WriteSVG(w io.Writer) (int, error) {
+// OutputSVG will output the current network as an SVG image to the given io.Writer
+func (net *Network) OutputSVG(w io.Writer) (int, error) {
 	// Set up margins and the canvas size
 	var (
 		marginLeft     = 10
@@ -141,7 +141,9 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 				//xv := (xr * 4.0) - 2.0
 				// xv is from -5 to 5
 				xv := (xr - 0.5) * float64(nodeRadius)
-				yv := net.AllNodes[n].ActivationFunction(xv)
+				node := net.AllNodes[n]
+				f := ActivationFunctions[node.ActivationFunctionIndex]
+				yv := f(xv)
 				// plot, 3.0 is the amplitude along y
 				yp := float64(ypos) + float64(nodeRadius)*1.35 - (yv * 0.6 * float64(nodeRadius))
 
@@ -162,7 +164,7 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 	}
 
 	// Draw the output node
-	output := svg.AddCircle(outputx+nodeRadius, outputy+nodeRadius, nodeRadius)
+	output := svg.AddCircle(outputx+nodeRadius+1, outputy+nodeRadius+1, nodeRadius)
 	output.Fill("magenta")
 	output.Stroke2(tinysvg.ColorByName("black"))
 
@@ -170,10 +172,10 @@ func (net *Network) WriteSVG(w io.Writer) (int, error) {
 	return w.Write(document.Bytes())
 }
 
-// SaveDiagram saves a drawing of the current network as an SVG file
-func (net *Network) SaveDiagram(filename string) error {
+// WriteSVG saves a drawing of the current network as an SVG file
+func (net *Network) WriteSVG(filename string) error {
 	var buf bytes.Buffer
-	if _, err := net.WriteSVG(&buf); err != nil {
+	if _, err := net.OutputSVG(&buf); err != nil {
 		return err
 	}
 	return ioutil.WriteFile(filename, buf.Bytes(), 0644)

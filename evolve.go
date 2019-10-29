@@ -262,7 +262,7 @@ func (net *Network) Modify(maxIterations int) {
 	case 2:
 		//fmt.Println("Modifying the network using method 3 - change activation")
 		// Change the activation function
-		net.AllNodes[net.GetRandomNeuron()].RandomizeActivationFunction()
+		net.RandomizeActivationFunctionForRandomNeuron()
 	default:
 		panic("implementation error: invalid method number: " + strconv.Itoa(method))
 	}

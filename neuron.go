@@ -4,24 +4,23 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
-
-	"github.com/xyproto/af"
 )
 
 // Neuron is a list of input-neurons, and an activation function.
 type Neuron struct {
-	Net                    *Network
-	InputNeurons           []NeuronIndex // pointers to other neurons
-	ActivationFunction     func(float64) float64
-	Value                  *float64
-	distanceFromOutputNode int // Used when traversing nodes and drawing diagrams
-	neuronIndex            NeuronIndex
+	Net          *Network
+	InputNeurons []NeuronIndex // pointers to other neurons
+	//ActivationFunction func(float64) float64
+	ActivationFunctionIndex int
+	Value                   *float64
+	distanceFromOutputNode  int // Used when traversing nodes and drawing diagrams
+	neuronIndex             NeuronIndex
 }
 
 // NewNeuron creates a new Neuron
 func (net *Network) NewNeuron() (*Neuron, NeuronIndex) {
 	// Pre-allocate room for 64 connections and use Linear as the default activation function
-	neuron := Neuron{Net: net, InputNeurons: make([]NeuronIndex, 0, 4), ActivationFunction: af.Linear}
+	neuron := Neuron{Net: net, InputNeurons: make([]NeuronIndex, 0, 4), ActivationFunctionIndex: Linear}
 	neuron.neuronIndex = NeuronIndex(len(net.AllNodes))
 	net.AllNodes = append(net.AllNodes, neuron)
 	return &neuron, neuron.neuronIndex
@@ -36,8 +35,8 @@ func (net *Network) NewRandomNeuron() (*Neuron, NeuronIndex) {
 
 // RandomizeActivationFunction will choose a random activation function for this neuron
 func (neuron *Neuron) RandomizeActivationFunction() {
-	chosenIndex := rand.Intn(len(ActivationFunctions))
-	neuron.ActivationFunction = ActivationFunctions[chosenIndex]
+	chosenActivationFunctionIndex := rand.Intn(len(ActivationFunctions))
+	neuron.ActivationFunctionIndex = chosenActivationFunctionIndex
 }
 
 // SetValue can be used for setting a value for this neuron instead of using input neutrons.
@@ -175,7 +174,13 @@ func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64
 	if counter == 0 {
 		return 0.0, false
 	}
-	return neuron.ActivationFunction(summed / float64(counter)), false
+	f := neuron.ActivationFunction()
+	return f(summed / float64(counter)), false
+}
+
+// ActivationFunction returns the activation function for this neuron
+func (neuron *Neuron) ActivationFunction() func(float64) float64 {
+	return ActivationFunctions[neuron.ActivationFunctionIndex]
 }
 
 // Copy a Neuron to a new Neuron, and assign the pointer to the given network to .Net
@@ -183,7 +188,7 @@ func (neuron Neuron) Copy(net *Network) Neuron {
 	var newNeuron Neuron
 	newNeuron.Net = net
 	newNeuron.InputNeurons = neuron.InputNeurons
-	newNeuron.ActivationFunction = neuron.ActivationFunction
+	newNeuron.ActivationFunctionIndex = neuron.ActivationFunctionIndex
 	newNeuron.Value = neuron.Value
 	newNeuron.distanceFromOutputNode = neuron.distanceFromOutputNode
 	newNeuron.neuronIndex = neuron.neuronIndex
