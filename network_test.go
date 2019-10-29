@@ -178,6 +178,7 @@ func ExampleNetwork_InsertNode() {
 	})
 	fmt.Println("Before insertion:")
 	fmt.Println(net)
+	//net.WriteSVG("before.svg")
 	_, nodeIndex := net.NewNeuron()
 	err := net.InsertNode(0, 1, nodeIndex)
 	if err != nil {
@@ -185,6 +186,7 @@ func ExampleNetwork_InsertNode() {
 	}
 	fmt.Println("After insertion:")
 	fmt.Println(net)
+	//net.WriteSVG("after.svg")
 	// Output:
 	// Before insertion:
 	// Network (4 nodes, 3 input nodes, 1 output node)
@@ -221,17 +223,17 @@ func TestLeftRight(t *testing.T) {
 	if a != 1 || b != 0 {
 		t.Fail()
 	}
-	net.WriteSVG("before.svg")
-	fmt.Println("BEFORE:")
-	fmt.Println(net)
+	//net.WriteSVG("before.svg")
+	//fmt.Println("BEFORE:")
+	//fmt.Println(net)
 	_, nodeIndex := net.NewNeuron()
 	err := net.InsertNode(0, 1, nodeIndex)
 	if err != nil {
 		t.Error(err)
 	}
-	net.WriteSVG("after.svg")
-	fmt.Println("AFTER:")
-	fmt.Println(net)
+	//net.WriteSVG("after.svg")
+	//fmt.Println("AFTER:")
+	//fmt.Println(net)
 	a, b, _ = net.LeftRight(0, nodeIndex)
 	// output node to the right
 	if a != nodeIndex || b != 0 {

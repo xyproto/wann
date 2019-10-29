@@ -1,6 +1,7 @@
 package wann
 
 import (
+	"fmt"
 	"sort"
 )
 
@@ -32,8 +33,11 @@ func SortByValue(m map[int]float64) PairList {
 
 func (neuron *Neuron) checkInputNeurons() {
 	for _, inputNeuronIndex := range neuron.InputNodes {
+		fmt.Println("Network of neuron ", neuron.neuronIndex, ":")
+		fmt.Println(neuron.Net)
 		if int(inputNeuronIndex) >= len(neuron.Net.AllNodes) {
-			panic("input neuron index is pointing out of bounds")
+			msg := fmt.Sprintf("at %d which has input index %d", neuron.neuronIndex, inputNeuronIndex)
+			panic("input neuron index is pointing out of bounds: " + msg)
 		}
 	}
 }

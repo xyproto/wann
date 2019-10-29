@@ -395,11 +395,81 @@ func (net *Network) ForEachConnectedNodeIndex(f func(ni NeuronIndex)) {
 	})
 }
 
+// InsertRandomNode will try the given number of times to insert a node in a random location,
+// replacing an existing connection between two nodes.
+// `a -> b` will then become `a -> newNode -> b`
+// Returns true if one was inserted or false if the randomly chosen location wasn't fruitful
+func (net *Network) InsertRandomNode() bool {
+
+	fmt.Println("Network before inserting random node")
+	fmt.Println(net)
+
+	// Find a random node among the nodes that are connected to the output node (directly or indirectly)
+	connectedNodes := net.Connected()
+	randomNodeIndexThatIsConnected := connectedNodes[rand.Intn(len(connectedNodes))]
+
+	// If this is one of the network input nodes, return
+	if net.IsInput(randomNodeIndexThatIsConnected) {
+		// Nothing to do here, the input nodes get their input from the input numbers
+		return false
+	}
+
+	// If this is the output node, and there are no inputs to the output node, return
+	if randomNodeIndexThatIsConnected == net.OutputNode && len(net.AllNodes[net.OutputNode].InputNodes) == 0 {
+		// Nothing to do here, no connections to the output node
+		return false
+	}
+
+	// If we arrived here, this node must have input nodes. Choose one at random.
+	rightIndex := randomNodeIndexThatIsConnected
+	inputNodes := net.AllNodes[rightIndex].InputNodes
+
+	// if len(inputNodes) == 0 {
+	// 	fmt.Println("One of my assumptions are wrong")
+	// 	fmt.Println("this node:", randomNodeIndexThatIsConnected, "should have input nodes!")
+	// 	fmt.Println(net)
+	// 	panic("yes")
+	// }
+
+	leftIndex := inputNodes[rand.Intn(len(inputNodes))]
+
+	// We now have a left and right node index, that we know are connected, replace this connection with
+	// one that goes through an entirely new node.
+
+	// Create a new node and connect it with the left node
+	newNode, newNodeIndex := net.NewNeuron()
+	fmt.Println("NEW NODE INDEX", newNode.neuronIndex, "RETURNED INDEX", newNodeIndex)
+	err := newNode.AddInput(leftIndex)
+	if err != nil {
+		panic(err)
+	}
+
+	// Remove the connection to the left node and then connect the right node to the new node
+	err = net.AllNodes[rightIndex].RemoveInput(leftIndex)
+	if err != nil {
+		panic(err)
+	}
+	err = net.AllNodes[rightIndex].AddInput(newNodeIndex)
+	if err != nil {
+		panic(err)
+	}
+
+	// Output the network
+	fmt.Println("Network after inserting random node:")
+	fmt.Println(net)
+
+	// Check that the network is still good
+	net.checkInputNeurons()
+
+	return true
+}
+
 // Copy a Network to a new network
-func (net Network) Copy() Network {
+func (net Network) Copy() *Network {
 	var newNet Network
 	newNet.AllNodes = make([]Neuron, len(net.AllNodes))
 	for i, node := range net.AllNodes {
+		// This copies the node and also sets the .Net pointer correctly to this network
 		newNet.AllNodes[i] = node.Copy(&newNet)
 	}
 	newNet.InputNodes = net.InputNodes
@@ -409,7 +479,10 @@ func (net Network) Copy() Network {
 	// For debugging
 	//newNet.checkInputNeurons()
 
-	return newNet
+	// NOTE: It's important that a pointer to a Network is returned,
+	//       instead of an entire Network struct, so that the .Net pointers point correctly.
+
+	return &newNet
 }
 
 // String creates a simple and not very useful ASCII representation of the input nodes and the output node.
