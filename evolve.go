@@ -94,9 +94,12 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 			fmt.Println("------ generation " + strconv.Itoa(j) + ", population size " + strconv.Itoa(len(population)))
 		}
 
+		// The scores for this generation (using a random shared weight within ScorePopulation).
+		// CorrectOutputMultipliers gives weight to the "correct" or "wrong" results, with the same index as the inputData
+		// Score each network in the population.
 		scoreMap, scoreSum := ScorePopulation(population, inputData, correctOutputMultipliers)
 
-		// The scores for this weight
+		// Sort by score
 		scoreList := SortByValue(scoreMap)
 
 		// Handle the best score stats
@@ -140,26 +143,35 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 			fmt.Println("Best, average and worst improvement counters:", noImprovementOfBestScoreCounter, noImprovementOfAverageScoreCounter, noImprovementOfWorstScoreCounter)
 		}
 
-		// The scores for this weight
-		scoreList = SortByValue(scoreMap)
+		bestThirdCountdown := len(population) / 3
 
-		// Now take the best networks and make mutated offspring.
-		// Delete the worst networks.
-
-		// TODO: Rewrite. The entire loop should loop from highest to lowest scoring.
-		for networkIndex := 0; networkIndex < config.PopulationSize; networkIndex++ {
-			networkScore := scoreMap[networkIndex]
-			// Is this network in the best half?
-			bestHalf := (networkScore >= averageScore) && (networkScore > 0)
-			if !bestHalf {
-				// Take a proper copy, not just the the pointers, because the nodes will be changed
-				// Assign it to the population, replacing the low-scoring ones
-				// TODO: Actually replace the low-scoring ones
-				newNetwork := bestNetwork.Copy()
-				newNetwork.Modify(100)
-				population[networkIndex] = newNetwork
+		// Now loop over all networks, sorted by score (descending order)
+		for _, p := range scoreList {
+			networkIndex := p.Key
+			networkScore := p.Value
+			if bestThirdCountdown > 0 {
+				bestThirdCountdown--
+				// In the best third of the networks
+				fmt.Println("BEST THIRD:", networkIndex, "score", networkScore)
+			} else {
+				fmt.Println("WORST TWO THIRDS:", networkIndex, "score", networkScore)
 			}
 		}
+
+		// // TODO: Rewrite. The entire loop should loop from highest to lowest scoring.
+		// for networkIndex := 0; networkIndex < config.PopulationSize; networkIndex++ {
+		// 	networkScore := scoreMap[networkIndex]
+		// 	// Is this network in the best half?
+		// 	bestHalf := (networkScore >= averageScore) && (networkScore > 0)
+		// 	if !bestHalf {
+		// 		// Take a proper copy, not just the the pointers, because the nodes will be changed
+		// 		// Assign it to the population, replacing the low-scoring ones
+		// 		// TODO: Actually replace the low-scoring ones
+		// 		newNetwork := bestNetwork.Copy()
+		// 		newNetwork.Modify(100)
+		// 		population[networkIndex] = newNetwork
+		// 	}
+		// }
 
 	}
 	if bestNetwork == nil {
