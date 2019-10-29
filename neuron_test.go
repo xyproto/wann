@@ -118,3 +118,5 @@ func TestEvaluate(t *testing.T) {
 	result := net.Evaluate([]float64{0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5})
 	fmt.Println(result)
 }
+
+// 	func (node *Neuron) In(collection []NeuronIndex) bool {

@@ -96,30 +96,24 @@ func (net *Network) InsertNode(a, b NeuronIndex, newNodeIndex NeuronIndex) error
 
 	// TODO: When a neuron is inserted, the input index
 
-	if a == b {
-		return errors.New("the a and b nodes are the same")
-	}
 	// Sort the nodes by where they place in the diagram
 	//fmt.Println("InsertNode: BEFORE LEFT RIGHT:", a, b)
-	a, b = net.LeftRight(a, b)
-	//fmt.Println("InsertNode: AFTER LEFT RIGHT:", a, b)
-	if net.IsInput(a) && net.IsInput(b) {
-		return errors.New("both node a and b are special input nodes")
-	} else if !net.IsInput(a) && net.IsInput(b) {
-		return errors.New("node b (but not a) is a special input node")
+	a, b, arbitrary := net.LeftRight(a, b)
+	if arbitrary {
+		if a == b {
+			return errors.New("insert node: the a and b nodes are the same")
+		}
+		if net.IsInput(a) && net.IsInput(b) {
+			return errors.New("insert node: both node a and b are input nodes")
+		}
+		return errors.New("insert node: aribtrary ordering when inserting a node")
 	}
 
-	if b == net.OutputNode {
-		// this is fine
-		//fmt.Println("b is the output node")
-	}
-	if net.IsInput(a) {
-		// this is fine
-		//fmt.Println("a is an input node")
-	}
+	// This should never happen
 	if a == net.OutputNode {
+		panic("implementation error: the leftmost node is an output node and this was not cought earlier")
 		// If now, after swapping, a is an output node, return with an error
-		return errors.New("the leftmost node is an output node")
+		//return errors.New("the leftmost node is an output node")
 	}
 
 	// b already has a as an input (a -> b)
@@ -137,8 +131,6 @@ func (net *Network) InsertNode(a, b NeuronIndex, newNodeIndex NeuronIndex) error
 			return errors.New("error in InsertNode b.RemoveInput(a): " + err.Error())
 		}
 	}
-
-	//net.AllNodes[net.OutputNode].Net = net
 
 	// Connect the new node to b
 	if err := net.AllNodes[b].AddInput(newNodeIndex); err != nil {
@@ -158,36 +150,33 @@ func (net *Network) InsertNode(a, b NeuronIndex, newNodeIndex NeuronIndex) error
 // AddConnection adds a connection from a to b
 func (net *Network) AddConnection(a, b NeuronIndex) error {
 	lastIndex := NeuronIndex(len(net.AllNodes) - 1)
-	if a > lastIndex || b > lastIndex {
+	if a < 0 || a > lastIndex || b < 0 || b > lastIndex {
 		return errors.New("index out of range")
 	}
-	if a == b {
-		return errors.New("can't connect to self")
-	}
 	// Sort the nodes by where they place in the diagram
-	a, b = net.LeftRight(a, b)
+	arbitrary := false
+	a, b, arbitrary = net.LeftRight(a, b)
+	if arbitrary {
+		if a == b {
+			return errors.New("can't connect to self")
+		}
+		return errors.New("error: arbitrary ordering when adding a connection")
+	}
+	// a should not be an output node
 	if a == net.OutputNode {
-		// Swap a and b
-		tmp := a
-		b = a
-		a = tmp
+		return errors.New("error: will not insert a node between the output node and another node")
 	}
-	if a == net.OutputNode {
-		// If now, after swapping, a is an output node, return with an error
-		return errors.New("will not insert a node between the output node and another node")
-	}
-	if net.AllNodes[a].distanceFromOutputNode > net.AllNodes[b].distanceFromOutputNode {
-		// Swap a and b
-		tmp := a
-		b = a
-		a = tmp
-	}
+	// b should not be an input node
 	if net.IsInput(b) {
-		return errors.New("b is an input node")
+		return errors.New("error: b is an input node")
 	}
-	//if b.Value != nil {
-	//return errors.New("b is a value node/input node"
-	//}
+	// same thing
+	if net.AllNodes[b].Value != nil {
+		return errors.New("error: b is an input node")
+	}
+	if net.AllNodes[b].HasInput(a) {
+		return errors.New("error: input already exists")
+	}
 	return net.AllNodes[b].AddInput(a)
 }
 
@@ -240,44 +229,49 @@ func (net *Network) Complexity() float64 {
 // LeftRight returns two neurons, such that the first on is the one that is
 // most to the left (towards the input neurons) and the second one is most to
 // the right (towards the output neuron). Assumes that a and b are not equal.
-func (net *Network) LeftRight(a, b NeuronIndex) (NeuronIndex, NeuronIndex) {
+// The returned bool is true if there is no order (if the nodes are equal, both are output nodes or both are input nodes)
+func (net *Network) LeftRight(a, b NeuronIndex) (NeuronIndex, NeuronIndex, bool) {
+	// First check if they are equal
+	if a == b {
+		return a, b, true // Arbitrary order
+	}
 	// First check the network output nodes
 	if a == net.OutputNode && b == net.OutputNode {
-		return a, b // Arbitrary order
+		return a, b, true // Arbitrary order
 	}
 	if a == net.OutputNode && b != net.OutputNode {
-		return b, a // Swap order
+		return b, a, false // Swap order
 	}
 	if a != net.OutputNode && b == net.OutputNode {
-		return a, b // Same order
+		return a, b, false // Same order
 	}
 	// Then check if the nodes are already connected
 	if net.AllNodes[a].In(net.AllNodes[b].InputNodes) {
-		return a, b // Same order
+		return a, b, false // Same order
 	}
 	if net.AllNodes[b].In(net.AllNodes[a].InputNodes) {
-		return b, a // Swap order
+		return b, a, false // Swap order
 	}
 	// Then check the input nodes of the network
 	aIsNetworkInputNode := net.AllNodes[a].In(net.InputNodes)
 	bIsNetworkInputNode := net.AllNodes[b].In(net.InputNodes)
 	if aIsNetworkInputNode && !bIsNetworkInputNode {
-		return a, b // Same order
+		return a, b, false // Same order
 	}
 	if !aIsNetworkInputNode && bIsNetworkInputNode {
-		return b, a // Swap order
+		return b, a, false // Swap order
 	}
 	if aIsNetworkInputNode && bIsNetworkInputNode {
-		return a, b // Arbitrary order
+		return a, b, true // Arbitrary order
 	}
 	// Then check the distance from the output node, in steps
 	aDistance := net.AllNodes[a].distanceFromOutputNode
 	bDistance := net.AllNodes[b].distanceFromOutputNode
 	if bDistance > aDistance {
-		return b, a // Swap order, b is further away from the output node, which (usually) means further left in the graph
+		return b, a, false // Swap order, b is further away from the output node, which (usually) means further left in the graph
 	}
 	// Everything else
-	return a, b
+	return a, b, false
 }
 
 // Depth returns the maximum connection distance from the output node
@@ -289,12 +283,6 @@ func (net *Network) Depth() int {
 		}
 	})
 	return maxDepth
-}
-
-func (net *Network) checkInputNeurons() {
-	for _, n := range net.All() {
-		n.checkInputNeurons()
-	}
 }
 
 // All returns a slice with pointers to all nodes in this network
@@ -318,16 +306,6 @@ func (net *Network) GetRandomInputNode() NeuronIndex {
 	inputPosition := rand.Intn(len(net.InputNodes))
 	inputNodeIndex := net.InputNodes[inputPosition]
 	return inputNodeIndex
-}
-
-// In checks if this neuron is in the given collection
-func (node *Neuron) In(collection []NeuronIndex) bool {
-	for _, existingNodeIndex := range collection {
-		if node.Is(existingNodeIndex) {
-			return true
-		}
-	}
-	return false
 }
 
 // Combine will combine two lists of indices

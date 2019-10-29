@@ -7,6 +7,32 @@ import (
 	"strconv"
 )
 
+// ScorePopulation evaluates a population, given a slice of input numbers.
+// It returns a map with scores, together with the sum of scores.
+func ScorePopulation(population []Network, inputData [][]float64, correctOutputMultipliers []float64) (map[int]float64, float64) {
+	// Use a shared random weight
+	w := rand.Float64()
+
+	scoreMap := make(map[int]float64)
+	scoreSum := 0.0
+
+	for i := 0; i < len(population); i++ {
+		net := population[i]
+
+		net.checkInputNeurons()
+
+		net.SetWeight(w)
+		result := 0.0
+		for i := 0; i < len(inputData); i++ {
+			result += net.Evaluate(inputData[i]) * correctOutputMultipliers[i]
+		}
+		score := result / net.Complexity()
+		scoreSum += score
+		scoreMap[i] = score
+	}
+	return scoreMap, scoreSum
+}
+
 // Evolve evolves a neural network, given a slice of training data and a slice of correct output values.
 // Will overwrite config.Inputs.
 func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []float64) (*Network, error) {
@@ -38,108 +64,80 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 
 	var bestNetwork *Network
 
-	// For each generation, evaluate and modify the networks
-
+	// Keep track of the best scores
 	bestScore := 0.0
 	lastBestScore := 0.0
 	noImprovementOfBestScoreCounter := 0
 
-	//bestWeight := 0.0
-
+	// Keep track of the average scores
 	averageScore := 0.0
 	lastAverageScore := 0.0
 	noImprovementOfAverageScoreCounter := 0
 
+	// Keep track of the worst scores
+	worstScore := 0.0
+	lastWorstScore := 0.0
+	noImprovementOfWorstScoreCounter := 0
+
+	// For each generation, evaluate and modify the networks
 	for j := 0; j < config.Generations; j++ {
+
+		bestNetwork = nil
+
+		// Initialize the scores with unlikely values
+		// TODO: Use the first network in the population for initializing these instead
+		bestScore = -9999.0
+		averageScore = 0.0
+		worstScore = 9999.0
 
 		if config.Verbose {
 			fmt.Println("------ generation " + strconv.Itoa(j) + ", population size " + strconv.Itoa(len(population)))
 		}
 
-		//bestWeight = 0.0
-		bestNetwork = nil
-
-		bestScore = 0.0
-		averageScore = 0.0
-
-		// For each weight, evaluate all networks
-		//first := true
-		w := rand.Float64()
-		//for w := 0.0; w <= 1.0; w += 0.1 {
-
-		scoreMap := make(map[int]float64)
-		scoreSum := 0.0
-		for i := 0; i < config.PopulationSize; i++ {
-			net := population[i]
-
-			// if net.AllNodes[net.OutputNode].InputNeuronsAreGood() {
-			// 	fmt.Println("input neurons are good")
-			// } else {
-			// 	panic("input neurons are not good")
-			// }
-
-			net.SetWeight(w)
-			result := 0.0
-			for i := 0; i < len(inputData); i++ {
-				result += net.Evaluate(inputData[i]) * correctOutputMultipliers[i]
-			}
-			score := result / net.Complexity()
-			//if score <= 0 {
-			//	score = -net.Complexity()
-			//}
-			scoreSum += score
-			scoreMap[i] = score
-		}
+		scoreMap, scoreSum := ScorePopulation(population, inputData, correctOutputMultipliers)
 
 		// The scores for this weight
 		scoreList := SortByValue(scoreMap)
 
-		if bestNetwork == nil || scoreList[0].Value > bestScore {
+		// Handle the best score stats
+		lastBestScore = bestScore
+		if scoreList[0].Value > bestScore {
 			bestScore = scoreList[0].Value
 			bestNetwork = &(population[scoreList[0].Key])
-			//bestWeight = w
-			//first = false
+		}
+		if bestScore >= lastBestScore {
+			noImprovementOfBestScoreCounter++
+		} else {
+			noImprovementOfBestScoreCounter = 0
 		}
 
-		//}
+		// Handle the average score stats
+		lastAverageScore = averageScore
+		averageScore = scoreSum / float64(config.PopulationSize)
+		if averageScore >= lastAverageScore {
+			noImprovementOfAverageScoreCounter++
+		} else {
+			noImprovementOfAverageScoreCounter = 0
+		}
+
+		// Handle the worst score stats
+		lastWorstScore = worstScore
+		if scoreList[len(scoreList)-1].Value < worstScore {
+			worstScore = scoreList[len(scoreList)-1].Value
+		}
+		if worstScore >= lastWorstScore {
+			noImprovementOfWorstScoreCounter++
+		} else {
+			noImprovementOfWorstScoreCounter = 0
+		}
 
 		if bestNetwork == nil {
 			panic("implementation error: no best network")
 		}
 
 		if config.Verbose {
-			fmt.Printf("Best score: %f, using weight: %f\n", bestScore, w)
-		}
-
-		if bestScore == lastBestScore {
-			noImprovementOfBestScoreCounter++
-		}
-		lastBestScore = bestScore
-
-		// No better score for 20 generations? Stop evolving.
-		if config.MaxIterationsWithoutBestImprovement > 0 && noImprovementOfBestScoreCounter > config.MaxIterationsWithoutBestImprovement {
-			if config.Verbose {
-				fmt.Println("No best score improvement for a while, done training.")
-			}
-			break
-		}
-
-		lastAverageScore = averageScore
-		averageScore = scoreSum / float64(config.PopulationSize)
-		if averageScore == lastAverageScore {
-			noImprovementOfAverageScoreCounter++
-		}
-
-		// No better score for 20 generations? Stop evolving.
-		if config.MaxIterationsWithoutAverageImprovement > 0 && noImprovementOfAverageScoreCounter > config.MaxIterationsWithoutAverageImprovement {
-			if config.Verbose {
-				fmt.Println("No average score improvement for a while, done training.")
-			}
-			break
-		}
-
-		if config.Verbose {
-			fmt.Println("Average score:", averageScore)
+			fmt.Println("Best, average and worst score:", bestScore, averageScore, worstScore)
+			fmt.Println("Best, average and worst improvement counters:", noImprovementOfBestScoreCounter, noImprovementOfAverageScoreCounter, noImprovementOfWorstScoreCounter)
 		}
 
 		// The scores for this weight
@@ -148,27 +146,19 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		// Now take the best networks and make mutated offspring.
 		// Delete the worst networks.
 
+		// TODO: Rewrite. The entire loop should loop from highest to lowest scoring.
 		for networkIndex := 0; networkIndex < config.PopulationSize; networkIndex++ {
 			networkScore := scoreMap[networkIndex]
 			// Is this network in the best half?
 			bestHalf := (networkScore >= averageScore) && (networkScore > 0)
-			// If the average score is 0, then modify an arbitrary half of the population
-			// if bestScore == 0 || averageScore == 0 {
-			// 	if networkIndex > (config.PopulationSize / 2) {
-			// 		//population[networkIndex] = NewNetwork(config)
-			// 		//continue
-			// 	}
-			// }
-			// If not in the best half, take a copy of the best network,
-			// then modify it a bit (in a random way)
 			if !bestHalf {
 				// Take a proper copy, not just the the pointers, because the nodes will be changed
-				// Assign it to the population, replacing the low-scoring one
+				// Assign it to the population, replacing the low-scoring ones
+				// TODO: Actually replace the low-scoring ones
 				newNetwork := bestNetwork.Copy()
 				newNetwork.Modify(100)
 				population[networkIndex] = newNetwork
 			}
-			//fmt.Println(networkIndex, "is in the best half?", bestHalf)
 		}
 
 	}

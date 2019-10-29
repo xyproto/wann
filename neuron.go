@@ -130,14 +130,6 @@ func (neuron *Neuron) InputNeuronsAreGood() bool {
 	return true
 }
 
-func (neuron *Neuron) checkInputNeurons() {
-	for _, inputNeuronIndex := range neuron.InputNodes {
-		if int(inputNeuronIndex) >= len(neuron.Net.AllNodes) {
-			panic("input neuron index is pointing out of bounds")
-		}
-	}
-}
-
 // evaluate will return a weighted sum of the input nodes,
 // using the .Value field if it is set and no input nodes are available.
 func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64, bool) {
@@ -180,6 +172,16 @@ func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64
 // ActivationFunction returns the activation function for this neuron
 func (neuron *Neuron) ActivationFunction() func(float64) float64 {
 	return ActivationFunctions[neuron.ActivationFunctionIndex]
+}
+
+// In checks if this neuron is in the given collection
+func (neuron *Neuron) In(collection []NeuronIndex) bool {
+	for _, existingNodeIndex := range collection {
+		if neuron.Is(existingNodeIndex) {
+			return true
+		}
+	}
+	return false
 }
 
 // Copy a Neuron to a new Neuron, and assign the pointer to the given network to .Net

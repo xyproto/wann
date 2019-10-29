@@ -29,3 +29,17 @@ func SortByValue(m map[int]float64) PairList {
 	sort.Sort(sort.Reverse(pl))
 	return pl
 }
+
+func (neuron *Neuron) checkInputNeurons() {
+	for _, inputNeuronIndex := range neuron.InputNodes {
+		if int(inputNeuronIndex) >= len(neuron.Net.AllNodes) {
+			panic("input neuron index is pointing out of bounds")
+		}
+	}
+}
+
+func (net *Network) checkInputNeurons() {
+	for _, n := range net.All() {
+		n.checkInputNeurons()
+	}
+}

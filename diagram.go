@@ -78,30 +78,30 @@ func (net *Network) OutputSVG(w io.Writer) (int, error) {
 	// TODO: Once the diagram confirmed to be correct, draw the lines first and then the nodes
 	// TODO: Draw unconnected nodes in gray
 	for _, neurons := range layerNeurons {
-		for _, n := range neurons {
+		for _, neuronIndex := range neurons {
 
-			if n == net.OutputNode {
+			if neuronIndex == net.OutputNode {
 				// Skip
 				continue
 			}
 
 			// Find the position of this node circle
-			x, y := getPosition(n)
+			x, y := getPosition(neuronIndex)
 
 			// Draw the connection from the center of this node to the center of all input nodes, if applicable
-			for _, inputNeuron := range (net.AllNodes[n]).InputNodes {
+			for _, inputNeuron := range (net.AllNodes[neuronIndex]).InputNodes {
 				ix, iy := getPosition(inputNeuron)
 				svg.Line(ix+nodeRadius, iy+nodeRadius, x+nodeRadius, y+nodeRadius, lineWidth, "orange")
 			}
 
 			// Draw the connection to the output node, if it has this node as input
-			if net.AllNodes[net.OutputNode].HasInput(n) {
+			if net.AllNodes[net.OutputNode].HasInput(neuronIndex) {
 				svg.Line(x+nodeRadius, y+nodeRadius, outputx+nodeRadius, outputy+nodeRadius, lineWidth, "#0099ff")
 			}
 
 			// Draw this node
 			input := svg.AddCircle(x+nodeRadius, y+nodeRadius, nodeRadius)
-			switch net.AllNodes[n].distanceFromOutputNode {
+			switch net.AllNodes[neuronIndex].distanceFromOutputNode {
 			case 1:
 				input.Fill("lightblue")
 			case 2:
@@ -141,7 +141,7 @@ func (net *Network) OutputSVG(w io.Writer) (int, error) {
 				//xv := (xr * 4.0) - 2.0
 				// xv is from -5 to 5
 				xv := (xr - 0.5) * float64(nodeRadius)
-				node := net.AllNodes[n]
+				node := net.AllNodes[neuronIndex]
 				f := ActivationFunctions[node.ActivationFunctionIndex]
 				yv := f(xv)
 				// plot, 3.0 is the amplitude along y
