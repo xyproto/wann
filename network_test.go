@@ -225,8 +225,18 @@ func TestLeftRight(t *testing.T) {
 	}
 }
 
-// 	func (net *Network) LeftRight(a, b NeuronIndex) (left NeuronIndex, right NeuronIndex) {
-// 	func (net *Network) Depth() int {
+func TestDepth(t *testing.T) {
+	rand.Seed(commonSeed)
+	net := NewNetwork(&Config{
+		Inputs:          3,
+		ConnectionRatio: 1.0,
+	})
+	fmt.Println(net.Depth())
+	_, nodeIndex := net.NewNeuron()
+	_ = net.InsertNode(0, 1, nodeIndex)
+	fmt.Println(net.Depth())
+}
+
 // 	func (net *Network) checkInputNeurons() {
 // 	func (net Network) Copy() Network {
 // 	func (net *Network) GetRandomNeuron() NeuronIndex {

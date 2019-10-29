@@ -283,11 +283,11 @@ func (net *Network) LeftRight(a, b NeuronIndex) (NeuronIndex, NeuronIndex) {
 // Depth returns the maximum connection distance from the output node
 func (net *Network) Depth() int {
 	maxDepth := 0
-	for _, n := range net.All() {
+	net.ForEachConnected(func(n *Neuron) {
 		if n.distanceFromOutputNode > maxDepth {
 			maxDepth = n.distanceFromOutputNode
 		}
-	}
+	})
 	return maxDepth
 }
 
