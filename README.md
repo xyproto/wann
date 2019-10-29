@@ -10,6 +10,7 @@ Inspired by: https://ai.googleblog.com/2019/08/exploring-weight-agnostic-neural.
 
 * Neural networks can be trained, and they work, but I have only tried this on very simple training data and there is surely a lot of room for improvement, both in term of benchmarking/profiling and controlling the rate of mutation.
 * Currently, a random weight is chosen when training, instead of looping over the range of the weight. The paper describes the latter, but it's unclear to me what the ideal step size for the weight is, when looping.
+* Complex networks are given a worse score when evolving. A quick benchmark at the start of the program determines which activation function us more complex. This optimizes not only for simple networks, but also for network performance. 
 
 ## Quick start
 
