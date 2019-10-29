@@ -332,19 +332,39 @@ func TestCopy(t *testing.T) {
 		Inputs:          5,
 		ConnectionRatio: 0.5,
 	})
+
+	// Take a deep copy with the Copy() function
 	net2 := net.Copy()
+	// Modify net2 by inserting an unconnected neuron
 	n := NewUnconnectedNeuron()
 	net2.AllNodes[1] = *n
-	if net.String() != net2.String() {
+	// net and net2 should now be different, since net2 is a proper copy
+	if net.String() == net2.String() {
 		t.Fail()
 	}
+
+	// Take a shallow copy
 	net3 := net
+	// Modify net3 by inserting an unconnected neuron
+	net3.AllNodes[1] = *n
+	// net and net3 should still be the same, since net3 is just a shallow copy
 	if net.String() != net3.String() {
 		t.Fail()
 	}
-
 }
 
 func TestForEachConnectedNodeIndex(t *testing.T) {
-	//ForEachConnectedNodeIndex(f func(ni NeuronIndex, distanceFromOutputNode int))
+	rand.Seed(commonSeed)
+	net := NewNetwork(&Config{
+		Inputs:          5,
+		ConnectionRatio: 0.5,
+	})
+	lastNi := NeuronIndex(-1)
+	net.ForEachConnectedNodeIndex(func(ni NeuronIndex) {
+		fmt.Println(ni)
+		lastNi = ni
+	})
+	if lastNi != 5 {
+		t.Fail()
+	}
 }
