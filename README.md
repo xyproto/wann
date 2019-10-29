@@ -27,7 +27,7 @@ Build and run the example:
 
     go build && ./evolve
 
-Take a look at the best image for the last generation:
+Take a look at the best network for judging if a set of numbers that are either 0 or 1 are of one category:
 
     xdg-open best.svg
 
