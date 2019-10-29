@@ -31,19 +31,38 @@ func SortByValue(m map[int]float64) PairList {
 	return pl
 }
 
-func (neuron *Neuron) checkInputNeurons() {
-	for _, inputNeuronIndex := range neuron.InputNodes {
-		fmt.Println("Network of neuron ", neuron.neuronIndex, ":")
-		fmt.Println(neuron.Net)
-		if int(inputNeuronIndex) >= len(neuron.Net.AllNodes) {
-			msg := fmt.Sprintf("at %d which has input index %d", neuron.neuronIndex, inputNeuronIndex)
-			panic("input neuron index is pointing out of bounds: " + msg)
-		}
-	}
-}
+// func (neuron Neuron) checkInputNeurons() {
+// 	for _, inputNeuronIndex := range neuron.InputNodes {
+// 		fmt.Println("Network of neuron ", neuron.neuronIndex, ":")
+// 		fmt.Println(neuron.Net)
+// 		if int(inputNeuronIndex) >= len(neuron.Net.AllNodes) {
+// 			msg := fmt.Sprintf("at %d which has input index %d", neuron.neuronIndex, inputNeuronIndex)
+// 			panic("input neuron index is pointing out of bounds: " + msg)
+// 		}
+// 	}
+// }
 
 func (net *Network) checkInputNeurons() {
-	for _, n := range net.All() {
-		n.checkInputNeurons()
+	for neuronIndex, neuron := range net.AllNodes {
+		if len(net.AllNodes) != len(neuron.Net.AllNodes) {
+			panic("net.AllNodes and neuron.Net.AllNodes have different length")
+		}
+		if net != neuron.Net {
+			//panic("neuron Net pointer is out of sync")
+			net.AllNodes[neuronIndex].Net = net
+		}
+		neuron = net.AllNodes[neuronIndex]
+		if net != neuron.Net {
+			panic("neuron Net pointer is out of sync")
+		}
+		for _, inputNeuronIndex := range neuron.InputNodes {
+			if int(inputNeuronIndex) >= len(net.AllNodes) {
+				fmt.Println("Network:", net.String())
+				panic(fmt.Sprintf("indexNeuronIndex out of range: %d\n", inputNeuronIndex))
+			}
+			if int(inputNeuronIndex) >= len(neuron.Net.AllNodes) {
+				panic(fmt.Sprintf("indexNeuronIndex out of range: %d\n", inputNeuronIndex))
+			}
+		}
 	}
 }

@@ -464,13 +464,20 @@ func (net *Network) InsertRandomNode() bool {
 	return true
 }
 
+// UpdateNetworkPointers will update all the node.Net pointers to point to this network
+func (net *Network) UpdateNetworkPointers() {
+	for nodeIndex := range net.AllNodes {
+		net.AllNodes[nodeIndex].Net = net
+	}
+}
+
 // Copy a Network to a new network
 func (net Network) Copy() *Network {
 	var newNet Network
 	newNet.AllNodes = make([]Neuron, len(net.AllNodes))
-	for i, node := range net.AllNodes {
+	for nodeIndex := range net.AllNodes {
 		// This copies the node and also sets the .Net pointer correctly to this network
-		newNet.AllNodes[i] = node.Copy(&newNet)
+		newNet.AllNodes[nodeIndex] = newNet.AllNodes[nodeIndex].Copy(&newNet)
 	}
 	newNet.InputNodes = net.InputNodes
 	newNet.OutputNode = net.OutputNode

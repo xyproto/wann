@@ -152,14 +152,20 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 			if bestThirdCountdown > 0 {
 				bestThirdCountdown--
 				// In the best third of the networks
-				fmt.Println("BEST THIRD:", networkIndex, "score", networkScore)
+				//fmt.Println("BEST THIRD:", networkIndex, "score", networkScore)
 				goodNetworks = append(goodNetworks, population[networkIndex])
 			} else {
-				fmt.Println("WORST TWO THIRDS:", networkIndex, "score", networkScore)
-				randomGoodNetworkCopy := goodNetworks[rand.Intn(len(goodNetworks))].Copy()
-				randomGoodNetworkCopy.checkInputNeurons()
+				//fmt.Println("WORST TWO THIRDS:", networkIndex, "score", networkScore)
+				randomGoodNetwork := goodNetworks[rand.Intn(len(goodNetworks))]
+				//randomGoodNetwork.UpdateNetworkPointers()
+				//randomGoodNetwork.checkInputNeurons()
+				randomGoodNetworkCopy := randomGoodNetwork.Copy()
+				//randomGoodNetworkCopy.UpdateNetworkPointers()
+				//randomGoodNetworkCopy.checkInputNeurons()
+				//randomGoodNetworkCopy.UpdateNetworkPointers()
 				randomGoodNetworkCopy.Modify(1)
-				randomGoodNetworkCopy.checkInputNeurons()
+				//randomGoodNetworkCopy.UpdateNetworkPointers()
+				//randomGoodNetworkCopy.checkInputNeurons()
 				// Replace the "bad" network with the modified copy of a "good" one
 				// It's important that this is a pointer to a Network and not
 				// a bare Network, so that the node .Net pointers are correct.
@@ -187,6 +193,7 @@ func (net *Network) Modify(maxIterations int) {
 		// Insert a node, replacing a randomly chosen existing connection
 		net.InsertRandomNode()
 	case 1:
+		net.checkInputNeurons()
 		nodeA, nodeB := net.GetRandomNode(), net.GetRandomNode()
 		// A bit risky, time-wise, but continue finding random neurons until they work out
 		// Create a new connection
@@ -199,6 +206,7 @@ func (net *Network) Modify(maxIterations int) {
 				return
 			}
 		}
+		net.checkInputNeurons()
 	case 2:
 		// Change the activation function to a randomly selected one
 		net.RandomizeActivationFunctionForRandomNeuron()
