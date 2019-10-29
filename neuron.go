@@ -8,9 +8,8 @@ import (
 
 // Neuron is a list of input-neurons, and an activation function.
 type Neuron struct {
-	Net          *Network
-	InputNeurons []NeuronIndex // pointers to other neurons
-	//ActivationFunction func(float64) float64
+	Net                     *Network
+	InputNodes              []NeuronIndex // pointers to other neurons
 	ActivationFunctionIndex int
 	Value                   *float64
 	distanceFromOutputNode  int // Used when traversing nodes and drawing diagrams
@@ -20,7 +19,7 @@ type Neuron struct {
 // NewNeuron creates a new Neuron
 func (net *Network) NewNeuron() (*Neuron, NeuronIndex) {
 	// Pre-allocate room for 64 connections and use Linear as the default activation function
-	neuron := Neuron{Net: net, InputNeurons: make([]NeuronIndex, 0, 4), ActivationFunctionIndex: Linear}
+	neuron := Neuron{Net: net, InputNodes: make([]NeuronIndex, 0, 4), ActivationFunctionIndex: Linear}
 	neuron.neuronIndex = NeuronIndex(len(net.AllNodes))
 	net.AllNodes = append(net.AllNodes, neuron)
 	return &neuron, neuron.neuronIndex
@@ -47,7 +46,7 @@ func (neuron *Neuron) SetValue(x float64) {
 
 // HasInput checks if the given neuron is an input neuron to this one
 func (neuron *Neuron) HasInput(e NeuronIndex) bool {
-	for _, ni := range neuron.InputNeurons {
+	for _, ni := range neuron.InputNodes {
 		if ni == e {
 			return true
 		}
@@ -58,7 +57,7 @@ func (neuron *Neuron) HasInput(e NeuronIndex) bool {
 // FindInput checks if the given neuron is an input neuron to this one,
 // and also returns the index to InputNeurons, if found.
 func (neuron *Neuron) FindInput(e NeuronIndex) (int, bool) {
-	for i, n := range neuron.InputNeurons {
+	for i, n := range neuron.InputNodes {
 		if n == e {
 			return i, true
 		}
@@ -81,7 +80,7 @@ func (neuron *Neuron) AddInput(ni NeuronIndex) error {
 	if neuron.HasInput(ni) {
 		return errors.New("neuron already exists")
 	}
-	neuron.InputNeurons = append(neuron.InputNeurons, ni)
+	neuron.InputNodes = append(neuron.InputNodes, ni)
 
 	return nil
 }
@@ -104,7 +103,7 @@ func (neuron *Neuron) AddInputNeuron(n *Neuron) error {
 func (neuron *Neuron) RemoveInput(e NeuronIndex) error {
 	if i, found := neuron.FindInput(e); found {
 		// Found it, remove the neuron at index i
-		neuron.InputNeurons = append(neuron.InputNeurons[:i], neuron.InputNeurons[i+1:]...)
+		neuron.InputNodes = append(neuron.InputNodes[:i], neuron.InputNodes[i+1:]...)
 		return nil
 	}
 	return errors.New("neuron does not exist")
@@ -123,7 +122,7 @@ func (net *Network) Exists(ni NeuronIndex) bool {
 
 // InputNeuronsAreGood checks if all input neurons of this neuron exists in neuron.Net
 func (neuron *Neuron) InputNeuronsAreGood() bool {
-	for _, inputNeuronIndex := range neuron.InputNeurons {
+	for _, inputNeuronIndex := range neuron.InputNodes {
 		if !neuron.Net.Exists(inputNeuronIndex) {
 			return false
 		}
@@ -132,7 +131,7 @@ func (neuron *Neuron) InputNeuronsAreGood() bool {
 }
 
 func (neuron *Neuron) checkInputNeurons() {
-	for _, inputNeuronIndex := range neuron.InputNeurons {
+	for _, inputNeuronIndex := range neuron.InputNodes {
 		if int(inputNeuronIndex) >= len(neuron.Net.AllNodes) {
 			panic("input neuron index is pointing out of bounds")
 		}
@@ -151,7 +150,7 @@ func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64
 	summed := 0.0
 	counter := 0
 
-	for _, inputNeuronIndex := range neuron.InputNeurons {
+	for _, inputNeuronIndex := range neuron.InputNodes {
 		// Let each input neuron do its own evauluation, using the given weight
 		(*maxEvaluationLoops)--
 		if int(inputNeuronIndex) >= len(neuron.Net.AllNodes) {
@@ -187,7 +186,7 @@ func (neuron *Neuron) ActivationFunction() func(float64) float64 {
 func (neuron Neuron) Copy(net *Network) Neuron {
 	var newNeuron Neuron
 	newNeuron.Net = net
-	newNeuron.InputNeurons = neuron.InputNeurons
+	newNeuron.InputNodes = neuron.InputNodes
 	newNeuron.ActivationFunctionIndex = neuron.ActivationFunctionIndex
 	newNeuron.Value = neuron.Value
 	newNeuron.distanceFromOutputNode = neuron.distanceFromOutputNode
@@ -197,5 +196,5 @@ func (neuron Neuron) Copy(net *Network) Neuron {
 
 // String will return a string containing both the pointer address and the number of input neurons
 func (neuron *Neuron) String() string {
-	return fmt.Sprintf("node ID %d has these input connections: %v", neuron.neuronIndex, neuron.InputNeurons)
+	return fmt.Sprintf("node ID %d has these input connections: %v", neuron.neuronIndex, neuron.InputNodes)
 }

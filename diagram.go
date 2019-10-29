@@ -89,7 +89,7 @@ func (net *Network) OutputSVG(w io.Writer) (int, error) {
 			x, y := getPosition(n)
 
 			// Draw the connection from the center of this node to the center of all input nodes, if applicable
-			for _, inputNeuron := range net.AllNodes[n].InputNeurons {
+			for _, inputNeuron := range (net.AllNodes[n]).InputNodes {
 				ix, iy := getPosition(inputNeuron)
 				svg.Line(ix+nodeRadius, iy+nodeRadius, x+nodeRadius, y+nodeRadius, lineWidth, "orange")
 			}
