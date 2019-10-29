@@ -157,6 +157,10 @@ func (net *Network) InsertNode(a, b NeuronIndex, newNodeIndex NeuronIndex) error
 
 // AddConnection adds a connection from a to b
 func (net *Network) AddConnection(a, b NeuronIndex) error {
+	lastIndex := NeuronIndex(len(net.AllNodes) - 1)
+	if a > lastIndex || b > lastIndex {
+		return errors.New("index out of range")
+	}
 	if a == b {
 		return errors.New("can't connect to self")
 	}
