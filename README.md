@@ -22,8 +22,8 @@ SVG image with two input nodes and one output node:
 
 <img alt=diagram src=img/test.svg width=128 />
 
-Before and after adding a node:
+## Adding a node
 
-| before                                           | after                                           |
+| Before                                           | After                                           |
 | ------------------------------------------------ | ----------------------------------------------- |
-| ![before](img/before.svg)                        | [after](img/after.svg)                          |
+| ![before](img/before.svg)                        | ![after](img/after.svg)                         |
