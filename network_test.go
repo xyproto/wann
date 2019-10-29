@@ -6,10 +6,7 @@ import (
 	"testing"
 )
 
-// Use a pseudo-random seed
-//var commonSeed = time.Now().UTC().UnixNano()
-
-// Use a specific seed
+// Use a specific seed for the random number generator
 var commonSeed int64 = 1571917826405889420
 
 func TestNewNetwork(t *testing.T) {

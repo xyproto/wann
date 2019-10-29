@@ -119,4 +119,15 @@ func TestEvaluate(t *testing.T) {
 	fmt.Println(result)
 }
 
-// 	func (node *Neuron) In(collection []NeuronIndex) bool {
+func TestIn(t *testing.T) {
+	rand.Seed(commonSeed)
+	net := NewNetwork()
+	n, ni := net.NewNeuron()
+	if ni != 1 {
+		t.Fail()
+	}
+	outputNeuronIndex := NeuronIndex(0)
+	if !n.In([]NeuronIndex{outputNeuronIndex, 1}) {
+		t.Fail()
+	}
+}
