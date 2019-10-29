@@ -240,35 +240,44 @@ func (net *Network) Complexity() float64 {
 // LeftRight returns two neurons, such that the first on is the one that is
 // most to the left (towards the input neurons) and the second one is most to
 // the right (towards the output neuron). Assumes that a and b are not equal.
-func (net *Network) LeftRight(a, b NeuronIndex) (left, right NeuronIndex) {
-	if a == net.OutputNode {
-		left = b
-		right = a
-		return
+func (net *Network) LeftRight(a, b NeuronIndex) (NeuronIndex, NeuronIndex) {
+	// First check the network output nodes
+	if a == net.OutputNode && b == net.OutputNode {
+		return a, b // Arbitrary order
 	}
-	if b == net.OutputNode {
-		left = a
-		right = b
-		return
+	if a == net.OutputNode && b != net.OutputNode {
+		return b, a // Swap order
 	}
-	if net.AllNodes[a].In(net.InputNodes) {
-		left = a
-		right = b
-		return
+	if a != net.OutputNode && b == net.OutputNode {
+		return a, b // Same order
 	}
-	if net.AllNodes[b].In(net.InputNodes) {
-		left = b
-		right = a
-		return
+	// Then check if the nodes are already connected
+	if net.AllNodes[a].In(net.AllNodes[b].InputNodes) {
+		return a, b // Same order
 	}
-	if net.AllNodes[a].distanceFromOutputNode <= net.AllNodes[b].distanceFromOutputNode {
-		left = b
-		right = a
-		return
+	if net.AllNodes[b].In(net.AllNodes[a].InputNodes) {
+		return b, a // Swap order
 	}
-	left = a
-	right = b
-	return
+	// Then check the input nodes of the network
+	aIsNetworkInputNode := net.AllNodes[a].In(net.InputNodes)
+	bIsNetworkInputNode := net.AllNodes[b].In(net.InputNodes)
+	if aIsNetworkInputNode && !bIsNetworkInputNode {
+		return a, b // Same order
+	}
+	if !aIsNetworkInputNode && bIsNetworkInputNode {
+		return b, a // Swap order
+	}
+	if aIsNetworkInputNode && bIsNetworkInputNode {
+		return a, b // Arbitrary order
+	}
+	// Then check the distance from the output node, in steps
+	aDistance := net.AllNodes[a].distanceFromOutputNode
+	bDistance := net.AllNodes[b].distanceFromOutputNode
+	if bDistance > aDistance {
+		return b, a // Swap order, b is further away from the output node, which (usually) means further left in the graph
+	}
+	// Everything else
+	return a, b
 }
 
 // Depth returns the maximum connection distance from the output node
@@ -352,7 +361,7 @@ func (net *Network) getAllConnectedNodes(nodeIndex NeuronIndex, distanceFromFirs
 	if !node.In(alreadyHaveThese) {
 		allNodes = append(allNodes, nodeIndex)
 	}
-	for _, inputNodeIndex := range node.InputNeurons {
+	for _, inputNodeIndex := range node.InputNodes {
 		if node.Is(inputNodeIndex) {
 			panic("implementation error: node is input node to self")
 		}
@@ -419,7 +428,7 @@ func (net Network) Copy() Network {
 func (net Network) String() string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Network (%d nodes, %d input nodes, %d output node)\n", len(net.AllNodes), len(net.InputNodes), 1))
-	sb.WriteString("\tConnected inputs to output node: " + strconv.Itoa(len(net.AllNodes[net.OutputNode].InputNeurons)) + "\n")
+	sb.WriteString("\tConnected inputs to output node: " + strconv.Itoa(len(net.AllNodes[net.OutputNode].InputNodes)) + "\n")
 	for _, node := range net.All() {
 		sb.WriteString("\t" + node.String() + "\n")
 	}
