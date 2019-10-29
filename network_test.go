@@ -176,9 +176,11 @@ func TestLeftRight(t *testing.T) {
 	})
 	net.AllNodes[1].ActivationFunctionIndex = Swish
 	a, b := net.LeftRight(0, 1)
+	// output node to the right
 	if a != 1 || b != 0 {
 		t.Fail()
 	}
+	// output node to the right
 	a, b = net.LeftRight(1, 0)
 	if a != 1 || b != 0 {
 		t.Fail()
@@ -191,18 +193,22 @@ func TestLeftRight(t *testing.T) {
 	}
 	net.WriteSVG("after.svg")
 	fmt.Println("A")
+	fmt.Println("NEW NODE INDEX IS", nodeIndex)
 	a, b = net.LeftRight(0, nodeIndex)
+	// output node to the right
 	if a != nodeIndex || b != 0 {
 		t.Fail()
 	}
 	fmt.Println("B")
 	a, b = net.LeftRight(nodeIndex, 0)
+	// output node to the right
 	if a != nodeIndex || b != 0 {
 		t.Fail()
 	}
 	fmt.Println("C")
 	a, b = net.LeftRight(1, nodeIndex)
-	if a != nodeIndex || b != 1 {
+	// Here, the new node should be to the right, since it's between node 1 and the output node
+	if a != 1 || b != nodeIndex {
 		t.Fail()
 	}
 	fmt.Println("D")
@@ -214,8 +220,8 @@ func TestLeftRight(t *testing.T) {
 	fmt.Println("a:", a)
 	fmt.Println("b:", b)
 
-	if a != nodeIndex || b != 1 {
-		t.FailNow()
+	if a != 1 || b != nodeIndex {
+		t.Fail()
 	}
 }
 
