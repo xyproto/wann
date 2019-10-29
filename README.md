@@ -18,6 +18,11 @@ Here's a more tidy SVG image, also created by this package:
 
 <img alt=diagram src=img/diagram.svg width=128 />
 
-This diagram is created when running the tests:
+SVG image with two input nodes and one output node:
 
 <img alt=diagram src=img/test.svg width=128 />
+
+Before and after adding a node:
+
+| ------------------------------------------------ | ----------------------------------------------- |
+| <img alt=diagram src=img/before.svg width=128 /> | <img alt=diagram src=img/after.svg width=128 /> |
