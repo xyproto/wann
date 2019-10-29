@@ -239,7 +239,32 @@ func (neuron Neuron) Copy(net *Network) Neuron {
 	return newNeuron
 }
 
+// IsInput returns true if this is an input node
+func (neuron *Neuron) IsInput() bool {
+	if neuron.Net == nil {
+		// Hard to tell
+		return false
+
+	}
+	return neuron.Net.IsInput(neuron.neuronIndex)
+}
+
+// IsOutput returns true if this is an output node
+func (neuron *Neuron) IsOutput() bool {
+	if neuron.Net == nil {
+		// Hard to tell
+		return false
+	}
+	return neuron.Net.OutputNode == neuron.neuronIndex
+}
+
 // String will return a string containing both the pointer address and the number of input neurons
 func (neuron *Neuron) String() string {
-	return fmt.Sprintf("node ID %d has these input connections: %v", neuron.neuronIndex, neuron.InputNodes)
+	nodeType := "       Node"
+	if neuron.IsInput() {
+		nodeType = " Input node"
+	} else if neuron.IsOutput() {
+		nodeType = "Output node"
+	}
+	return fmt.Sprintf("%s ID %d has these input connections: %v", nodeType, neuron.neuronIndex, neuron.InputNodes)
 }

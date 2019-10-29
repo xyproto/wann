@@ -170,6 +170,40 @@ func TestComplexity(t *testing.T) {
 	}
 }
 
+func ExampleNetwork_InsertNode() {
+	rand.Seed(commonSeed)
+	net := NewNetwork(&Config{
+		Inputs:          3,
+		ConnectionRatio: 1.0,
+	})
+	fmt.Println("Before insertion:")
+	fmt.Println(net)
+	_, nodeIndex := net.NewNeuron()
+	err := net.InsertNode(0, 1, nodeIndex)
+	if err != nil {
+		fmt.Println("error: " + err.Error())
+	}
+	fmt.Println("After insertion:")
+	fmt.Println(net)
+	// Output:
+	// Before insertion:
+	// Network (4 nodes, 3 input nodes, 1 output node)
+	// 	Connected inputs to output node: 3
+	// 	Output node ID 0 has these input connections: [1 2 3]
+	// 	 Input node ID 1 has these input connections: []
+	// 	 Input node ID 2 has these input connections: []
+	// 	 Input node ID 3 has these input connections: []
+	//
+	// After insertion:
+	// Network (5 nodes, 3 input nodes, 1 output node)
+	// 	Connected inputs to output node: 3
+	// 	Output node ID 0 has these input connections: [2 3 4]
+	// 	 Input node ID 1 has these input connections: []
+	// 	 Input node ID 2 has these input connections: []
+	// 	 Input node ID 3 has these input connections: []
+	//	       Node ID 4 has these input connections: [1]
+}
+
 func TestLeftRight(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
@@ -188,12 +222,16 @@ func TestLeftRight(t *testing.T) {
 		t.Fail()
 	}
 	net.WriteSVG("before.svg")
+	fmt.Println("BEFORE:")
+	fmt.Println(net)
 	_, nodeIndex := net.NewNeuron()
 	err := net.InsertNode(0, 1, nodeIndex)
 	if err != nil {
 		t.Error(err)
 	}
 	net.WriteSVG("after.svg")
+	fmt.Println("AFTER:")
+	fmt.Println(net)
 	a, b, _ = net.LeftRight(0, nodeIndex)
 	// output node to the right
 	if a != nodeIndex || b != 0 {
