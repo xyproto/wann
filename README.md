@@ -47,11 +47,11 @@ Here are a few examples:
 
 <img alt=diagram src=img/diagram.svg width=128 />
 
+<img alt=diagram src=img/best.svg width=128 />
+
 <img alt=diagram src=img/test.svg width=128 />
 
 <img alt=diagram src=img/before.svg width=128 />
-
-<img alt=diagram src=img/after.svg width=128 />
 
 This one happened during debugging, and is included just for fun:
 
