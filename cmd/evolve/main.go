@@ -45,14 +45,12 @@ func main() {
 	// 4. Train, according to the paper.
 
 	config := &wann.Config{
-		Inputs:                                 0,
-		ConnectionRatio:                        0.1,
-		SharedWeight:                           0.0,
-		Generations:                            100,
-		PopulationSize:                         500,
-		MaxIterationsWithoutBestImprovement:    1000,
-		MaxIterationsWithoutAverageImprovement: 1000,
-		Verbose:                                true,
+		Inputs:          0,
+		ConnectionRatio: 0.1,
+		SharedWeight:    0.0,
+		Generations:     2000,
+		PopulationSize:  300,
+		Verbose:         true,
 	}
 
 	inputData := make([][]float64, 4)

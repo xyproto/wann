@@ -150,21 +150,21 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		lastBestScore = bestScore
 		if scoreList[0].Value > bestScore {
 			bestScore = scoreList[0].Value
-			bestNetwork = population[scoreList[0].Key]
 		}
 		if bestScore >= lastBestScore {
-			noImprovementOfBestScoreCounter++
-		} else {
+			bestNetwork = population[scoreList[0].Key]
 			noImprovementOfBestScoreCounter = 0
+		} else {
+			noImprovementOfBestScoreCounter++
 		}
 
 		// Handle the average score stats
 		lastAverageScore = averageScore
 		averageScore = scoreSum / float64(config.PopulationSize)
 		if averageScore >= lastAverageScore {
-			noImprovementOfAverageScoreCounter++
-		} else {
 			noImprovementOfAverageScoreCounter = 0
+		} else {
+			noImprovementOfAverageScoreCounter++
 		}
 
 		// Handle the worst score stats
@@ -173,9 +173,9 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 			worstScore = scoreList[len(scoreList)-1].Value
 		}
 		if worstScore >= lastWorstScore {
-			noImprovementOfWorstScoreCounter++
-		} else {
 			noImprovementOfWorstScoreCounter = 0
+		} else {
+			noImprovementOfWorstScoreCounter++
 		}
 
 		if bestNetwork == nil {
@@ -219,9 +219,12 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 			}
 		}
 	}
+	if config.Verbose {
+		fmt.Println("Score of the best network:", bestScore)
+	}
 	// Return the best Network so far
 	if bestNetwork == nil {
-		return nil, errors.New("the best network is nil")
+		return nil, errors.New("the total best network is nil")
 	}
 	return bestNetwork, nil
 }
