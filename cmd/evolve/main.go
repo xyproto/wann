@@ -24,7 +24,7 @@ func main() {
 
 	right := []float64{
 		1.0, 1.0, 1.0, // ooo
-		0.1, 0.0, 0.0} // o
+		1.0, 0.0, 0.0} // o
 
 	// Prepare the input data as a 2D slice
 	inputData := [][]float64{
