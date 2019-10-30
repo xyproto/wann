@@ -2,9 +2,13 @@
 
 # wann [![Build Status](https://travis-ci.org/xyproto/wann.svg?branch=master)](https://travis-ci.org/xyproto/wann) [![Go Report Card](https://goreportcard.com/badge/github.com/xyproto/wann)](https://goreportcard.com/report/github.com/xyproto/wann) [![GoDoc](https://godoc.org/github.com/xyproto/wann?status.svg)](https://godoc.org/github.com/xyproto/wann)
 
-Weight Agnostic Neural Networks, implemented in Go, using the techniques outlined in this paper:
+Weight Agnostic Neural Networks is a new type of neural network, where the weights of all the neurons are shared.
+
+The term was introduced in this paper (from 2019-06-12):
 
 *"Weight Agnostic Neural Networks" by Adam Gaier and David Ha*. ([PDF](https://arxiv.org/pdf/1906.04358.pdf) | [Interactive version](https://weightagnostic.github.io/) | [Google AI blog post](https://ai.googleblog.com/2019/08/exploring-weight-agnostic-neural.html))
+
+This package implements Weight Agnostic Neural Networks for Go.
 
 ## Features and limitations
 
