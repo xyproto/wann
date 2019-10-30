@@ -15,11 +15,11 @@ func TestDiagram(t *testing.T) {
 	})
 
 	// Set a few activation functions
-	net.AllNodes[net.InputNodes[0]].ActivationFunctionIndex = Linear
-	net.AllNodes[net.InputNodes[1]].ActivationFunctionIndex = Swish
-	net.AllNodes[net.InputNodes[2]].ActivationFunctionIndex = Gauss
-	net.AllNodes[net.InputNodes[3]].ActivationFunctionIndex = Sigmoid
-	net.AllNodes[net.InputNodes[4]].ActivationFunctionIndex = ReLU
+	net.AllNodes[net.InputNodes[0]].ActivationFunction = Linear
+	net.AllNodes[net.InputNodes[1]].ActivationFunction = Swish
+	net.AllNodes[net.InputNodes[2]].ActivationFunction = Gauss
+	net.AllNodes[net.InputNodes[3]].ActivationFunction = Sigmoid
+	net.AllNodes[net.InputNodes[4]].ActivationFunction = ReLU
 
 	// Save the diagram as an image
 	err := net.WriteSVG("test.svg")

@@ -8,18 +8,18 @@ import (
 
 // Neuron is a list of input-neurons, and an activation function.
 type Neuron struct {
-	Net                     *Network
-	InputNodes              []NeuronIndex // pointers to other neurons
-	ActivationFunctionIndex int
-	Value                   *float64
-	distanceFromOutputNode  int // Used when traversing nodes and drawing diagrams
-	neuronIndex             NeuronIndex
+	Net                    *Network
+	InputNodes             []NeuronIndex // pointers to other neurons
+	ActivationFunction     ActivationFunctionIndex
+	Value                  *float64
+	distanceFromOutputNode int // Used when traversing nodes and drawing diagrams
+	neuronIndex            NeuronIndex
 }
 
 // NewBlankNeuron creates a new Neuron, with the Step activation function as the default
 func (net *Network) NewBlankNeuron() (*Neuron, NeuronIndex) {
 	// Pre-allocate room for 16 connections and use Linear as the default activation function
-	neuron := Neuron{Net: net, InputNodes: make([]NeuronIndex, 0, 16), ActivationFunctionIndex: Step}
+	neuron := Neuron{Net: net, InputNodes: make([]NeuronIndex, 0, 16), ActivationFunction: Step}
 	neuron.neuronIndex = NeuronIndex(len(net.AllNodes))
 	net.AllNodes = append(net.AllNodes, neuron)
 	return &neuron, neuron.neuronIndex
@@ -27,12 +27,12 @@ func (net *Network) NewBlankNeuron() (*Neuron, NeuronIndex) {
 
 // NewNeuron creates a new *Neuron, with a randomly chosen activation function
 func (net *Network) NewNeuron() (*Neuron, NeuronIndex) {
-	chosenActivationFunctionIndex := rand.Intn(len(ActivationFunctions))
+	chosenActivationFunctionIndex := ActivationFunctionIndex(rand.Intn(len(ActivationFunctions)))
 	inputNodes := make([]NeuronIndex, 0, 16)
 	neuron := Neuron{
-		Net:                     net,
-		InputNodes:              inputNodes,
-		ActivationFunctionIndex: chosenActivationFunctionIndex,
+		Net:                net,
+		InputNodes:         inputNodes,
+		ActivationFunction: chosenActivationFunctionIndex,
 	}
 	// The length of net.AllNodes is what will be the last index
 	neuronIndex := NeuronIndex(len(net.AllNodes))
@@ -46,7 +46,7 @@ func (net *Network) NewNeuron() (*Neuron, NeuronIndex) {
 // NewUnconnectedNeuron returns a new unconnected neuron with neuronIndex -1 and net pointer set to nil
 func NewUnconnectedNeuron() *Neuron {
 	// Pre-allocate room for 16 connections and use Linear as the default activation function
-	neuron := Neuron{Net: nil, InputNodes: make([]NeuronIndex, 0, 16), ActivationFunctionIndex: Linear}
+	neuron := Neuron{Net: nil, InputNodes: make([]NeuronIndex, 0, 16), ActivationFunction: Linear}
 	neuron.neuronIndex = -1
 	return &neuron
 }
@@ -77,8 +77,8 @@ func (neuron *Neuron) Connect(net *Network) {
 
 // RandomizeActivationFunction will choose a random activation function for this neuron
 func (neuron *Neuron) RandomizeActivationFunction() {
-	chosenActivationFunctionIndex := rand.Intn(len(ActivationFunctions))
-	neuron.ActivationFunctionIndex = chosenActivationFunctionIndex
+	chosenActivationFunctionIndex := ActivationFunctionIndex(rand.Intn(len(ActivationFunctions)))
+	neuron.ActivationFunction = chosenActivationFunctionIndex
 }
 
 // SetValue can be used for setting a value for this neuron instead of using input neutrons.
@@ -173,6 +173,7 @@ func (neuron *Neuron) InputNeuronsAreGood() bool {
 
 // evaluate will return a weighted sum of the input nodes,
 // using the .Value field if it is set and no input nodes are available.
+// returns true if the maximum number of evaluation loops is reached
 func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64, bool) {
 	if *maxEvaluationLoops <= 0 {
 		return 0.0, true
@@ -206,13 +207,13 @@ func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64
 	if counter == 0 {
 		return 0.0, false
 	}
-	f := neuron.ActivationFunction()
+	f := neuron.GetActivationFunction()
 	return f(summed / float64(counter)), false
 }
 
-// ActivationFunction returns the activation function for this neuron
-func (neuron *Neuron) ActivationFunction() func(float64) float64 {
-	return ActivationFunctions[neuron.ActivationFunctionIndex]
+// GetActivationFunction returns the activation function for this neuron
+func (neuron *Neuron) GetActivationFunction() func(float64) float64 {
+	return ActivationFunctions[neuron.ActivationFunction]
 }
 
 // In checks if this neuron is in the given collection
@@ -223,18 +224,6 @@ func (neuron *Neuron) In(collection []NeuronIndex) bool {
 		}
 	}
 	return false
-}
-
-// Copy a Neuron to a new Neuron, and assign the pointer to the given network to .Net
-func (neuron Neuron) Copy(net *Network) Neuron {
-	var newNeuron Neuron
-	newNeuron.Net = net
-	newNeuron.InputNodes = neuron.InputNodes
-	newNeuron.ActivationFunctionIndex = neuron.ActivationFunctionIndex
-	newNeuron.Value = neuron.Value
-	newNeuron.distanceFromOutputNode = neuron.distanceFromOutputNode
-	newNeuron.neuronIndex = neuron.neuronIndex
-	return newNeuron
 }
 
 // IsInput returns true if this is an input node or not
@@ -254,6 +243,18 @@ func (neuron *Neuron) IsOutput() bool {
 		return false
 	}
 	return neuron.Net.OutputNode == neuron.neuronIndex
+}
+
+// Copy a Neuron to a new Neuron, and assign the pointer to the given network to .Net
+func (neuron Neuron) Copy(net *Network) Neuron {
+	var newNeuron Neuron
+	newNeuron.Net = net
+	newNeuron.InputNodes = neuron.InputNodes
+	newNeuron.ActivationFunction = neuron.ActivationFunction
+	newNeuron.Value = neuron.Value
+	newNeuron.distanceFromOutputNode = neuron.distanceFromOutputNode
+	newNeuron.neuronIndex = neuron.neuronIndex
+	return newNeuron
 }
 
 // String will return a string containing both the pointer address and the number of input neurons

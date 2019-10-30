@@ -7,9 +7,12 @@ import (
 	"github.com/xyproto/af"
 )
 
+// ActivationFunctionIndex is a number that represents a specific activation function
+type ActivationFunctionIndex int
+
 const (
 	// Step is a step. First 0 and then abrubtly up to 1.
-	Step = iota
+	Step ActivationFunctionIndex = iota
 	// Linear is the linear activation function. Gradually from 0 to 1.
 	Linear
 	// Sin is the sinoid activation function
@@ -32,29 +35,32 @@ const (
 	Squared
 	// Swish is a later invention than ReLU, _|
 	Swish
+	// SoftPlus is log(1 + exp(x))
+	SoftPlus
 )
 
 // ActivationFunctions is a collection of activation functions, where the keys are constants that are defined above
 // https://github.com/google/brain-tokyo-workshop/blob/master/WANNRelease/WANN/wann_src/ind.py
-var ActivationFunctions = map[int](func(float64) float64){
-	Step:    af.Step,       // Unsigned Step Function
-	Linear:  af.Linear,     // Linear
-	Sin:     af.Sin,        // Sin
-	Gauss:   af.Gaussian01, // Gaussian with mean 0 and sigma 1
-	Tanh:    af.Tanh,       // Hyperbolic Tangent (signed?)
-	Sigmoid: af.Sigmoid,    // Sigmoid (unsigned?)
-	Inv:     af.Inv,        // Inverse
-	Abs:     af.Abs,        // Absolute value
-	ReLU:    af.ReLU,       // Rectified linear unit
-	Cos:     af.Cos,        // Cosine
-	Squared: af.Squared,    // Squared
-	Swish:   af.Swish,      // Swish
+var ActivationFunctions = map[ActivationFunctionIndex](func(float64) float64){
+	Step:     af.Step,       // Unsigned Step Function
+	Linear:   af.Linear,     // Linear
+	Sin:      af.Sin,        // Sin
+	Gauss:    af.Gaussian01, // Gaussian with mean 0 and sigma 1
+	Tanh:     af.Tanh,       // Hyperbolic Tangent (signed?)
+	Sigmoid:  af.Sigmoid,    // Sigmoid (unsigned?)
+	Inv:      af.Inv,        // Inverse
+	Abs:      af.Abs,        // Absolute value
+	ReLU:     af.ReLU,       // Rectified linear unit
+	Cos:      af.Cos,        // Cosine
+	Squared:  af.Squared,    // Squared
+	Swish:    af.Swish,      // Swish
+	SoftPlus: af.SoftPlus,   // SoftPlus
 }
 
 // ComplexityEstimate is a map for having an estimate of how complex each function is,
 // based on a quick benchmark of each function.
 // The complexity estimates will vary, depending on the performance.
-var ComplexityEstimate = make(map[int]float64)
+var ComplexityEstimate = make(map[ActivationFunctionIndex]float64)
 
 func (config *Config) estimateComplexity() {
 	if config.Verbose {
@@ -62,22 +68,22 @@ func (config *Config) estimateComplexity() {
 	}
 	startEstimate := time.Now()
 	resolution := 0.0001
-	durationMap := make(map[int]time.Duration)
+	durationMap := make(map[ActivationFunctionIndex]time.Duration)
 	var maxDuration time.Duration
 	for i, f := range ActivationFunctions {
 		start := time.Now()
-		for x := 0.0; x < 1.0; x += resolution {
+		for x := 0.0; x <= 1.0; x += resolution {
 			_ = f(x)
 		}
 		duration := time.Since(start)
-		durationMap[i] = duration
+		durationMap[ActivationFunctionIndex(i)] = duration
 		if duration > maxDuration {
 			maxDuration = duration
 		}
 	}
 	for i := range ActivationFunctions {
 		// 1.0 means the function took maxDuration
-		ComplexityEstimate[i] = float64(durationMap[i]) / float64(maxDuration)
+		ComplexityEstimate[ActivationFunctionIndex(i)] = float64(durationMap[ActivationFunctionIndex(i)]) / float64(maxDuration)
 	}
 	estimateDuration := time.Since(startEstimate)
 	if config.Verbose {
@@ -87,10 +93,51 @@ func (config *Config) estimateComplexity() {
 
 // Call runs an activation function with the given float64 value.
 // The activation function is chosen by one of the constants above.
-func Call(functionIndex int, x float64) float64 {
-	if f, ok := ActivationFunctions[functionIndex]; ok {
+func (afi ActivationFunctionIndex) Call(x float64) float64 {
+	if f, ok := ActivationFunctions[afi]; ok {
 		return f(x)
 	}
 	// Use the linear function by default
 	return af.Linear(x)
+}
+
+// goExpression returns the Go expression for this activation function, using the given variable name string as the input variable
+func (afi ActivationFunctionIndex) goExpression(varName string) string {
+	switch afi {
+	case Step:
+		// Using s to not confuse it with the varName
+		return "func(s float64) float64 { if s >= 0 { return 0 } else { return 1 } }(" + varName + ")"
+	case Linear:
+		return varName
+	case Sin:
+		return "math.Sin(math.Pi * " + varName + ")"
+	case Gauss:
+		return "math.Exp(-(" + varName + " * " + varName + ") / 2.0)"
+	case Tanh:
+		return "math.Tanh(" + varName + ")"
+	case Sigmoid:
+		return "1.0 / (1.0 + math.Exp(-" + varName + "))"
+	case Inv:
+		return "-" + varName
+	case Abs:
+		return "math.Abs(" + varName + ")"
+	case ReLU:
+		// Using r to not confuse it with the varName
+		return "func(r float64) float64 { if r >= 0 { return r } else { return 0 } }(" + varName + ")"
+	case Cos:
+		return "math.Cos(math.Pi * " + varName + ")"
+	case Squared:
+		return varName + " * " + varName
+	case Swish:
+		return varName + "/ (1.0 + math.Exp(-" + varName + "))"
+	case SoftPlus:
+		return "math.Log(1.0 + math.Exp(" + varName + "))"
+	default:
+		return varName
+	}
+}
+
+// String returns a formula, using "x" as the input variable
+func (afi ActivationFunctionIndex) String() string {
+	return afi.goExpression("x")
 }

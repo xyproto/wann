@@ -137,7 +137,7 @@ func (net *Network) OutputSVG(w io.Writer) (int, error) {
 				// xv is from -5 to 5
 				xv := (xr - 0.5) * float64(nodeRadius)
 				node := net.AllNodes[neuronIndex]
-				f := ActivationFunctions[node.ActivationFunctionIndex]
+				f := ActivationFunctions[node.ActivationFunction]
 				yv := f(xv)
 				// plot, 3.0 is the amplitude along y
 				yp := float64(ypos) + float64(nodeRadius)*1.35 - (yv * 0.6 * float64(nodeRadius))

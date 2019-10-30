@@ -42,7 +42,7 @@ func main() {
 		InitialConnectionRatio: 0.1,
 		Generations:            2000,
 		PopulationSize:         200,
-		Verbose:                true,
+		Verbose:                false,
 	}
 
 	// Evolve a network, using the input data and the sought after results
@@ -67,18 +67,5 @@ func main() {
 	}
 
 	// Output a Go function for this network
-	fmt.Println("This network as a Go function (this is an experimental feature!):")
 	fmt.Println(trainedNetwork.GoFunction())
-
-	// Save the trained network as an SVG image
-	if config.Verbose {
-		fmt.Print("Writing network.svg...")
-	}
-	if err := trainedNetwork.WriteSVG("network.svg"); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
-		os.Exit(1)
-	}
-	if config.Verbose {
-		fmt.Println("ok")
-	}
 }

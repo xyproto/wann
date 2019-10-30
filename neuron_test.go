@@ -11,8 +11,8 @@ func TestNeuron(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork()
 	n, _ := net.NewBlankNeuron()
-	n.ActivationFunctionIndex = Swish
-	result := n.ActivationFunction()(0.5)
+	n.ActivationFunction = Swish
+	result := n.GetActivationFunction()(0.5)
 	diff := math.Abs(result - 0.311287)
 	if diff > 0.00001 { // 0.0000001 {
 		t.Errorf("default swish activation function, expected a number close to 0.311287, got %f:", result)
@@ -107,13 +107,13 @@ func TestEvaluate(t *testing.T) {
 	})
 
 	// Set a few activation functions
-	net.AllNodes[net.InputNodes[0]].ActivationFunctionIndex = Linear
-	net.AllNodes[net.InputNodes[1]].ActivationFunctionIndex = Swish
-	net.AllNodes[net.InputNodes[2]].ActivationFunctionIndex = Gauss
-	net.AllNodes[net.InputNodes[3]].ActivationFunctionIndex = Sigmoid
-	net.AllNodes[net.InputNodes[4]].ActivationFunctionIndex = ReLU
-	net.AllNodes[net.InputNodes[5]].ActivationFunctionIndex = Step
-	net.AllNodes[net.InputNodes[6]].ActivationFunctionIndex = Inv
+	net.AllNodes[net.InputNodes[0]].ActivationFunction = Linear
+	net.AllNodes[net.InputNodes[1]].ActivationFunction = Swish
+	net.AllNodes[net.InputNodes[2]].ActivationFunction = Gauss
+	net.AllNodes[net.InputNodes[3]].ActivationFunction = Sigmoid
+	net.AllNodes[net.InputNodes[4]].ActivationFunction = ReLU
+	net.AllNodes[net.InputNodes[5]].ActivationFunction = Step
+	net.AllNodes[net.InputNodes[6]].ActivationFunction = Inv
 
 	result := net.Evaluate([]float64{0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5})
 	fmt.Println(result)

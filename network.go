@@ -170,8 +170,8 @@ func (net *Network) AddConnection(a, b NeuronIndex) error {
 // RandomizeActivationFunctionForRandomNeuron randomizes the activation function for a randomly selected neuron
 func (net *Network) RandomizeActivationFunctionForRandomNeuron() {
 	chosenNeuronIndex := net.GetRandomNode()
-	chosenActivationFunctionIndex := rand.Intn(len(ActivationFunctions))
-	net.AllNodes[chosenNeuronIndex].ActivationFunctionIndex = chosenActivationFunctionIndex
+	chosenActivationFunctionIndex := ActivationFunctionIndex(rand.Intn(len(ActivationFunctions)))
+	net.AllNodes[chosenNeuronIndex].ActivationFunction = chosenActivationFunctionIndex
 }
 
 // Evaluate will return a weighted sum of the input nodes,
@@ -213,7 +213,7 @@ func (net *Network) Complexity() float64 {
 	// unconnected nodes.
 	for _, n := range net.AllNodes {
 		if n.Value == nil {
-			sum += ComplexityEstimate[n.ActivationFunctionIndex] * functionComplexityMultiplier
+			sum += ComplexityEstimate[n.ActivationFunction] * functionComplexityMultiplier
 		}
 	}
 	// The number of connected nodes should also carry some weight

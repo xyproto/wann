@@ -207,7 +207,7 @@ func TestLeftRight(t *testing.T) {
 		inputs:                 3,
 		InitialConnectionRatio: 1.0,
 	})
-	net.AllNodes[1].ActivationFunctionIndex = Swish
+	net.AllNodes[1].ActivationFunction = Swish
 	a, b, _ := net.LeftRight(0, 1)
 	// output node to the right
 	if a != 1 || b != 0 {
