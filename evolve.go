@@ -10,7 +10,7 @@ import (
 
 // ScorePopulation evaluates a population, given a slice of input numbers.
 // It returns a map with scores, together with the sum of scores.
-func ScorePopulation(population []*Network, weight float64, inputData [][]float64, correctOutputMultipliers []float64) (map[int]float64, float64) {
+func ScorePopulation(population []*Network, weight float64, inputData [][]float64, incorrectOutputMultipliers []float64) (map[int]float64, float64) {
 
 	scoreMap := make(map[int]float64)
 	scoreSum := 0.0
@@ -23,7 +23,7 @@ func ScorePopulation(population []*Network, weight float64, inputData [][]float6
 		// Evaluate all networks in the given population
 		result := 0.0
 		for i := 0; i < len(inputData); i++ {
-			result += net.Evaluate(inputData[i]) * correctOutputMultipliers[i]
+			result += net.Evaluate(inputData[i]) * incorrectOutputMultipliers[i]
 		}
 
 		// The score is how well the network is doing, divided by the network complexity rating
@@ -100,11 +100,17 @@ func (config *Config) Init() {
 // Will overwrite config.Inputs.
 func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []float64) (*Network, error) {
 
-	const maxModificationInterationsWhenMutating = 10
-
 	// Initialize, if needed
 	if !config.initialized {
 		config.Init()
+	}
+
+	const maxModificationInterationsWhenMutating = 10
+
+	// Convert from having 0..1 for meaning from incorrect to correct, to -1..0 to mean the same
+	incorrectOutputMultipliers := make([]float64, len(correctOutputMultipliers))
+	for i := range correctOutputMultipliers {
+		incorrectOutputMultipliers[i] = correctOutputMultipliers[i] - 1.0
 	}
 
 	inputLength := len(inputData)
@@ -167,7 +173,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		// The scores for this generation (using a random shared weight within ScorePopulation).
 		// CorrectOutputMultipliers gives weight to the "correct" or "wrong" results, with the same index as the inputData
 		// Score each network in the population.
-		scoreMap, scoreSum := ScorePopulation(population, w, inputData, correctOutputMultipliers)
+		scoreMap, scoreSum := ScorePopulation(population, w, inputData, incorrectOutputMultipliers)
 
 		// Sort by score
 		scoreList := SortByValue(scoreMap)
@@ -204,7 +210,8 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 			}
 		}
 
-		bestThirdCountdown := len(population) / 3
+		// Only keep the best 2% (1/50)
+		bestFractionCountdown := len(population) / 50
 
 		goodNetworks := make([]*Network, 0)
 
@@ -213,8 +220,8 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		// p.Value is the network score
 		for _, p := range scoreList {
 			networkIndex := p.Key
-			if bestThirdCountdown > 0 {
-				bestThirdCountdown--
+			if bestFractionCountdown > 0 {
+				bestFractionCountdown--
 				// In the best third of the networks
 				goodNetworks = append(goodNetworks, population[networkIndex])
 			} else {
@@ -236,7 +243,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 	// and a step size of 0.0001 for the weight
 	population = []*Network{bestNetwork}
 	for w := 0.0; w <= 1.0; w += 0.0001 {
-		scoreMap, _ := ScorePopulation(population, w, inputData, correctOutputMultipliers)
+		scoreMap, _ := ScorePopulation(population, w, inputData, incorrectOutputMultipliers)
 
 		// Sort by score
 		scoreList := SortByValue(scoreMap)
