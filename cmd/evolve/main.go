@@ -47,7 +47,7 @@ func main() {
 	// Evolve a network, using the input data and the sought after results
 	trainedNetwork, err := config.Evolve(inputData, correctResultsForUp)
 	if err != nil {
-		fmt.Fprintf(os.Stdout, "error: %s\n", err)
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -70,7 +70,7 @@ func main() {
 		fmt.Print("Writing network.svg...")
 	}
 	if err := trainedNetwork.WriteSVG("network.svg"); err != nil {
-		fmt.Fprintf(os.Stdout, "error: %s\n", err)
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		os.Exit(1)
 	}
 	if config.Verbose {
