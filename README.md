@@ -10,8 +10,9 @@ Weight Agnostic Neural Networks, implemented in Go, using the techniques outline
 
 * Neural networks can be trained and used, but I have only tried this on very simple training data and there is surely a lot of room for improvement, both in term of benchmarking/profiling and controlling the rate of mutation.
 * A random weight is chosen when training, instead of looping over the range of the weight. The paper describes both methods.
-* Complex networks are given a worse score when evolving. A quick benchmark at the start of the program determines which activation function us more complex. This optimizes not only for simple networks, but also for network performance.
-* The functionality for drawing diagrams plots the activation functions directly onto the nodes.
+* After the network has been trained, the optimal weight is found by looping over all weights (with a step size of `0.0001`).
+* Increased complexity counts negatively when evolving networks. A quick benchmark of all available activation functions at the start of the program determines which activation function us more complex. This optimizes not only for less complex networks, but also for execution speed.
+* The diagram drawing routine plots the activation functions directly onto the nodes, together with a label. This can be saved as an SVG file.
 
 ## Example program
 
