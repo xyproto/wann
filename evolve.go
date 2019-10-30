@@ -107,10 +107,10 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 
 	const maxModificationInterationsWhenMutating = 10
 
-	// Convert from having 0..1 for meaning from incorrect to correct, to -1..0 to mean the same
+	// Convert from having 0..1 for meaning from incorrect to correct, to -1..1 to mean the same
 	incorrectOutputMultipliers := make([]float64, len(correctOutputMultipliers))
 	for i := range correctOutputMultipliers {
-		incorrectOutputMultipliers[i] = correctOutputMultipliers[i] - 1.0
+		incorrectOutputMultipliers[i] = correctOutputMultipliers[i]*2.0 - 1.0
 	}
 
 	inputLength := len(inputData)
@@ -210,8 +210,8 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 			}
 		}
 
-		// Only keep the best 2% (1/50)
-		bestFractionCountdown := len(population) / 50
+		// Only keep the best 4% (1/25)
+		bestFractionCountdown := len(population) / 25
 
 		goodNetworks := make([]*Network, 0)
 
