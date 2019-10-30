@@ -129,6 +129,6 @@ Take a look at the best network for judging if a set of numbers that are either 
 
 ## General info
 
-* Version: 0.0.2
+* Version: 0.0.3
 * License: MIT
 * Author: Alexander F. Rødseth &lt;xyproto@archlinux.org&gt;
