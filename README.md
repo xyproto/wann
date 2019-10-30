@@ -145,7 +145,7 @@ This is an experimental feature and a work in progress!
 
 The idea is to generate one large expression from all the expressions that each node in the network represents.
 
-Right now, his only works for networks that has a depth of 1.
+Right now, this only works for networks that has a depth of 1.
 
 For example, adding these two lines to `cmd/evolve/main.go`:
 
