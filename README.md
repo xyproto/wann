@@ -45,11 +45,12 @@ func main() {
 		0.1, 0.0, 0.0} // o
 
 	// Prepare the input data as a 2D slice
-	inputData := make([][]float64, 4)
-	inputData[0] = up
-	inputData[1] = down
-	inputData[2] = left
-	inputData[3] = right
+	inputData := [][]float64{
+		up,
+		down,
+		left,
+		right,
+	}
 
 	// Which of the elements in the input data are we trying to identify?
 	correctResultsForUp := []float64{1.0, -1.0, -1.0, -1.0}
