@@ -149,15 +149,15 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 	var bestWeight float64
 
 	// Keep track of the best scores
-	bestScore := 0.0
-	lastBestScore := 0.0
+	bestScore := -9999.0
+	lastBestScore := -9999.0
 	noImprovementOfBestScoreCounter := 0
 
 	// Keep track of the average scores
 	averageScore := 0.0
 
 	// Keep track of the worst scores
-	worstScore := 0.0
+	worstScore := 9999.0
 
 	if config.Verbose {
 		fmt.Printf("Starting evolution with population size %d, for %d generations.\n", config.PopulationSize, config.Generations)
@@ -248,7 +248,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 	// Now find the best weight for the best network, using a population of 1
 	// and a step size of 0.0001 for the weight
 	population = []*Network{bestNetwork}
-	for w := 0.0; w <= 1.0; w += 0.0001 {
+	for w := -2.0; w <= 2.0; w += 0.0001 {
 		scoreMap, _ := ScorePopulation(population, w, inputData, incorrectOutputMultipliers)
 
 		// Sort by score
