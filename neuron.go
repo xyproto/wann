@@ -19,7 +19,7 @@ type Neuron struct {
 // NewBlankNeuron creates a new Neuron, with the Step activation function as the default
 func (net *Network) NewBlankNeuron() (*Neuron, NeuronIndex) {
 	// Pre-allocate room for 16 connections and use Linear as the default activation function
-	neuron := Neuron{Net: net, InputNodes: make([]NeuronIndex, 0, 16), ActivationFunction: Step}
+	neuron := Neuron{Net: net, InputNodes: make([]NeuronIndex, 0, 16), ActivationFunction: Swish}
 	neuron.neuronIndex = NeuronIndex(len(net.AllNodes))
 	net.AllNodes = append(net.AllNodes, neuron)
 	return &neuron, neuron.neuronIndex
@@ -208,6 +208,7 @@ func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64
 		return 0.0, false
 	}
 	f := neuron.GetActivationFunction()
+	// Run the average input through the activation function
 	return f(summed / float64(counter)), false
 }
 
