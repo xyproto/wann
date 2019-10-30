@@ -17,6 +17,12 @@ func ScorePopulation(population []*Network, weight float64, inputData [][]float6
 	for i := 0; i < len(population); i++ {
 		net := population[i]
 
+		if len(net.AllNodes[net.OutputNode].InputNodes) == 0 {
+			// The output node has no input nodes, not great
+			scoreMap[i] = 0.0
+			continue
+		}
+
 		net.SetWeight(weight)
 
 		// Evaluate all networks in the given population
@@ -82,10 +88,10 @@ func (net *Network) Complexity() float64 {
 	// TODO: These two constants really affect the results. Place them in the Config struct instead.
 
 	// How much should the function complexity matter in relation to the number of connected nodes?
-	const functionComplexityMultiplier = 12.0
+	const functionComplexityMultiplier = 2.0
 
 	// How much should the complexity score matter in relation to the network results, when scoring the network?
-	const complexityMultiplier = 28.0
+	const complexityMultiplier = 3.0
 
 	sum := 0.0
 	// Sum the complexity of all activation functions.
@@ -99,12 +105,15 @@ func (net *Network) Complexity() float64 {
 	// The number of connected nodes should also carry some weight
 	connectedNodes := float64(len(net.Connected()))
 	// This must always be larger than 0, to avoid divide by zero later
-	return (connectedNodes + sum) * complexityMultiplier
+	return (connectedNodes+sum)*complexityMultiplier + 1.0
 }
 
 // Evolve evolves a neural network, given a slice of training data and a slice of correct output values.
 // Will overwrite config.Inputs.
 func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []float64) (*Network, error) {
+
+	// TODO: If the config.initialConnectionRatio field is too low (0.0, for instance), then this function will fail.
+	//       Return with an error if none of the networks in a population has any connections left, then get rid of the "no improvement counter".
 
 	// Initialize, if needed
 	if !config.initialized {
@@ -145,19 +154,22 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		population[i].UpdateNetworkPointers()
 	}
 
-	var bestNetwork *Network
-	var bestWeight float64
+	var (
+		bestNetwork *Network
+		bestWeight  float64
 
-	// Keep track of the best scores
-	bestScore := -9999.0
-	lastBestScore := -9999.0
-	noImprovementOfBestScoreCounter := 0
+		// Keep track of the best scores
+		bestScore     float64
+		lastBestScore float64
 
-	// Keep track of the average scores
-	averageScore := 0.0
+		noImprovementCounter int // Counts how many times the best score has been stagnant
 
-	// Keep track of the worst scores
-	worstScore := 9999.0
+		// Keep track of the average scores
+		averageScore float64
+
+		// Keep track of the worst scores
+		worstScore float64
+	)
 
 	if config.Verbose {
 		fmt.Printf("Starting evolution with population size %d, for %d generations.\n", config.PopulationSize, config.Generations)
@@ -170,8 +182,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 
 		// Initialize the scores with unlikely values
 		// TODO: Use the first network in the population for initializing these instead
-		bestScore = -9999.0
-		worstScore = 9999.0
+		first := true
 
 		// Random weight from -2.0 to 2.0
 		w := rand.Float64()
@@ -185,16 +196,25 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		scoreList := SortByValue(scoreMap)
 
 		// Handle the best score stats
-		lastBestScore = bestScore
-		if scoreList[0].Value > bestScore {
+		if first {
+			lastBestScore = 0.0
 			bestScore = scoreList[0].Value
-		}
-		if bestScore >= lastBestScore {
+			worstScore = scoreList[len(scoreList)-1].Value
 			bestNetwork = population[scoreList[0].Key]
 			bestWeight = w
-			noImprovementOfBestScoreCounter = 0
+			first = false
 		} else {
-			noImprovementOfBestScoreCounter++
+			lastBestScore = bestScore
+			if scoreList[0].Value > bestScore {
+				bestScore = scoreList[0].Value
+			}
+		}
+		if bestScore > lastBestScore {
+			bestNetwork = population[scoreList[0].Key]
+			bestWeight = w
+			noImprovementCounter = 0
+		} else {
+			noImprovementCounter++
 		}
 
 		// Handle the average score stats
@@ -211,15 +231,16 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 
 		if config.Verbose {
 			fmt.Printf("[generation %d] worst score = %f, average score = %f, best score = %f\n", j, worstScore, averageScore, bestScore)
-			if noImprovementOfBestScoreCounter > 0 {
-				fmt.Printf("No improvement in the best score for the last %d generations\n", noImprovementOfBestScoreCounter)
+			//fmt.Printf("[generation %d] worst score = %f, average score = %f, best score = %f, no improvement counter for this generation = %d\n", j, worstScore, averageScore, bestScore, noImprovementCounter)
+			if noImprovementCounter > 0 {
+				fmt.Printf("No improvement in the best score for the last %d generations\n", noImprovementCounter)
 			}
 		}
 
-		// Only keep the best 4% (1/25)
-		bestFractionCountdown := len(population) / 25
+		// Only keep the best 7%
+		bestFractionCountdown := int(float64(len(population)) * 0.07)
 
-		goodNetworks := make([]*Network, 0)
+		goodNetworks := make([]*Network, 0, bestFractionCountdown)
 
 		// Now loop over all networks, sorted by score (descending order)
 		// p.Key is the network index
@@ -230,16 +251,25 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 				bestFractionCountdown--
 				// In the best third of the networks
 				goodNetworks = append(goodNetworks, population[networkIndex])
-			} else {
-				randomGoodNetwork := goodNetworks[rand.Intn(len(goodNetworks))]
-				randomGoodNetworkCopy := randomGoodNetwork.Copy()
-				randomGoodNetworkCopy.Modify(maxModificationInterationsWhenMutating)
-				// Replace the "bad" network with the modified copy of a "good" one
-				// It's important that this is a pointer to a Network and not
-				// a bare Network, so that the node .Net pointers are correct.
-				population[networkIndex] = randomGoodNetworkCopy
+				continue
 			}
+			// // If there has not been any improvement to the best score lately, randomize the bad half
+			// if noImprovementCounter > 100 {
+			// 	n := NewNetwork(config)
+			// 	population[networkIndex] = &n
+			// 	continue
+			// }
+			randomGoodNetwork := goodNetworks[rand.Intn(len(goodNetworks))]
+			randomGoodNetworkCopy := randomGoodNetwork.Copy()
+			randomGoodNetworkCopy.Modify(maxModificationInterationsWhenMutating)
+			// Replace the "bad" network with the modified copy of a "good" one
+			// It's important that this is a pointer to a Network and not
+			// a bare Network, so that the node .Net pointers are correct.
+			population[networkIndex] = randomGoodNetworkCopy
 		}
+		// if noImprovementCounter > 100 {
+		// 	noImprovementCounter = 0
+		// }
 	}
 	if config.Verbose {
 		fmt.Printf("[all time best network, random weight ] weight=%f score=%f\n", bestWeight, bestScore)

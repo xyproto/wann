@@ -39,7 +39,7 @@ func main() {
 
 	// Prepare a neural network configuration struct
 	config := &wann.Config{
-		InitialConnectionRatio: 0.01,
+		InitialConnectionRatio: 0.1,
 		Generations:            3000,
 		PopulationSize:         300,
 		Verbose:                true,

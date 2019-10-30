@@ -199,14 +199,16 @@ func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64
 			break
 		}
 	}
-	// No input neurons. Use the .Value field if it's not nil.
-	if counter == 0 && neuron.Value != nil {
+	// No input neurons. Use the .Value field if it's not nil and this is not the output node
+	if counter == 0 && neuron.Value != nil && !neuron.IsOutput() {
 		return *(neuron.Value), false
 	}
 	// Return the averaged sum, or 0
 	if counter == 0 {
+		// This should never happen
 		return 0.0, false
 	}
+	// This should run, also when this neuron is the output neuron
 	f := neuron.GetActivationFunction()
 	// Run the average input through the activation function
 	return f(summed / float64(counter)), false

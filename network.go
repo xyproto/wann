@@ -184,9 +184,8 @@ func (net *Network) Evaluate(inputValues []float64) float64 {
 			net.AllNodes[nindex].SetValue(inputValues[i])
 		}
 	}
-	outputNode := net.AllNodes[net.OutputNode]
 	maxIterationCounter := inputLength
-	result, _ := outputNode.evaluate(net.Weight, &maxIterationCounter)
+	result, _ := net.AllNodes[net.OutputNode].evaluate(net.Weight, &maxIterationCounter)
 	return result
 }
 
