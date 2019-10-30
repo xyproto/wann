@@ -153,7 +153,7 @@ func f(x float64) float64 { return -x }
 
 The plan is to output a function that takes the input data instead, and refers to the input data by index. Support for deeper networks also needs to be added.
 
-There is a complete example for outputting Go code in `cmd/functions`.
+There is a complete example for outputting Go code in `cmd/gofunction`.
 
 ## General info
 
