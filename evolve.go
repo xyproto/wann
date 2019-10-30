@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
+	"time"
 )
 
 // ScorePopulation evaluates a population, given a slice of input numbers.
 // It returns a map with scores, together with the sum of scores.
 func ScorePopulation(population []*Network, weight float64, inputData [][]float64, correctOutputMultipliers []float64) (map[int]float64, float64) {
+
 	scoreMap := make(map[int]float64)
 	scoreSum := 0.0
 
@@ -72,14 +74,38 @@ func (net *Network) Modify(maxIterations int) {
 	}
 }
 
+// initialize the pseaudo-random number generator, either using the config.RandomSeed or the time
+func (config *Config) initRandom() {
+	randomSeed := config.RandomSeed
+	if config.RandomSeed == 0 {
+		randomSeed = time.Now().UTC().UnixNano()
+	}
+	if config.Verbose {
+		fmt.Println("Using random seed:", randomSeed)
+	}
+	// Initialize the pseudo-random number generator
+	rand.Seed(randomSeed)
+}
+
+// Init will initialize the pseudo-random number generator and estimate the complexity of the available activation functions
+func (config *Config) Init() {
+	config.initRandom()
+	config.estimateComplexity()
+	config.initialized = true
+}
+
 // Evolve evolves a neural network, given a slice of training data and a slice of correct output values.
 // Will overwrite config.Inputs.
-// TODO: Fewer "magic constants"
-// TODO: Compare using a random weight with iterating over the weight for each network. Compare with the code associated with the WANN paper.
 func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []float64) (*Network, error) {
 
-	inputLength := len(inputData)
+	const maxModificationInterationsWhenMutating = 10
 
+	// Initialize, if needed
+	if !config.initialized {
+		config.Init()
+	}
+
+	inputLength := len(inputData)
 	if inputLength == 0 {
 		return nil, errors.New("no input data")
 	}
@@ -94,7 +120,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		return nil, errors.New("the length of the input data and the slice of output multipliers differs")
 	}
 
-	config.Inputs = len(inputData[0])
+	config.inputs = len(inputData[0])
 
 	population := make([]*Network, config.PopulationSize)
 
@@ -105,6 +131,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 	}
 
 	var bestNetwork *Network
+	var bestWeight float64
 
 	// Keep track of the best scores
 	bestScore := 0.0
@@ -113,13 +140,17 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 
 	// Keep track of the average scores
 	averageScore := 0.0
-	lastAverageScore := 0.0
-	noImprovementOfAverageScoreCounter := 0
+	//lastAverageScore := 0.0
+	//noImprovementOfAverageScoreCounter := 0
 
 	// Keep track of the worst scores
 	worstScore := 0.0
-	lastWorstScore := 0.0
-	noImprovementOfWorstScoreCounter := 0
+	//lastWorstScore := 0.0
+	//noImprovementOfWorstScoreCounter := 0
+
+	if config.Verbose {
+		fmt.Printf("Starting evolution with population size %d, for %d generations.\n", config.PopulationSize, config.Generations)
+	}
 
 	// For each generation, evaluate and modify the networks
 	for j := 0; j < config.Generations; j++ {
@@ -132,10 +163,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		averageScore = 0.0
 		worstScore = 9999.0
 
-		if config.Verbose {
-			fmt.Println("------ generation " + strconv.Itoa(j) + ", population size " + strconv.Itoa(len(population)))
-		}
-
+		// Random weight from -2.0 to 2.0
 		w := rand.Float64()
 
 		// The scores for this generation (using a random shared weight within ScorePopulation).
@@ -153,38 +181,41 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		}
 		if bestScore >= lastBestScore {
 			bestNetwork = population[scoreList[0].Key]
+			bestWeight = w
 			noImprovementOfBestScoreCounter = 0
 		} else {
 			noImprovementOfBestScoreCounter++
 		}
 
 		// Handle the average score stats
-		lastAverageScore = averageScore
+		//lastAverageScore = averageScore
 		averageScore = scoreSum / float64(config.PopulationSize)
-		if averageScore >= lastAverageScore {
-			noImprovementOfAverageScoreCounter = 0
-		} else {
-			noImprovementOfAverageScoreCounter++
-		}
+		// if averageScore >= lastAverageScore {
+		// 	noImprovementOfAverageScoreCounter = 0
+		// } else {
+		// 	noImprovementOfAverageScoreCounter++
+		// }
 
 		// Handle the worst score stats
-		lastWorstScore = worstScore
+		//lastWorstScore = worstScore
 		if scoreList[len(scoreList)-1].Value < worstScore {
 			worstScore = scoreList[len(scoreList)-1].Value
 		}
-		if worstScore >= lastWorstScore {
-			noImprovementOfWorstScoreCounter = 0
-		} else {
-			noImprovementOfWorstScoreCounter++
-		}
+		// if worstScore >= lastWorstScore {
+		// 	noImprovementOfWorstScoreCounter = 0
+		// } else {
+		// 	noImprovementOfWorstScoreCounter++
+		// }
 
 		if bestNetwork == nil {
 			panic("implementation error: no best network")
 		}
 
 		if config.Verbose {
-			fmt.Println("Best, average and worst score:", bestScore, averageScore, worstScore)
-			fmt.Println("Best, average and worst improvement counters:", noImprovementOfBestScoreCounter, noImprovementOfAverageScoreCounter, noImprovementOfWorstScoreCounter)
+			fmt.Printf("[generation %d] worst score = %f, average score = %f, best score = %f\n", j, worstScore, averageScore, bestScore)
+			if noImprovementOfBestScoreCounter > 0 {
+				fmt.Printf("No improvement in the best score for the last %d generations\n", noImprovementOfBestScoreCounter)
+			}
 		}
 
 		bestThirdCountdown := len(population) / 3
@@ -209,7 +240,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 				//randomGoodNetworkCopy.UpdateNetworkPointers()
 				//randomGoodNetworkCopy.checkInputNeurons()
 				//randomGoodNetworkCopy.UpdateNetworkPointers()
-				randomGoodNetworkCopy.Modify(10)
+				randomGoodNetworkCopy.Modify(maxModificationInterationsWhenMutating)
 				//randomGoodNetworkCopy.UpdateNetworkPointers()
 				//randomGoodNetworkCopy.checkInputNeurons()
 				// Replace the "bad" network with the modified copy of a "good" one
@@ -220,11 +251,36 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		}
 	}
 	if config.Verbose {
-		fmt.Println("Score of the best network:", bestScore)
+		fmt.Printf("[all time best network, random weight ] weight=%f score=%f\n", bestWeight, bestScore)
 	}
-	// Return the best Network so far
+
+	// Now find the best weight for the best network, using a population of 1
+	// and a step size of 0.0001 for the weight
+	population = []*Network{bestNetwork}
+	for w := 0.0; w <= 1.0; w += 0.0001 {
+		scoreMap, _ := ScorePopulation(population, w, inputData, correctOutputMultipliers)
+
+		// Sort by score
+		scoreList := SortByValue(scoreMap)
+
+		// Handle the best score stats
+		if scoreList[0].Value > bestScore {
+			bestScore = scoreList[0].Value
+			bestWeight = w
+		}
+	}
+
+	// Check if the best network is nil, just in case
 	if bestNetwork == nil {
 		return nil, errors.New("the total best network is nil")
 	}
+
+	// Save the best weight for the network
+	bestNetwork.SetWeight(bestWeight)
+
+	if config.Verbose {
+		fmt.Printf("[all time best network, optimal weight] weight=%f score=%f\n", bestWeight, bestScore)
+	}
+
 	return bestNetwork, nil
 }

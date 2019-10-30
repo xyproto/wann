@@ -8,9 +8,9 @@ import (
 func TestDiagram(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 0.5,
-		SharedWeight:    0.5,
+		inputs:                 5,
+		InitialConnectionRatio: 0.5,
+		sharedWeight:           0.5,
 	})
 
 	// net.AllNodes[net.InputNodes[0]].ActivationFunction = af.Linear

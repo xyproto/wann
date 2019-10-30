@@ -56,8 +56,10 @@ var ActivationFunctions = map[int](func(float64) float64){
 // The complexity estimates will vary, depending on the performance.
 var ComplexityEstimate = make(map[int]float64)
 
-func estimateComplexity() {
-	fmt.Print("Estimating activation function complexity...")
+func (config *Config) estimateComplexity() {
+	if config.Verbose {
+		fmt.Print("Estimating activation function complexity...")
+	}
 	startEstimate := time.Now()
 	resolution := 0.0001
 	durationMap := make(map[int]time.Duration)
@@ -80,7 +82,9 @@ func estimateComplexity() {
 		//fmt.Println(ComplexityEstimate[i])
 	}
 	estimateDuration := time.Since(startEstimate)
-	fmt.Printf(" done. (In %v)\n", estimateDuration)
+	if config.Verbose {
+		fmt.Printf(" done. (In %v)\n", estimateDuration)
+	}
 }
 
 // Call runs an activation function with the given float64 value.

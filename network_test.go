@@ -12,9 +12,9 @@ var commonSeed int64 = 1571917826405889420
 func TestNewNetwork(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 0.5,
-		SharedWeight:    0.5,
+		inputs:                 5,
+		InitialConnectionRatio: 0.5,
+		sharedWeight:           0.5,
 	})
 	fmt.Println(net)
 	for i, n := range net.AllNodes {
@@ -37,9 +37,9 @@ func TestGet(t *testing.T) {
 func TestIsInput(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 0.5,
-		SharedWeight:    0.5,
+		inputs:                 5,
+		InitialConnectionRatio: 0.5,
+		sharedWeight:           0.5,
 	})
 	if !net.IsInput(1) {
 		t.Fail()
@@ -52,9 +52,9 @@ func TestIsInput(t *testing.T) {
 func TestForEachConnected(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 0.5,
-		SharedWeight:    0.5,
+		inputs:                 5,
+		InitialConnectionRatio: 0.5,
+		sharedWeight:           0.5,
 	})
 	net.ForEachConnected(func(n *Neuron) {
 		fmt.Printf("%d: %s, distance from output node: %d\n", n.neuronIndex, n, n.distanceFromOutputNode)
@@ -64,9 +64,9 @@ func TestForEachConnected(t *testing.T) {
 func TestAll(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 0.7,
-		SharedWeight:    0.5,
+		inputs:                 5,
+		InitialConnectionRatio: 0.7,
+		sharedWeight:           0.5,
 	})
 	for _, node := range net.All() {
 		fmt.Println(node)
@@ -76,9 +76,9 @@ func TestAll(t *testing.T) {
 func TestEvaluate2(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 0.7,
-		SharedWeight:    0.5,
+		inputs:                 5,
+		InitialConnectionRatio: 0.7,
+		sharedWeight:           0.5,
 	})
 	_ = net.Evaluate([]float64{0.1, 0.2, 0.3, 0.4, 0.5})
 }
@@ -86,9 +86,9 @@ func TestEvaluate2(t *testing.T) {
 func TestInsertNode(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 0.5,
-		SharedWeight:    0.5,
+		inputs:                 5,
+		InitialConnectionRatio: 0.5,
+		sharedWeight:           0.5,
 	})
 	_, newNeuronIndex := net.NewNeuron()
 	if err := net.InsertNode(0, 2, newNeuronIndex); err != nil {
@@ -101,8 +101,8 @@ func TestInsertNode(t *testing.T) {
 func TestAddConnection(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 0.5,
+		inputs:                 5,
+		InitialConnectionRatio: 0.5,
 	})
 	_, newNeuronIndex := net.NewNeuron()
 	if err := net.InsertNode(net.OutputNode, 2, newNeuronIndex); err != nil {
@@ -126,8 +126,8 @@ func TestAddConnection(t *testing.T) {
 func TestRandomizeActivationFunctionForRandomNeuron(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 0.5,
+		inputs:                 5,
+		InitialConnectionRatio: 0.5,
 	})
 	net.RandomizeActivationFunctionForRandomNeuron()
 }
@@ -135,8 +135,8 @@ func TestRandomizeActivationFunctionForRandomNeuron(t *testing.T) {
 func TestNetworkString(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 0.5,
+		inputs:                 5,
+		InitialConnectionRatio: 0.5,
 	})
 	//fmt.Println(net.String())
 	_ = net.String()
@@ -153,8 +153,8 @@ func TestSetWeight(t *testing.T) {
 func TestComplexity(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 0.0,
+		inputs:                 5,
+		InitialConnectionRatio: 0.0,
 	})
 	// The complexity will vary, because the performance varies when
 	// estimating the complexity of each function.
@@ -173,8 +173,8 @@ func TestComplexity(t *testing.T) {
 func ExampleNetwork_InsertNode() {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          3,
-		ConnectionRatio: 1.0,
+		inputs:                 3,
+		InitialConnectionRatio: 1.0,
 	})
 	fmt.Println("Before insertion:")
 	fmt.Println(net)
@@ -209,8 +209,8 @@ func ExampleNetwork_InsertNode() {
 func TestLeftRight(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          3,
-		ConnectionRatio: 1.0,
+		inputs:                 3,
+		InitialConnectionRatio: 1.0,
 	})
 	net.AllNodes[1].ActivationFunctionIndex = Swish
 	a, b, _ := net.LeftRight(0, 1)
@@ -265,8 +265,8 @@ func TestLeftRight(t *testing.T) {
 func TestDepth(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          3,
-		ConnectionRatio: 1.0,
+		inputs:                 3,
+		InitialConnectionRatio: 1.0,
 	})
 	fmt.Println(net.Depth())
 	_, nodeIndex := net.NewBlankNeuron()
@@ -285,8 +285,8 @@ func ExampleCombine() {
 func TestGetRandomNeuron(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 1.0,
+		inputs:                 5,
+		InitialConnectionRatio: 1.0,
 	})
 	stats := make(map[NeuronIndex]uint)
 	for i := 0; i < 1000; i++ {
@@ -317,8 +317,8 @@ func TestGetRandomNeuron(t *testing.T) {
 func TestGetRandomInputNode(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 1.0,
+		inputs:                 5,
+		InitialConnectionRatio: 1.0,
 	})
 	stats := make(map[NeuronIndex]uint)
 	for i := 0; i < 1000; i++ {
@@ -339,8 +339,8 @@ func TestGetRandomInputNode(t *testing.T) {
 func TestConnected(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 0.1,
+		inputs:                 5,
+		InitialConnectionRatio: 0.1,
 	})
 	connected := net.Connected()
 	if connected[0] != 0 || connected[1] != 2 {
@@ -351,8 +351,8 @@ func TestConnected(t *testing.T) {
 func TestUnconnected(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 0.5,
+		inputs:                 5,
+		InitialConnectionRatio: 0.5,
 	})
 	unconnected := net.Unconnected()
 	correct := []NeuronIndex{1, 3, 4}
@@ -366,8 +366,8 @@ func TestUnconnected(t *testing.T) {
 func TestCopy(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 0.5,
+		inputs:                 5,
+		InitialConnectionRatio: 0.5,
 	})
 
 	// Take a deep copy with the Copy() function
@@ -393,8 +393,8 @@ func TestCopy(t *testing.T) {
 func TestForEachConnectedNodeIndex(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 0.5,
+		inputs:                 5,
+		InitialConnectionRatio: 0.5,
 	})
 	lastNi := NeuronIndex(-1)
 	net.ForEachConnectedNodeIndex(func(ni NeuronIndex) {

@@ -6,16 +6,7 @@ import (
 	"math/rand"
 	"strconv"
 	"strings"
-	"time"
 )
-
-// init will
-func init() {
-	// initialize the random number generator with the current time
-	rand.Seed(time.Now().UTC().UnixNano())
-	// estimate the complexity of each activation function
-	estimateComplexity()
-}
 
 // NeuronIndex is an index into the AllNodes slice
 type NeuronIndex int
@@ -36,9 +27,9 @@ func NewNetwork(cs ...*Config) Network {
 	if len(cs) == 1 && cs[0] != nil {
 		c = cs[0]
 	}
-	n := c.Inputs
-	r := c.ConnectionRatio
-	w := c.SharedWeight
+	n := c.inputs
+	r := c.InitialConnectionRatio
+	w := c.sharedWeight
 	// Create a new network that has one node, the output node
 	outputNodeIndex := NeuronIndex(0)
 	net := Network{make([]Neuron, 0, n+1), make([]NeuronIndex, n), outputNodeIndex, w}
@@ -211,19 +202,28 @@ func (net *Network) SetWeight(weight float64) {
 // Complexity measures the network complexity
 // Will return 1.0 at a minimum
 func (net *Network) Complexity() float64 {
+
+	// TODO: These two constants really affect the results. Place them in the Config struct instead.
+
+	// How much should the function complexity matter in relation to the number of connected nodes?
+	const functionComplexityMultiplier = 10.0
+
+	// How much should the complexity score matter in relation to the network results, when scoring the network?
+	const complexityMultiplier = 10.0
+
 	sum := 0.0
 	// Sum the complexity of all activation functions.
 	// This penalizes both slow activation functions and
 	// unconnected nodes.
 	for _, n := range net.AllNodes {
 		if n.Value == nil {
-			sum += ComplexityEstimate[n.ActivationFunctionIndex] * 10.0
+			sum += ComplexityEstimate[n.ActivationFunctionIndex] * functionComplexityMultiplier
 		}
 	}
 	// The number of connected nodes should also carry some weight
 	connectedNodes := float64(len(net.Connected()))
 	// This must always be larger than 0, to avoid divide by zero later
-	return connectedNodes + sum
+	return (connectedNodes + sum) * complexityMultiplier
 }
 
 // LeftRight returns two neurons, such that the first on is the one that is

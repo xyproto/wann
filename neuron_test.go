@@ -74,9 +74,9 @@ func TestFindInput(t *testing.T) {
 func TestRemoveInput(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          5,
-		ConnectionRatio: 0.5,
-		SharedWeight:    0.5,
+		inputs:                 5,
+		InitialConnectionRatio: 0.5,
+		sharedWeight:           0.5,
 	})
 
 	a, _ := net.NewBlankNeuron() // 0
@@ -101,9 +101,9 @@ func TestRemoveInput(t *testing.T) {
 func TestEvaluate(t *testing.T) {
 	rand.Seed(commonSeed)
 	net := NewNetwork(&Config{
-		Inputs:          7,
-		ConnectionRatio: 0.5,
-		SharedWeight:    0.5,
+		inputs:                 7,
+		InitialConnectionRatio: 0.5,
+		sharedWeight:           0.5,
 	})
 
 	// Set a few activation functions
