@@ -9,6 +9,7 @@ import (
 )
 
 // OutputSVG will output the current network as an SVG image to the given io.Writer
+// TODO: Clean up and refactor
 func (net *Network) OutputSVG(w io.Writer) (int, error) {
 	// Set up margins and the canvas size
 	var (
@@ -21,7 +22,7 @@ func (net *Network) OutputSVG(w io.Writer) (int, error) {
 		d              = float64(net.Depth()) * 2.5
 		width          = marginLeft + int(float64(nodeRadius)*2.0*d) + betweenPadding*(int(d)-1) + nodeRadius + marginRight
 		l              = float64(len(net.InputNodes))
-		height         = marginTop + int(float64(nodeRadius)*2.0*l) + betweenPadding*(int(l)-1) + marginBottom
+		height         = marginTop + int(float64(nodeRadius)*1.5*l) + betweenPadding*(int(l)-1) + marginBottom
 		imgPadding     = 5
 		lineWidth      = 2
 	)
@@ -147,6 +148,13 @@ func (net *Network) OutputSVG(w io.Writer) (int, error) {
 				} else if yp > (ypos + float64(nodeRadius)*1.9) {
 					continue
 				}
+
+				// Label
+				name := node.ActivationFunction.Name()
+				box := svg.AddRect(int(startx-float64(nodeRadius)*0.4), int(ypos+float64(nodeRadius)*2.5)-5, len(name)*5, 6)
+				box.Fill("black")
+				svg.Text(int(startx-float64(nodeRadius)*0.4), int(ypos+float64(nodeRadius)*2.5), 8, "Courier", name, "white")
+
 				p := tinysvg.NewPosf(xpos, yp)
 				points = append(points, p)
 			}
@@ -162,6 +170,12 @@ func (net *Network) OutputSVG(w io.Writer) (int, error) {
 	output := svg.AddCircle(outputx+nodeRadius+1, outputy+nodeRadius+1, nodeRadius)
 	output.Fill("magenta")
 	output.Stroke2(tinysvg.ColorByName("black"))
+
+	// Label
+	name := "Output"
+	box := svg.AddRect(outputx-nodeRadius/2, (nodeRadius*2)+outputy+1, len(name)*5, 6)
+	box.Fill("black")
+	svg.Text(outputx-nodeRadius/2, (nodeRadius*2)+outputy+6, 8, "Courier", name, "white")
 
 	// Write the data to the given io.Writer
 	return w.Write(document.Bytes())

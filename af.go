@@ -137,6 +137,40 @@ func (afi ActivationFunctionIndex) goExpression(varName string) string {
 	}
 }
 
+// Name returns a name for each activation function
+func (afi ActivationFunctionIndex) Name() string {
+	switch afi {
+	case Step:
+		return "Step"
+	case Linear:
+		return "Linear"
+	case Sin:
+		return "Sinusoid"
+	case Gauss:
+		return "Gaussian"
+	case Tanh:
+		return "Tanh"
+	case Sigmoid:
+		return "Sigmoid"
+	case Inv:
+		return "Inverted"
+	case Abs:
+		return "Absolute"
+	case ReLU:
+		return "ReLU"
+	case Cos:
+		return "Cosinusoid"
+	case Squared:
+		return "Squared"
+	case Swish:
+		return "Swish"
+	case SoftPlus:
+		return "SoftPlus"
+	default:
+		return "Untitled"
+	}
+}
+
 // String returns the Go expression for this activation function, using "x" as the input variable name
 func (afi ActivationFunctionIndex) String() string {
 	return afi.goExpression("x")

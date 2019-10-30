@@ -474,7 +474,7 @@ func (net Network) String() string {
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Network (%d nodes, %d input nodes, %d output node)\n", len(net.AllNodes), len(net.InputNodes), 1))
 	sb.WriteString("\tConnected inputs to output node: " + strconv.Itoa(len(net.AllNodes[net.OutputNode].InputNodes)) + "\n")
-	for _, node := range net.All() {
+	for _, node := range net.AllNodes {
 		sb.WriteString("\t" + node.String() + "\n")
 	}
 	return sb.String()
