@@ -101,7 +101,7 @@ func (afi ActivationFunctionIndex) Call(x float64) float64 {
 	return af.Linear(x)
 }
 
-// goExpression returns the Go expression for this activation function, using the given variable name string as the input variable
+// goExpression returns the Go expression for this activation function, using the given variable name string as the input variable name
 func (afi ActivationFunctionIndex) goExpression(varName string) string {
 	switch afi {
 	case Step:
@@ -137,7 +137,7 @@ func (afi ActivationFunctionIndex) goExpression(varName string) string {
 	}
 }
 
-// String returns a formula, using "x" as the input variable
+// String returns the Go expression for this activation function, using "x" as the input variable name
 func (afi ActivationFunctionIndex) String() string {
 	return afi.goExpression("x")
 }
