@@ -4,7 +4,7 @@
 
 Weight Agnostic Neural Networks, implemented in Go, using the techniques outlined in the paper:
 
-*"Weight Agnostic Neural Networks" by Adam Gaier and David Ha*. ([pdf](https://arxiv.org/pdf/1906.04358.pdf) | [interactive version](https://weightagnostic.github.io/) | [Google AI blog post](https://ai.googleblog.com/2019/08/exploring-weight-agnostic-neural.html))
+*"Weight Agnostic Neural Networks" by Adam Gaier and David Ha*. ([PDF](https://arxiv.org/pdf/1906.04358.pdf) | [Interactive version](https://weightagnostic.github.io/) | [Google AI blog post](https://ai.googleblog.com/2019/08/exploring-weight-agnostic-neural.html))
 
 ## Features and limitations
 
