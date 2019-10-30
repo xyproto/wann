@@ -130,11 +130,15 @@ Take a look at the best network for judging if a set of numbers that are either 
 
 * Adding convolution nodes might give interesting results.
 
-## Experimental features
+## Generating Go code from a trained network
 
-There is an experimental feature in place for outputting a network as a Go function. This only works for networks that are 1 deep, right now.
+This is an experimental feature and a work in progress!
 
-Adding these two lines to `cmd/evolve/main.go`:
+The idea is to generate one large expression from all the expressions that each node in the network represents.
+
+Right now, his only works for networks that has a depth of 1.
+
+For example, adding these two lines to `cmd/evolve/main.go`:
 
 ```go
 // Output a Go function for this network
@@ -143,11 +147,13 @@ fmt.Println(trainedNetwork.GoFunction())
 
 Produces this output:
 
-    func f(x float64) float64 { return -x }
+```go
+func f(x float64) float64 { return -x }
+```
 
-The next plan is to output a function that takes the input data instead, and refers to the input data by index. Support for deeper networks also needs to be added.
+The plan is to output a function that takes the input data instead, and refers to the input data by index. Support for deeper networks also needs to be added.
 
-There is an example for outputting Go code in `cmd/functions`.
+There is a complete example for outputting Go code in `cmd/functions`.
 
 ## General info
 
