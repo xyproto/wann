@@ -7,6 +7,8 @@ import "strings"
 // returns true if the maximum number of evaluation loops is reached
 // TODO: Rewrite this function
 func (neuron *Neuron) generateExpression(variableLetter *rune, maxEvaluationLoops *int, callDepth int) (string, bool) {
+	// TODO: Also include the activation function for the output node!
+	// TODO: Rewrite this function
 	if *maxEvaluationLoops <= 0 {
 		return "", true
 	}
@@ -40,6 +42,7 @@ func (neuron *Neuron) generateExpression(variableLetter *rune, maxEvaluationLoop
 			break
 		}
 	}
+
 	// No input neurons. Invent a variable name (using the input node counter?)
 	if counter == 0 && neuron.Value != nil {
 		returnString := string(*variableLetter) + ", "
@@ -55,6 +58,7 @@ func (neuron *Neuron) generateExpression(variableLetter *rune, maxEvaluationLoop
 		return neuron.ActivationFunction.goExpression(string('A')), false
 	}
 	// No further expressions, this is the end of the line, just use "x"
+	//outputAF := neuron.Net.AllNodes[neuron.Net.OutputNode].ActivationFunction
 	return neuron.ActivationFunction.goExpression(string(*variableLetter)), false
 }
 
@@ -68,5 +72,6 @@ func (net *Network) GoExpression(varLetter rune) string {
 
 // GoFunction returns the source code for a Go function that does the same thing as this network
 func (net *Network) GoFunction() string {
-	return "func f(x float64) float64 { return " + net.GoExpression('x') + " }"
+	// TODO: Rewrite and refactor
+	return "func f(x float64) float64 { return " + strings.Replace(net.AllNodes[net.OutputNode].ActivationFunction.goExpression("X"), "X", "("+net.GoExpression('x')+")", -1) + " }"
 }
