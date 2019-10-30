@@ -122,7 +122,7 @@ Build and run the example:
 
 Take a look at the best network for judging if a set of numbers that are either 0 or 1 are of one category:
 
-    xdg-open best.svg
+    xdg-open network.svg
 
 (If needed, use your favorite SVG viewer intead of the `xdg-open` command).
 
