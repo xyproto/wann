@@ -3,6 +3,6 @@ github.com/xyproto/af v0.0.0-20191018214415-1a8887381bd3 h1:QN9wTN6qa12WnnYyQ9xl
 github.com/xyproto/af v0.0.0-20191018214415-1a8887381bd3/go.mod h1:xYoWKJKu61/NJ4/6PV6mJuNu5QymmrbJmmI5mNOW+fI=
 github.com/xyproto/swish v1.3.0 h1:qiVl2UeqkMqDJKjRLVwRprD7Vzz2pbNRcWTb3s0TpjE=
 github.com/xyproto/swish v1.3.0/go.mod h1:IVhz2R80pNsPaSxbEcqR84i4MVL0b06HN7KIMhv38WA=
-github.com/xyproto/tinysvg v0.0.0-20191021102652-2273b0663827 h1:+vSMsxF5htrqPJkD149TO3kUx76KVUM/Q/fxAku82qM=
-github.com/xyproto/tinysvg v0.0.0-20191021102652-2273b0663827/go.mod h1:VxYks+aqnk4LulwRP6fGPZSzGNdb+Z+HZuUaSJz32Jk=
+github.com/xyproto/tinysvg v0.0.0-20191021103805-f0d4368c3445 h1:DczgYD4//HrRs7cVVd3joH/8HOG8OHhvMQOQaig8MKE=
+github.com/xyproto/tinysvg v0.0.0-20191021103805-f0d4368c3445/go.mod h1:VxYks+aqnk4LulwRP6fGPZSzGNdb+Z+HZuUaSJz32Jk=
 golang.org/x/sys v0.0.0-20190613101156-ab3f67ed278a/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
