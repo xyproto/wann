@@ -19,11 +19,16 @@ func ScorePopulation(population []*Network, weight float64, inputData [][]float6
 		net := population[i]
 
 		net.SetWeight(weight)
+
+		// Evaluate all networks in the given population
 		result := 0.0
 		for i := 0; i < len(inputData); i++ {
 			result += net.Evaluate(inputData[i]) * correctOutputMultipliers[i]
 		}
+
+		// The score is how well the network is doing, divided by the network complexity rating
 		score := result / net.Complexity()
+
 		scoreSum += score
 		scoreMap[i] = score
 	}
@@ -63,7 +68,6 @@ func (net *Network) Modify(maxIterations int) {
 				return
 			}
 		}
-		//net.checkInputNeurons()
 	case 2:
 		// Change the activation function to a randomly selected one
 		net.RandomizeActivationFunctionForRandomNeuron()
