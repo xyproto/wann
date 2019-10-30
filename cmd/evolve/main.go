@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	// Here are four shapes, up, down, left and right:
+	// Here are four shapes, representing: up, down, left and right:
 
 	up := []float64{
 		0.0, 1.0, 0.0, //  o
