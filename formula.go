@@ -6,6 +6,7 @@ import "strings"
 // using the "x" string if .Value is set and no input nodes are available.
 // returns true if the maximum number of evaluation loops is reached
 // TODO: Rewrite this function
+// WORK IN PROGRESS
 func (neuron *Neuron) generateExpression(variableLetter *rune, maxEvaluationLoops *int, callDepth int) (string, bool) {
 	// TODO: Also include the activation function for the output node!
 	// TODO: Rewrite this function
@@ -63,6 +64,7 @@ func (neuron *Neuron) generateExpression(variableLetter *rune, maxEvaluationLoop
 }
 
 // GoExpression returns the source code for a Go expression that does the same thing as this network
+// WORK IN PROGRESS
 func (net *Network) GoExpression(varLetter rune) string {
 	outputNode := net.AllNodes[net.OutputNode]
 	maxIterationCounter := 100 // to avoid circular connections in the graph
@@ -71,7 +73,11 @@ func (net *Network) GoExpression(varLetter rune) string {
 }
 
 // GoFunction returns the source code for a Go function that does the same thing as this network
+// x[0] means the first input, x[1] means the second input etc.
 func (net *Network) GoFunction() string {
 	// TODO: Rewrite and refactor
+	if len(net.Connected()) == 1 {
+		return "func f(x float64) float64 { return " + strings.Replace(net.AllNodes[net.OutputNode].ActivationFunction.goExpression("X"), "X", "x", -1) + " }"
+	}
 	return "func f(x float64) float64 { return " + strings.Replace(net.AllNodes[net.OutputNode].ActivationFunction.goExpression("X"), "X", "("+net.GoExpression('x')+")", -1) + " }"
 }

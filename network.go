@@ -205,7 +205,7 @@ func (net *Network) Complexity() float64 {
 	const functionComplexityMultiplier = 10.0
 
 	// How much should the complexity score matter in relation to the network results, when scoring the network?
-	const complexityMultiplier = 20.0
+	const complexityMultiplier = 30.0
 
 	sum := 0.0
 	// Sum the complexity of all activation functions.

@@ -35,13 +35,13 @@ func main() {
 	}
 
 	// Which of the elements in the input data are we trying to identify?
-	correctResultsForUp := []float64{1.0, -1.0, -1.0, -1.0}
+	correctResultsForUp := []float64{1.0, 0.0, 0.0, 0.0}
 
 	// Prepare a neural network configuration struct
 	config := &wann.Config{
-		InitialConnectionRatio: 0.1,
-		Generations:            2000,
-		PopulationSize:         200,
+		InitialConnectionRatio: 0.05,
+		Generations:            4000,
+		PopulationSize:         100,
 		Verbose:                false,
 	}
 
@@ -66,6 +66,6 @@ func main() {
 		}
 	}
 
-	// Output a Go function for this network
+	// Output a Go function for this network, for each input node
 	fmt.Println(trainedNetwork.GoFunction())
 }
