@@ -167,6 +167,6 @@ There is a complete example for outputting Go code in `cmd/gofunction`.
 
 ## General info
 
-* Version: 0.3.0
+* Version: 0.3.1
 * License: MIT
 * Author: Alexander F. Rødseth &lt;xyproto@archlinux.org&gt;
