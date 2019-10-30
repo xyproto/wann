@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
+	"strconv"
 
 	"github.com/xyproto/tinysvg"
 )
@@ -75,52 +76,48 @@ func (net *Network) OutputSVG(w io.Writer) (int, error) {
 		panic("implementation error: neuron index not found")
 	}
 
-	// TODO: Once the diagram confirmed to be correct, draw the lines first and then the nodes
-	// TODO: Draw unconnected nodes in gray
+	// Draw node lines first
 	for _, neurons := range layerNeurons {
 		for _, neuronIndex := range neurons {
-
 			if neuronIndex == net.OutputNode {
-				// Skip
+				continue
+			}
+			// Find the position of this node circle
+			x, y := getPosition(neuronIndex)
+			// Draw the connection from the center of this node to the center of all input nodes, if applicable
+			for _, inputNeuron := range (net.AllNodes[neuronIndex]).InputNodes {
+				ix, iy := getPosition(inputNeuron)
+				svg.Line(ix+nodeRadius, iy+nodeRadius, x+nodeRadius, y+nodeRadius, lineWidth, "orange")
+			}
+			// Draw the connection to the output node, if it has this node as input
+			if net.AllNodes[net.OutputNode].HasInput(neuronIndex) {
+				svg.Line(x+nodeRadius, y+nodeRadius, outputx+nodeRadius, outputy+nodeRadius, lineWidth, "#0099ff")
+			}
+		}
+	}
+
+	// Then draw the nodes on top, including graph plots
+	for _, neurons := range layerNeurons {
+		for _, neuronIndex := range neurons {
+			if neuronIndex == net.OutputNode {
 				continue
 			}
 
 			// Find the position of this node circle
 			x, y := getPosition(neuronIndex)
 
-			// Draw the connection from the center of this node to the center of all input nodes, if applicable
-			for _, inputNeuron := range (net.AllNodes[neuronIndex]).InputNodes {
-				ix, iy := getPosition(inputNeuron)
-				svg.Line(ix+nodeRadius, iy+nodeRadius, x+nodeRadius, y+nodeRadius, lineWidth, "orange")
-			}
-
-			// Draw the connection to the output node, if it has this node as input
-			if net.AllNodes[net.OutputNode].HasInput(neuronIndex) {
-				svg.Line(x+nodeRadius, y+nodeRadius, outputx+nodeRadius, outputy+nodeRadius, lineWidth, "#0099ff")
-			}
-
 			// Draw this node
 			input := svg.AddCircle(x+nodeRadius, y+nodeRadius, nodeRadius)
 			switch net.AllNodes[neuronIndex].distanceFromOutputNode {
-			case 1:
+			case 1, 6:
 				input.Fill("lightblue")
-			case 2:
+			case 2, 7:
 				input.Fill("lightgreen")
-			case 3:
+			case 3, 8:
 				input.Fill("lightyellow")
-			case 4:
+			case 4, 9:
 				input.Fill("orange")
-			case 5:
-				input.Fill("red")
-			case 6:
-				input.Fill("lightblue")
-			case 7:
-				input.Fill("lightgreen")
-			case 8:
-				input.Fill("lightyellow")
-			case 9:
-				input.Fill("orange")
-			case 10:
+			case 5, 10:
 				input.Fill("red")
 			default:
 				input.Fill("gray")
@@ -128,10 +125,10 @@ func (net *Network) OutputSVG(w io.Writer) (int, error) {
 			input.Stroke2(tinysvg.ColorByName("black"))
 
 			// Plot the activation function inside this node
+			var points []*tinysvg.Pos
 			startx := float64(x) + float64(nodeRadius)*0.5
 			stopx := float64(x+nodeRadius*2) - float64(nodeRadius)*0.5
 			ypos := float64(y)
-			var points []*tinysvg.Pos
 			for xpos := startx; xpos < stopx; xpos += 0.2 {
 				// xr is from 0 to 1
 				xr := float64(xpos-startx) / float64(stopx-startx)
@@ -151,6 +148,16 @@ func (net *Network) OutputSVG(w io.Writer) (int, error) {
 
 				// Label
 				name := node.ActivationFunction.Name()
+				if net.IsInput(neuronIndex) {
+					// Add a the input number to the name
+					for i, ni := range net.InputNodes {
+						if neuronIndex == ni {
+							name += " [" + strconv.Itoa(i) + "]"
+						}
+					}
+				} else if neuronIndex == net.OutputNode {
+					name += " !"
+				}
 				box := svg.AddRect(int(startx-float64(nodeRadius)*0.4), int(ypos+float64(nodeRadius)*2.5)-5, len(name)*5, 6)
 				box.Fill("black")
 				svg.Text(int(startx-float64(nodeRadius)*0.4), int(ypos+float64(nodeRadius)*2.5), 8, "Courier", name, "white")
@@ -172,7 +179,7 @@ func (net *Network) OutputSVG(w io.Writer) (int, error) {
 	output.Stroke2(tinysvg.ColorByName("black"))
 
 	// Label
-	name := "Output"
+	name := net.AllNodes[net.OutputNode].ActivationFunction.Name() + " [o]"
 	box := svg.AddRect(outputx-nodeRadius/2, (nodeRadius*2)+outputy+1, len(name)*5, 6)
 	box.Fill("black")
 	svg.Text(outputx-nodeRadius/2, (nodeRadius*2)+outputy+6, 8, "Courier", name, "white")
