@@ -66,10 +66,6 @@ func main() {
 		}
 	}
 
-	// Output a Go function for this network
-	fmt.Println("This network as a Go function (this is an experimental feature!):")
-	fmt.Println(trainedNetwork.GoFunction())
-
 	// Save the trained network as an SVG image
 	if config.Verbose {
 		fmt.Print("Writing network.svg...")

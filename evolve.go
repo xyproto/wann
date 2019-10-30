@@ -159,7 +159,6 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		// Initialize the scores with unlikely values
 		// TODO: Use the first network in the population for initializing these instead
 		bestScore = -9999.0
-		averageScore = 0.0
 		worstScore = 9999.0
 
 		// Random weight from -2.0 to 2.0

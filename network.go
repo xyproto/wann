@@ -95,7 +95,7 @@ func (net *Network) InsertNode(a, b NeuronIndex, newNodeIndex NeuronIndex) error
 		if net.IsInput(a) && net.IsInput(b) {
 			return errors.New("insert node: both node a and b are input nodes")
 		}
-		return errors.New("insert node: aribtrary ordering when inserting a node")
+		return errors.New("insert node: arbitrary ordering when inserting a node")
 	}
 
 	// This should never happen
@@ -141,7 +141,7 @@ func (net *Network) AddConnection(a, b NeuronIndex) error {
 		return errors.New("index out of range")
 	}
 	// Sort the nodes by where they place in the diagram
-	arbitrary := false
+	var arbitrary bool
 	a, b, arbitrary = net.LeftRight(a, b)
 	if arbitrary {
 		if a == b {
