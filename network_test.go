@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// Use a specific seed for the random number generator
+// Use a specific seed for the random number generator, just when testing
 var commonSeed int64 = 1571917826405889420
 
 func TestNewNetwork(t *testing.T) {
@@ -94,7 +94,6 @@ func TestInsertNode(t *testing.T) {
 	if err := net.InsertNode(0, 2, newNeuronIndex); err != nil {
 		t.Error(err)
 	}
-	//fmt.Println(net)
 	_ = net.Evaluate([]float64{0.1, 0.2, 0.3, 0.4, 0.5})
 }
 
@@ -138,7 +137,6 @@ func TestNetworkString(t *testing.T) {
 		inputs:                 5,
 		InitialConnectionRatio: 0.5,
 	})
-	//fmt.Println(net.String())
 	_ = net.String()
 }
 
@@ -160,11 +158,10 @@ func TestComplexity(t *testing.T) {
 	// estimating the complexity of each function.
 	// But the complexity compared between networks should still hold.
 	firstComplexity := net.Complexity()
-	//fmt.Println("First network complexity:", firstComplexity)
 	// Adding a connection increases the complexity
 	net.AddConnection(0, 1)
+	// The complexity for the network, after a connection has been added
 	secondComplexity := net.Complexity()
-	//fmt.Println("Second network complexity:", secondComplexity)
 	if firstComplexity >= secondComplexity {
 		t.Fail()
 	}
@@ -178,7 +175,6 @@ func ExampleNetwork_InsertNode() {
 	})
 	fmt.Println("Before insertion:")
 	fmt.Println(net)
-	//net.WriteSVG("before.svg")
 	_, nodeIndex := net.NewNeuron()
 	err := net.InsertNode(0, 1, nodeIndex)
 	if err != nil {
@@ -186,7 +182,6 @@ func ExampleNetwork_InsertNode() {
 	}
 	fmt.Println("After insertion:")
 	fmt.Println(net)
-	//net.WriteSVG("after.svg")
 	// Output:
 	// Before insertion:
 	// Network (4 nodes, 3 input nodes, 1 output node)
@@ -223,17 +218,11 @@ func TestLeftRight(t *testing.T) {
 	if a != 1 || b != 0 {
 		t.Fail()
 	}
-	//net.WriteSVG("before.svg")
-	//fmt.Println("BEFORE:")
-	//fmt.Println(net)
 	_, nodeIndex := net.NewNeuron()
 	err := net.InsertNode(0, 1, nodeIndex)
 	if err != nil {
 		t.Error(err)
 	}
-	//net.WriteSVG("after.svg")
-	//fmt.Println("AFTER:")
-	//fmt.Println(net)
 	a, b, _ = net.LeftRight(0, nodeIndex)
 	// output node to the right
 	if a != nodeIndex || b != 0 {
@@ -252,11 +241,6 @@ func TestLeftRight(t *testing.T) {
 	//net.WriteSVG("c.svg")
 	fmt.Println(net)
 	a, b, _ = net.LeftRight(nodeIndex, 1)
-	fmt.Println("nodeIndex:", nodeIndex)
-	fmt.Println("1:", 1)
-	fmt.Println("a:", a)
-	fmt.Println("b:", b)
-
 	if a != 1 || b != nodeIndex {
 		t.Fail()
 	}
@@ -302,16 +286,6 @@ func TestGetRandomNeuron(t *testing.T) {
 	if _, ok := stats[0]; !ok {
 		t.Fail()
 	}
-
-	// This is more a test of the random number generator than anything. Disable:
-	// // This isn't 00% watertight, but each element should have been chosen around 160 times, +- 30
-	// center := uint(160)
-	// margin := uint(30)
-	// for _, chosenCount := range stats {
-	// 	if chosenCount < (center-margin) || chosenCount > (center+margin) {
-	// 		t.Fail()
-	// 	}
-	// }
 }
 
 func TestGetRandomInputNode(t *testing.T) {

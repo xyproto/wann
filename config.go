@@ -4,7 +4,7 @@ package wann
 // The idea is that referring to fields by name is more explicit, and that it can
 // be re-used in connection with having a configuration file, in the future.
 type Config struct {
-	// Number of input neurons (inputs per slice of floats in inputData in the Evolve function, set by the Evolve function)
+	// Number of input neurons (inputs per slice of floats in inputData in the Evolve function)
 	inputs int
 	// When initializing a network, this is the propability that the node will be connected to the output node
 	InitialConnectionRatio float64
@@ -16,10 +16,10 @@ type Config struct {
 	PopulationSize int
 	// For how many generations should the training go on, without any improvement in the best score? Disabled if 0.
 	MaxIterationsWithoutBestImprovement int
-	// Verbose?
-	Verbose bool
 	// RandomSeed, for initializing the random number generator. The current time is used for the seed if this is set to 0.
 	RandomSeed int64
-	// Initialized?
+	// Verbose output
+	Verbose bool
+	// Has the pseudo-random number generator been seeded and the activation function complexity been estimated yet?
 	initialized bool
 }

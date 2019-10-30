@@ -37,7 +37,6 @@ func ScorePopulation(population []*Network, weight float64, inputData [][]float6
 func (net *Network) Modify(maxIterations int) {
 
 	// Use method 0, 1 or 2
-	// Method 1 and 2 are always fine, method 0 has had issues
 	method := rand.Intn(3) // up to and not including 3
 
 	// Perform a modfification, using one of the three methods outlined in the paper
@@ -47,14 +46,13 @@ func (net *Network) Modify(maxIterations int) {
 		counter := 0
 		for net.InsertRandomNode() == false {
 			counter++
-			if counter > maxIterations {
+			if maxIterations > 0 && counter > maxIterations {
 				break
 			}
 		}
 	case 1:
-		//net.checkInputNeurons()
 		nodeA, nodeB := net.GetRandomNode(), net.GetRandomNode()
-		// A bit risky, time-wise, but continue finding random neurons until they work out
+		// Continue finding random neurons until they work out or until maxIterations is reached
 		// Create a new connection
 		counter := 0
 		for net.AddConnection(nodeA, nodeB) != nil {
@@ -128,6 +126,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 	for i := 0; i < config.PopulationSize; i++ {
 		n := NewNetwork(config)
 		population[i] = &n
+		population[i].UpdateNetworkPointers()
 	}
 
 	var bestNetwork *Network
@@ -140,13 +139,9 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 
 	// Keep track of the average scores
 	averageScore := 0.0
-	//lastAverageScore := 0.0
-	//noImprovementOfAverageScoreCounter := 0
 
 	// Keep track of the worst scores
 	worstScore := 0.0
-	//lastWorstScore := 0.0
-	//noImprovementOfWorstScoreCounter := 0
 
 	if config.Verbose {
 		fmt.Printf("Starting evolution with population size %d, for %d generations.\n", config.PopulationSize, config.Generations)
@@ -188,24 +183,12 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		}
 
 		// Handle the average score stats
-		//lastAverageScore = averageScore
 		averageScore = scoreSum / float64(config.PopulationSize)
-		// if averageScore >= lastAverageScore {
-		// 	noImprovementOfAverageScoreCounter = 0
-		// } else {
-		// 	noImprovementOfAverageScoreCounter++
-		// }
 
 		// Handle the worst score stats
-		//lastWorstScore = worstScore
 		if scoreList[len(scoreList)-1].Value < worstScore {
 			worstScore = scoreList[len(scoreList)-1].Value
 		}
-		// if worstScore >= lastWorstScore {
-		// 	noImprovementOfWorstScoreCounter = 0
-		// } else {
-		// 	noImprovementOfWorstScoreCounter++
-		// }
 
 		if bestNetwork == nil {
 			panic("implementation error: no best network")
@@ -223,26 +206,18 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		goodNetworks := make([]*Network, 0)
 
 		// Now loop over all networks, sorted by score (descending order)
+		// p.Key is the network index
+		// p.Value is the network score
 		for _, p := range scoreList {
 			networkIndex := p.Key
-			//networkScore := p.Value
 			if bestThirdCountdown > 0 {
 				bestThirdCountdown--
 				// In the best third of the networks
-				//fmt.Println("BEST THIRD:", networkIndex, "score", networkScore)
 				goodNetworks = append(goodNetworks, population[networkIndex])
 			} else {
-				//fmt.Println("WORST TWO THIRDS:", networkIndex, "score", networkScore)
 				randomGoodNetwork := goodNetworks[rand.Intn(len(goodNetworks))]
-				//randomGoodNetwork.UpdateNetworkPointers()
-				//randomGoodNetwork.checkInputNeurons()
 				randomGoodNetworkCopy := randomGoodNetwork.Copy()
-				//randomGoodNetworkCopy.UpdateNetworkPointers()
-				//randomGoodNetworkCopy.checkInputNeurons()
-				//randomGoodNetworkCopy.UpdateNetworkPointers()
 				randomGoodNetworkCopy.Modify(maxModificationInterationsWhenMutating)
-				//randomGoodNetworkCopy.UpdateNetworkPointers()
-				//randomGoodNetworkCopy.checkInputNeurons()
 				// Replace the "bad" network with the modified copy of a "good" one
 				// It's important that this is a pointer to a Network and not
 				// a bare Network, so that the node .Net pointers are correct.

@@ -31,17 +31,7 @@ func SortByValue(m map[int]float64) PairList {
 	return pl
 }
 
-// func (neuron Neuron) checkInputNeurons() {
-// 	for _, inputNeuronIndex := range neuron.InputNodes {
-// 		fmt.Println("Network of neuron ", neuron.neuronIndex, ":")
-// 		fmt.Println(neuron.Net)
-// 		if int(inputNeuronIndex) >= len(neuron.Net.AllNodes) {
-// 			msg := fmt.Sprintf("at %d which has input index %d", neuron.neuronIndex, inputNeuronIndex)
-// 			panic("input neuron index is pointing out of bounds: " + msg)
-// 		}
-// 	}
-// }
-
+// checkInputNeurons was used for debugging
 func (net *Network) checkInputNeurons() {
 	for neuronIndex, neuron := range net.AllNodes {
 		if len(net.AllNodes) != len(neuron.Net.AllNodes) {

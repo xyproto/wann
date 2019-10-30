@@ -71,8 +71,7 @@ func (net *Network) OutputSVG(w io.Writer) (int, error) {
 				}
 			}
 		}
-		panic("getPosition: neuron index not found, this should never happen")
-		//return -1, -1
+		panic("implementation error: neuron index not found")
 	}
 
 	// TODO: Once the diagram confirmed to be correct, draw the lines first and then the nodes
@@ -135,10 +134,6 @@ func (net *Network) OutputSVG(w io.Writer) (int, error) {
 			for xpos := startx; xpos < stopx; xpos += 0.2 {
 				// xr is from 0 to 1
 				xr := float64(xpos-startx) / float64(stopx-startx)
-				// xv is from -5 to 3
-				//xv := (xr * 8.0) - 5.0
-				// xv is from -2 to 2
-				//xv := (xr * 4.0) - 2.0
 				// xv is from -5 to 5
 				xv := (xr - 0.5) * float64(nodeRadius)
 				node := net.AllNodes[neuronIndex]

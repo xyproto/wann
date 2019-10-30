@@ -2,6 +2,7 @@ package wann
 
 import (
 	"math/rand"
+	"os"
 	"testing"
 )
 
@@ -12,12 +13,6 @@ func TestDiagram(t *testing.T) {
 		InitialConnectionRatio: 0.5,
 		sharedWeight:           0.5,
 	})
-
-	// net.AllNodes[net.InputNodes[0]].ActivationFunction = af.Linear
-	// net.AllNodes[net.InputNodes[1]].ActivationFunction = af.Swish
-	// net.AllNodes[net.InputNodes[2]].ActivationFunction = af.Gaussian01
-	// net.AllNodes[net.InputNodes[3]].ActivationFunction = af.Sigmoid
-	// net.AllNodes[net.InputNodes[4]].ActivationFunction = af.ReLU
 
 	// Set a few activation functions
 	net.AllNodes[net.InputNodes[0]].ActivationFunctionIndex = Linear
@@ -31,5 +26,5 @@ func TestDiagram(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	//os.Remove("test.svg")
+	os.Remove("test.svg")
 }

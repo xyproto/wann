@@ -115,8 +115,6 @@ func (neuron *Neuron) Is(e NeuronIndex) bool {
 
 // AddInput will add an input neuron
 func (neuron *Neuron) AddInput(ni NeuronIndex) error {
-
-	//fmt.Println("ADD INPUT", ni, "TO", neuron.neuronIndex)
 	if neuron.Is(ni) {
 		return errors.New("adding a neuron as input to itself")
 	}
@@ -176,7 +174,6 @@ func (neuron *Neuron) InputNeuronsAreGood() bool {
 // evaluate will return a weighted sum of the input nodes,
 // using the .Value field if it is set and no input nodes are available.
 func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64, bool) {
-	//fmt.Println("Evaluate. Countdown: ", *maxEvaluationLoops)
 	if *maxEvaluationLoops <= 0 {
 		return 0.0, true
 	}
@@ -188,10 +185,11 @@ func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64
 	for _, inputNeuronIndex := range neuron.InputNodes {
 		// Let each input neuron do its own evauluation, using the given weight
 		(*maxEvaluationLoops)--
+		// TODO: Figure out exactly why this one kicks in (and if it matters)
+		//       It only seems to kick in during "go test" and not in evolve/main.go
 		if int(inputNeuronIndex) >= len(neuron.Net.AllNodes) {
 			continue
 			//panic("TOO HIGH INPUT NEURON INDEX")
-			//inputNeuronIndex = NeuronIndex(len(neuron.Net.AllNodes) - 1)
 		}
 		result, stopNow := neuron.Net.AllNodes[inputNeuronIndex].evaluate(weight, maxEvaluationLoops)
 		summed += result * weight
@@ -239,20 +237,20 @@ func (neuron Neuron) Copy(net *Network) Neuron {
 	return newNeuron
 }
 
-// IsInput returns true if this is an input node
+// IsInput returns true if this is an input node or not
+// Returns false if nil
 func (neuron *Neuron) IsInput() bool {
 	if neuron.Net == nil {
-		// Hard to tell
 		return false
 
 	}
 	return neuron.Net.IsInput(neuron.neuronIndex)
 }
 
-// IsOutput returns true if this is an output node
+// IsOutput returns true if this is an output node or not
+// Returns false if nil
 func (neuron *Neuron) IsOutput() bool {
 	if neuron.Net == nil {
-		// Hard to tell
 		return false
 	}
 	return neuron.Net.OutputNode == neuron.neuronIndex

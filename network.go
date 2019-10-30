@@ -39,7 +39,6 @@ func NewNetwork(cs ...*Config) Network {
 	// Initialize n input nodes that all are inputs to the one output node.
 	for i := 0; i < n; i++ {
 		// Add a new input node
-
 		_, nodeIndex := net.NewNeuron()
 
 		// Register the input node index in the input node NeuronIndex slice
@@ -88,7 +87,6 @@ func (net *Network) InsertNode(a, b NeuronIndex, newNodeIndex NeuronIndex) error
 	// TODO: When a neuron is inserted, the input index
 
 	// Sort the nodes by where they place in the diagram
-	//fmt.Println("InsertNode: BEFORE LEFT RIGHT:", a, b)
 	a, b, arbitrary := net.LeftRight(a, b)
 	if arbitrary {
 		if a == b {
@@ -103,8 +101,6 @@ func (net *Network) InsertNode(a, b NeuronIndex, newNodeIndex NeuronIndex) error
 	// This should never happen
 	if a == net.OutputNode {
 		panic("implementation error: the leftmost node is an output node and this was not cought earlier")
-		// If now, after swapping, a is an output node, return with an error
-		//return errors.New("the leftmost node is an output node")
 	}
 
 	// b already has a as an input (a -> b)
@@ -401,9 +397,6 @@ func (net *Network) ForEachConnectedNodeIndex(f func(ni NeuronIndex)) {
 // Returns true if one was inserted or false if the randomly chosen location wasn't fruitful
 func (net *Network) InsertRandomNode() bool {
 
-	//fmt.Println("Network before inserting random node")
-	//fmt.Println(net)
-
 	// Find a random node among the nodes that are connected to the output node (directly or indirectly)
 	connectedNodes := net.Connected()
 	randomNodeIndexThatIsConnected := connectedNodes[rand.Intn(len(connectedNodes))]
@@ -424,13 +417,6 @@ func (net *Network) InsertRandomNode() bool {
 	rightIndex := randomNodeIndexThatIsConnected
 	inputNodes := net.AllNodes[rightIndex].InputNodes
 
-	// if len(inputNodes) == 0 {
-	// 	fmt.Println("One of my assumptions are wrong")
-	// 	fmt.Println("this node:", randomNodeIndexThatIsConnected, "should have input nodes!")
-	// 	fmt.Println(net)
-	// 	panic("yes")
-	// }
-
 	leftIndex := inputNodes[rand.Intn(len(inputNodes))]
 
 	// We now have a left and right node index, that we know are connected, replace this connection with
@@ -438,7 +424,6 @@ func (net *Network) InsertRandomNode() bool {
 
 	// Create a new node and connect it with the left node
 	newNode, newNodeIndex := net.NewNeuron()
-	//fmt.Println("NEW NODE INDEX", newNode.neuronIndex, "RETURNED INDEX", newNodeIndex)
 	err := newNode.AddInput(leftIndex)
 	if err != nil {
 		panic(err)
@@ -453,13 +438,6 @@ func (net *Network) InsertRandomNode() bool {
 	if err != nil {
 		panic(err)
 	}
-
-	// Output the network
-	//fmt.Println("Network after inserting random node:")
-	//fmt.Println(net)
-
-	// Check that the network is still good
-	//net.checkInputNeurons()
 
 	return true
 }
@@ -483,12 +461,8 @@ func (net Network) Copy() *Network {
 	newNet.OutputNode = net.OutputNode
 	newNet.Weight = net.Weight
 
-	// For debugging
-	//newNet.checkInputNeurons()
-
 	// NOTE: It's important that a pointer to a Network is returned,
-	//       instead of an entire Network struct, so that the .Net pointers point correctly.
-
+	//       instead of an entire Network struct, so that the .Net pointers in the nodes point correctly.
 	return &newNet
 }
 

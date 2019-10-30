@@ -70,7 +70,6 @@ func (config *Config) estimateComplexity() {
 			_ = f(x)
 		}
 		duration := time.Since(start)
-		//fmt.Println("duration", duration)
 		durationMap[i] = duration
 		if duration > maxDuration {
 			maxDuration = duration
@@ -79,7 +78,6 @@ func (config *Config) estimateComplexity() {
 	for i := range ActivationFunctions {
 		// 1.0 means the function took maxDuration
 		ComplexityEstimate[i] = float64(durationMap[i]) / float64(maxDuration)
-		//fmt.Println(ComplexityEstimate[i])
 	}
 	estimateDuration := time.Since(startEstimate)
 	if config.Verbose {
