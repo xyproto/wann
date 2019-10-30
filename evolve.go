@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
-	"time"
 )
 
 // ScorePopulation evaluates a population, given a slice of input numbers.
@@ -76,24 +75,31 @@ func (net *Network) Modify(maxIterations int) {
 	}
 }
 
-// initialize the pseaudo-random number generator, either using the config.RandomSeed or the time
-func (config *Config) initRandom() {
-	randomSeed := config.RandomSeed
-	if config.RandomSeed == 0 {
-		randomSeed = time.Now().UTC().UnixNano()
-	}
-	if config.Verbose {
-		fmt.Println("Using random seed:", randomSeed)
-	}
-	// Initialize the pseudo-random number generator
-	rand.Seed(randomSeed)
-}
+// Complexity measures the network complexity
+// Will return 1.0 at a minimum
+func (net *Network) Complexity() float64 {
 
-// Init will initialize the pseudo-random number generator and estimate the complexity of the available activation functions
-func (config *Config) Init() {
-	config.initRandom()
-	config.estimateComplexity()
-	config.initialized = true
+	// TODO: These two constants really affect the results. Place them in the Config struct instead.
+
+	// How much should the function complexity matter in relation to the number of connected nodes?
+	const functionComplexityMultiplier = 12.0
+
+	// How much should the complexity score matter in relation to the network results, when scoring the network?
+	const complexityMultiplier = 28.0
+
+	sum := 0.0
+	// Sum the complexity of all activation functions.
+	// This penalizes both slow activation functions and
+	// unconnected nodes.
+	for _, n := range net.AllNodes {
+		if n.Value == nil {
+			sum += ComplexityEstimate[n.ActivationFunction] * functionComplexityMultiplier
+		}
+	}
+	// The number of connected nodes should also carry some weight
+	connectedNodes := float64(len(net.Connected()))
+	// This must always be larger than 0, to avoid divide by zero later
+	return (connectedNodes + sum) * complexityMultiplier
 }
 
 // Evolve evolves a neural network, given a slice of training data and a slice of correct output values.

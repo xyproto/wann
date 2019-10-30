@@ -195,33 +195,6 @@ func (net *Network) SetWeight(weight float64) {
 	net.Weight = weight
 }
 
-// Complexity measures the network complexity
-// Will return 1.0 at a minimum
-func (net *Network) Complexity() float64 {
-
-	// TODO: These two constants really affect the results. Place them in the Config struct instead.
-
-	// How much should the function complexity matter in relation to the number of connected nodes?
-	const functionComplexityMultiplier = 10.0
-
-	// How much should the complexity score matter in relation to the network results, when scoring the network?
-	const complexityMultiplier = 30.0
-
-	sum := 0.0
-	// Sum the complexity of all activation functions.
-	// This penalizes both slow activation functions and
-	// unconnected nodes.
-	for _, n := range net.AllNodes {
-		if n.Value == nil {
-			sum += ComplexityEstimate[n.ActivationFunction] * functionComplexityMultiplier
-		}
-	}
-	// The number of connected nodes should also carry some weight
-	connectedNodes := float64(len(net.Connected()))
-	// This must always be larger than 0, to avoid divide by zero later
-	return (connectedNodes + sum) * complexityMultiplier
-}
-
 // LeftRight returns two neurons, such that the first on is the one that is
 // most to the left (towards the input neurons) and the second one is most to
 // the right (towards the output neuron). Assumes that a and b are not equal.

@@ -1,5 +1,11 @@
 package wann
 
+import (
+	"fmt"
+	"math/rand"
+	"time"
+)
+
 // Config is a struct that is used when initializing new Network structs.
 // The idea is that referring to fields by name is more explicit, and that it can
 // be re-used in connection with having a configuration file, in the future.
@@ -22,4 +28,24 @@ type Config struct {
 	Verbose bool
 	// Has the pseudo-random number generator been seeded and the activation function complexity been estimated yet?
 	initialized bool
+}
+
+// initialize the pseaudo-random number generator, either using the config.RandomSeed or the time
+func (config *Config) initRandom() {
+	randomSeed := config.RandomSeed
+	if config.RandomSeed == 0 {
+		randomSeed = time.Now().UTC().UnixNano()
+	}
+	if config.Verbose {
+		fmt.Println("Using random seed:", randomSeed)
+	}
+	// Initialize the pseudo-random number generator
+	rand.Seed(randomSeed)
+}
+
+// Init will initialize the pseudo-random number generator and estimate the complexity of the available activation functions
+func (config *Config) Init() {
+	config.initRandom()
+	config.estimateComplexity()
+	config.initialized = true
 }
