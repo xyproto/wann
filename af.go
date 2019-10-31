@@ -101,42 +101,6 @@ func (afi ActivationFunctionIndex) Call(x float64) float64 {
 	return af.Linear(x)
 }
 
-// goExpression returns the Go expression for this activation function, using the given variable name string as the input variable name
-func (afi ActivationFunctionIndex) goExpression(varName string) string {
-	switch afi {
-	case Step:
-		// Using s to not confuse it with the varName
-		return "func(s float64) float64 { if s >= 0 { return 0 } else { return 1 } }(" + varName + ")"
-	case Linear:
-		return varName
-	case Sin:
-		return "math.Sin(math.Pi * " + varName + ")"
-	case Gauss:
-		return "math.Exp(-(" + varName + " * " + varName + ") / 2.0)"
-	case Tanh:
-		return "math.Tanh(" + varName + ")"
-	case Sigmoid:
-		return "1.0 / (1.0 + math.Exp(-" + varName + "))"
-	case Inv:
-		return "-" + varName
-	case Abs:
-		return "math.Abs(" + varName + ")"
-	case ReLU:
-		// Using r to not confuse it with the varName
-		return "func(r float64) float64 { if r >= 0 { return r } else { return 0 } }(" + varName + ")"
-	case Cos:
-		return "math.Cos(math.Pi * " + varName + ")"
-	case Squared:
-		return varName + " * " + varName
-	case Swish:
-		return varName + "/ (1.0 + math.Exp(-" + varName + "))"
-	case SoftPlus:
-		return "math.Log(1.0 + math.Exp(" + varName + "))"
-	default:
-		return varName
-	}
-}
-
 // Name returns a name for each activation function
 func (afi ActivationFunctionIndex) Name() string {
 	switch afi {
@@ -168,6 +132,42 @@ func (afi ActivationFunctionIndex) Name() string {
 		return "SoftPlus"
 	default:
 		return "Untitled"
+	}
+}
+
+// goExpression returns the Go expression for this activation function, using the given variable name string as the input variable name
+func (afi ActivationFunctionIndex) goExpression(varName string) string {
+	switch afi {
+	case Step:
+		// Using s to not confuse it with the varName
+		return "func(s float64) float64 { if s >= 0 { return 1 } else { return 0 } }(" + varName + ")"
+	case Linear:
+		return varName
+	case Sin:
+		return "math.Sin(math.Pi * " + varName + ")"
+	case Gauss:
+		return "math.Exp(-(" + varName + " * " + varName + ") / 2.0)"
+	case Tanh:
+		return "math.Tanh(" + varName + ")"
+	case Sigmoid:
+		return "(1.0 / (1.0 + math.Exp(-" + varName + ")))"
+	case Inv:
+		return "-" + varName
+	case Abs:
+		return "math.Abs(" + varName + ")"
+	case ReLU:
+		// Using r to not confuse it with the varName
+		return "func(r float64) float64 { if r >= 0 { return r } else { return 0 } }(" + varName + ")"
+	case Cos:
+		return "math.Cos(math.Pi * " + varName + ")"
+	case Squared:
+		return "(" + varName + " * " + varName + ")"
+	case Swish:
+		return "(" + varName + "/ (1.0 + math.Exp(-" + varName + ")))"
+	case SoftPlus:
+		return "math.Log(1.0 + math.Exp(" + varName + "))"
+	default:
+		return varName
 	}
 }
 
