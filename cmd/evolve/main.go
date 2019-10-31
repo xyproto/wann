@@ -78,5 +78,5 @@ func main() {
 		fmt.Println("ok")
 	}
 
-	fmt.Println(trainedNetwork.GoFunction("x1", "x2", "x3", "x4"))
+	//fmt.Println(trainedNetwork.GoFunction("x1", "x2", "x3", "x4"))
 }
