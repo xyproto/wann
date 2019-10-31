@@ -134,7 +134,8 @@ func (net *Network) InsertNode(a, b NeuronIndex, newNodeIndex NeuronIndex) error
 	return nil
 }
 
-// AddConnection adds a connection from a to b
+// AddConnection adds a connection from a to b.
+// The order is swapped if needed, then a is added as an input to b.
 func (net *Network) AddConnection(a, b NeuronIndex) error {
 	lastIndex := NeuronIndex(len(net.AllNodes) - 1)
 	if a < 0 || a > lastIndex || b < 0 || b > lastIndex {
@@ -419,6 +420,23 @@ func (net *Network) UpdateNetworkPointers() {
 	for nodeIndex := range net.AllNodes {
 		net.AllNodes[nodeIndex].Net = net
 	}
+}
+
+// NewInputNode creates a new input node for this network, optionally connecting it to the output node
+func (net *Network) NewInputNode(activationFunction ActivationFunctionIndex, connectToOutput bool) error {
+	// Create a new node
+	_, ni := net.NewBlankNeuron()
+	// Set the activation function
+	net.AllNodes[ni].ActivationFunction = activationFunction
+	// Set the parent network
+	net.AllNodes[ni].Net = net
+	// Add the new node to the input nodes of the net
+	net.InputNodes = append(net.InputNodes, ni)
+	// Connect the input node to the output node
+	if connectToOutput {
+		return net.AddConnection(ni, net.OutputNode)
+	}
+	return nil
 }
 
 // Copy a Network to a new network
