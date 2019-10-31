@@ -77,6 +77,4 @@ func main() {
 	if config.Verbose {
 		fmt.Println("ok")
 	}
-
-	//fmt.Println(trainedNetwork.GoFunction("x1", "x2", "x3", "x4"))
 }

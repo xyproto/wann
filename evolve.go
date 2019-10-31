@@ -25,7 +25,7 @@ func ScorePopulation(population []*Network, weight float64, inputData [][]float6
 
 		net.SetWeight(weight)
 
-		// Evaluate all networks in the given population
+		// Evaluate all the input data examples for this network
 		result := 0.0
 		for i := 0; i < len(inputData); i++ {
 			result += net.Evaluate(inputData[i]) * incorrectOutputMultipliers[i]
@@ -122,10 +122,12 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 
 	const maxModificationInterationsWhenMutating = 10
 
-	// Convert from having 0..1 for meaning from incorrect to correct, to -1..1 to mean the same
 	incorrectOutputMultipliers := make([]float64, len(correctOutputMultipliers))
 	for i := range correctOutputMultipliers {
+		// Convert from having 0..1 for meaning from incorrect to correct, to -1..1 to mean the same
 		incorrectOutputMultipliers[i] = correctOutputMultipliers[i]*2.0 - 1.0
+		// Convert from having 0..1 for meaning from incorrect to correct, to 1..0 to mean the same
+		//incorrectOutputMultipliers[i] = -correctOutputMultipliers[i] + 1.0
 	}
 
 	inputLength := len(inputData)
@@ -156,7 +158,6 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 
 	var (
 		bestNetwork *Network
-		bestWeight  float64
 
 		// Keep track of the best scores
 		bestScore     float64
@@ -201,7 +202,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 			bestScore = scoreList[0].Value
 			worstScore = scoreList[len(scoreList)-1].Value
 			bestNetwork = population[scoreList[0].Key]
-			bestWeight = w
+			bestNetwork.SetWeight(w)
 			first = false
 		} else {
 			lastBestScore = bestScore
@@ -211,7 +212,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		}
 		if bestScore > lastBestScore {
 			bestNetwork = population[scoreList[0].Key]
-			bestWeight = w
+			bestNetwork.SetWeight(w)
 			noImprovementCounter = 0
 		} else {
 			noImprovementCounter++
@@ -272,7 +273,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		// }
 	}
 	if config.Verbose {
-		fmt.Printf("[all time best network, random weight ] weight=%f score=%f\n", bestWeight, bestScore)
+		fmt.Printf("[all time best network, random weight ] weight=%f score=%f\n", bestNetwork.Weight, bestScore)
 	}
 
 	// Now find the best weight for the best network, using a population of 1
@@ -283,7 +284,7 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		// Handle the best score stats
 		if scoreMap[0] > bestScore {
 			bestScore = scoreMap[0]
-			bestWeight = w
+			population[0].SetWeight(w)
 		}
 	}
 
@@ -293,11 +294,35 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 	}
 
 	// Save the best weight for the network
-	bestNetwork.SetWeight(bestWeight)
+	//bestNetwork.SetWeight(bestWeight)
 
 	if config.Verbose {
-		fmt.Printf("[all time best network, optimal weight] weight=%f score=%f\n", bestWeight, bestScore)
+		fmt.Printf("[all time best network, optimal weight] weight=%f best score=%f\n", bestNetwork.Weight, bestScore)
 	}
+
+	// Find what needs to be added and multiplied to normalize the score (0..1)
+
+	//smallestScore := worstScore
+	//largestScore := bestScore
+
+	//normalizeMul := 1.0/largestScore - smallestScore
+	//normalizeAdd := smallestScore
+	//if normalizeMul > 0 {
+	//	normalizeAdd = -smallestScore
+	//}
+
+	//normalize := func(x float64) float64 { return (x * normalizeMul) + normalizeAdd }
+	//normalizedWorstScore := normalize(smallestScore)
+	//normalizedBestScore := normalize(largestScore)
+	////fmt.Println(normalizedWorstScore, normalizedBestScore)
+
+	//norm := NewNormalizationInfo(true)
+	//norm.add = normalizeAdd
+	//norm.mul = normalizeMul
+
+	//if config.Verbose {
+	//	fmt.Printf("normalization function: y = (x * %f) + %f\n", norm.mul, norm.add)
+	//}
 
 	return bestNetwork, nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dave/jennifer/jen"
 	"github.com/xyproto/af"
 )
 
@@ -174,4 +175,71 @@ func (afi ActivationFunctionIndex) goExpression(varName string) string {
 // String returns the Go expression for this activation function, using "x" as the input variable name
 func (afi ActivationFunctionIndex) String() string {
 	return afi.goExpression("x")
+}
+
+// Statement returns the Statement statement for this activation function, using the given inner statement
+func (afi ActivationFunctionIndex) Statement(inner *jen.Statement) *jen.Statement {
+	switch afi {
+	case Step:
+		// func(s float64) float64 { if s >= 0 { return 1 } else { return 0 } }(inner)
+		// Using s to not confuse it with the varName
+		return jen.Func().Params(jen.Id("s").Id("float64")).Id("float64").Block(
+			jen.If(jen.Id("s").Op(">=").Id("0")).Block(
+				jen.Return(jen.Lit(1)),
+			).Else().Block(
+				jen.Return(jen.Lit(0)),
+			),
+		).Call(inner)
+	case Cos:
+		// math.Cos((inner) * math.Pi)
+		return jen.Qual("math", "Cos").Call(jen.Parens(inner).Op("*").Id("math").Dot("Pi"))
+	case Sin:
+		// math.Sin((inner) * math.Pi)
+		return jen.Qual("math", "Sin").Call(jen.Parens(inner).Op("*").Id("math").Dot("Pi"))
+	case Gauss:
+		// return math.Exp(-(math.Pow(inner, 2.0)) / 2.0)
+		return jen.Qual("math", "Exp").Call(jen.Op("-").Parens(
+			jen.Qual("math", "Pow").Params(
+				inner,
+				jen.Lit(2.0),
+			),
+		).Op("/").Lit(2.0))
+	case Tanh:
+		// math.Tanh(inner)
+		return jen.Qual("math", "Tanh").Call(inner)
+	case Sigmoid:
+		// (1.0 / (1.0 + math.Exp(-(inner))))
+		return jen.Lit(1.0).Op("/").Parens(jen.Lit(1.0).Op("+").Qual("math", "Exp").Call(jen.Op("-").Parens(inner)))
+	case Inv:
+		// -(inner)
+		return jen.Op("-").Parens(inner)
+	case Abs:
+		// math.Abs(inner)
+		return jen.Qual("math", "Abs").Call(inner)
+	case ReLU:
+		//return "func(r float64) float64 { if r >= 0 { return r } else { return 0 } }(" + varName + ")"
+		// Using r to not confuse it with the varName
+		return jen.Func().Params(jen.Id("r").Id("float64")).Id("float64").Block(
+			jen.If(jen.Id("r").Op(">=").Id("0")).Block(
+				jen.Return(jen.Id("r")),
+			).Else().Block(
+				jen.Return(jen.Lit(0)),
+			),
+		).Call(inner)
+	case Squared:
+		// inner^2
+		return jen.Qual("math", "Pow").Call(inner, jen.Lit(2.0))
+	case Swish:
+		// (inner / (1.0 + math.Exp(-inner)))
+		return jen.Parens(inner.Op("/").Parens(jen.Lit(1.0).Op("+").Qual("math", "exp").Call(jen.Op("-").Parens(inner))))
+	case SoftPlus:
+		// math.Log(1.0 + math.Exp(inner))
+		return jen.Qual("math", "Log").Call(jen.Lit(1.0).Op("+").Qual("math", "Exp").Call(inner))
+	default:
+		// Same as for Linear, just return the given statement, wrapped in parenthesis
+		fallthrough
+	case Linear:
+		// (inner)
+		return jen.Parens(inner)
+	}
 }

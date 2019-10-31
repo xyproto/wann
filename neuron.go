@@ -210,8 +210,10 @@ func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64
 	}
 	// This should run, also when this neuron is the output neuron
 	f := neuron.GetActivationFunction()
+	//fmt.Println(neuron.ActivationFunction.Name() + " = " + neuron.ActivationFunction.String())
 	// Run the average input through the activation function
-	return f(summed / float64(counter)), false
+	retval := f(summed / float64(counter))
+	return retval, false
 }
 
 // GetActivationFunction returns the activation function for this neuron
