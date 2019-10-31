@@ -280,13 +280,9 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 	population = []*Network{bestNetwork}
 	for w := -2.0; w <= 2.0; w += 0.0001 {
 		scoreMap, _ := ScorePopulation(population, w, inputData, incorrectOutputMultipliers)
-
-		// Sort by score
-		scoreList := SortByValue(scoreMap)
-
 		// Handle the best score stats
-		if scoreList[0].Value > bestScore {
-			bestScore = scoreList[0].Value
+		if scoreMap[0] > bestScore {
+			bestScore = scoreMap[0]
 			bestWeight = w
 		}
 	}
