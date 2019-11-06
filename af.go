@@ -199,6 +199,8 @@ func (afi ActivationFunctionIndex) Statement(inner *jen.Statement) *jen.Statemen
 	case Gauss:
 		// return math.Exp(-(math.Pow(inner, 2.0)) / 2.0)
 		return jen.Qual("math", "Exp").Call(jen.Op("-").Parens(
+			// Using math.Pow ensures the inner expression is only calculated once, if it's a large expression
+			//inner.Op("*").Add(inner),
 			jen.Qual("math", "Pow").Params(
 				inner,
 				jen.Lit(2.0),
@@ -228,10 +230,12 @@ func (afi ActivationFunctionIndex) Statement(inner *jen.Statement) *jen.Statemen
 		).Call(inner)
 	case Squared:
 		// inner^2
+		//return inner.Op("*").Add(inner)
+		// Using math.Pow ensures the inner expression is only calculated once, if it's a large expression
 		return jen.Qual("math", "Pow").Call(inner, jen.Lit(2.0))
 	case Swish:
 		// (inner / (1.0 + math.Exp(-inner)))
-		return jen.Parens(inner.Op("/").Parens(jen.Lit(1.0).Op("+").Qual("math", "exp").Call(jen.Op("-").Parens(inner))))
+		return jen.Parens(inner.Op("/").Parens(jen.Lit(1.0).Op("+").Qual("math", "Exp").Call(jen.Op("-").Parens(inner))))
 	case SoftPlus:
 		// math.Log(1.0 + math.Exp(inner))
 		return jen.Qual("math", "Log").Call(jen.Lit(1.0).Op("+").Qual("math", "Exp").Call(inner))
@@ -242,4 +246,9 @@ func (afi ActivationFunctionIndex) Statement(inner *jen.Statement) *jen.Statemen
 		// (inner)
 		return jen.Parens(inner)
 	}
+}
+
+// GoRun will first construct the expression using jennifer and then evaluate the result using "go run" and a source file innn /tmp
+func (afi ActivationFunctionIndex) GoRun(x float64) (float64, error) {
+	return runStatement(afi.Statement(jen.Id("x")), x)
 }
