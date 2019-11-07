@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+
+	"github.com/dave/jennifer/jen"
 )
 
 // Neuron is a list of input-neurons, and an activation function.
@@ -211,8 +213,10 @@ func (neuron *Neuron) evaluate(weight float64, maxEvaluationLoops *int) (float64
 	// This should run, also when this neuron is the output neuron
 	f := neuron.GetActivationFunction()
 	//fmt.Println(neuron.ActivationFunction.Name() + " = " + neuron.ActivationFunction.String())
-	// Run the average input through the activation function
-	retval := f(summed / float64(counter))
+	// Run the input through the activation function
+	// TODO: Does "retval := f(summed)"" perform better?, or the one that averages the sum first?
+	//retval := f(summed / float64(counter))
+	retval := f(summed)
 	return retval, false
 }
 
@@ -236,7 +240,6 @@ func (neuron *Neuron) In(collection []NeuronIndex) bool {
 func (neuron *Neuron) IsInput() bool {
 	if neuron.Net == nil {
 		return false
-
 	}
 	return neuron.Net.IsInput(neuron.neuronIndex)
 }
@@ -271,4 +274,21 @@ func (neuron *Neuron) String() string {
 		nodeType = "Output node"
 	}
 	return fmt.Sprintf("%s ID %d has these input connections: %v", nodeType, neuron.neuronIndex, neuron.InputNodes)
+}
+
+// InputStatement returns a statement like "inputData[0]", if this node is a network input node
+func (neuron *Neuron) InputStatement() (*jen.Statement, error) {
+	// If this node is a network input node, return a statement representing this input,
+	// like "inputData[0]"
+	if !neuron.IsInput() {
+		return jen.Empty(), errors.New(" not an input node")
+	}
+	for i, ni := range neuron.Net.InputNodes {
+		if ni == neuron.neuronIndex {
+			// This index in the neuron.NetInputNodes is i
+			return jen.Id("inputData").Index(jen.Lit(i)), nil
+		}
+	}
+	// Not found!
+	return jen.Empty(), errors.New("not an input node for the associated network")
 }
