@@ -15,7 +15,7 @@ func ExampleActivationFunctionIndex_Call() {
 func ExampleGauss_Statement() {
 	statement := Gauss.Statement(jen.Id("x"))
 	fmt.Println(statement.GoString())
-	result, err := runStatement(statement, 0.5)
+	result, err := RunStatementX(statement, 0.5)
 	if err != nil {
 		panic(err)
 	}

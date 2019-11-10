@@ -64,8 +64,8 @@ func (net *Network) checkInputNeurons() {
 	}
 }
 
-// runStatement will run the given statement by wrapping it in a program and using "go run"
-func runStatement(statement *jen.Statement, x float64) (float64, error) {
+// RunStatementX will run the given statement by wrapping it in a program and using "go run"
+func RunStatementX(statement *jen.Statement, x float64) (float64, error) {
 	file, err := ioutil.TempFile("/tmp", "af_*.go")
 	if err != nil {
 		return 0.0, err
@@ -76,6 +76,41 @@ func runStatement(statement *jen.Statement, x float64) (float64, error) {
 	f := jen.NewFile("main")
 	f.Func().Id("main").Params().Block(
 		jen.Id("x").Op(":=").Lit(x),
+		jen.Qual("fmt", "Println").Call(statement),
+	)
+	// Save the file
+	if ioutil.WriteFile(filename, []byte(f.GoString()), 0664) != nil {
+		return 0.0, err
+	}
+	// Run the file
+	cmd := exec.Command("go", "run", filename)
+	out, err := cmd.CombinedOutput()
+	// Return the outputted float string as a float64
+	resultString := strings.TrimSpace(string(out))
+	resultFloat, err := strconv.ParseFloat(resultString, 64)
+	if err != nil {
+		return 0.0, err
+	}
+	return resultFloat, nil
+}
+
+// RunStatementInputData will run the given statement by wrapping it in a program and using "go run"
+func RunStatementInputData(statement *jen.Statement, inputData []float64) (float64, error) {
+	file, err := ioutil.TempFile("/tmp", "af_*.go")
+	if err != nil {
+		return 0.0, err
+	}
+	filename := file.Name()
+	defer os.Remove(filename)
+	// Build the contents of the source file using jennifer
+	f := jen.NewFile("main")
+	f.Func().Id("main").Params().Block(
+		// Build a statement that declares and initializes "inputData" based on the contents of inputData
+		jen.Id("inputData").Op(":=").Index().Float64().ValuesFunc(func(g *jen.Group) {
+			for i := 0; i < len(inputData); i++ {
+				g.Lit(inputData[i])
+			}
+		}),
 		jen.Qual("fmt", "Println").Call(statement),
 	)
 	// Save the file

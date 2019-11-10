@@ -250,5 +250,5 @@ func (afi ActivationFunctionIndex) Statement(inner *jen.Statement) *jen.Statemen
 
 // GoRun will first construct the expression using jennifer and then evaluate the result using "go run" and a source file innn /tmp
 func (afi ActivationFunctionIndex) GoRun(x float64) (float64, error) {
-	return runStatement(afi.Statement(jen.Id("x")), x)
+	return RunStatementX(afi.Statement(jen.Id("x")), x)
 }

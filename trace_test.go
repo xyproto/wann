@@ -20,7 +20,7 @@ func TestNetwork_Trace(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(render(statement))
+	fmt.Println(Render(statement))
 }
 
 // ExampleNetwork_Trace2
@@ -39,7 +39,7 @@ func TestNetwork_Trace2(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(render(statement))
+	fmt.Println(Render(statement))
 }
 
 // ExampleNeuron_InputStatement
@@ -58,7 +58,7 @@ func ExampleNeuron_InputStatement() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(render(inputStatement2))
+	fmt.Println(Render(inputStatement2))
 	// Output:
 	// inputData[2]
 }

@@ -24,7 +24,7 @@ func main() {
 
 	right := []float64{
 		1.0, 1.0, 1.0, // ooo
-		0.1, 0.0, 0.0} // o
+		1.0, 0.0, 0.0} // o
 
 	// Prepare the input data as a 2D slice
 	inputData := [][]float64{
@@ -39,10 +39,10 @@ func main() {
 
 	// Prepare a neural network configuration struct
 	config := &wann.Config{
-		InitialConnectionRatio: 0.05,
-		Generations:            4000,
-		PopulationSize:         100,
-		Verbose:                false,
+		InitialConnectionRatio: 0.2,
+		Generations:            2000,
+		PopulationSize:         500,
+		Verbose:                true,
 	}
 
 	// Evolve a network, using the input data and the sought after results
@@ -66,6 +66,24 @@ func main() {
 		}
 	}
 
-	// Output a Go function for this network, for each input node
-	fmt.Println(trainedNetwork.GoFunction())
+	// Save the trained network as an SVG image
+	if config.Verbose {
+		fmt.Print("Writing network.svg...")
+	}
+	if err := trainedNetwork.WriteSVG("network.svg"); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+		os.Exit(1)
+	}
+	if config.Verbose {
+		fmt.Println("ok")
+	}
+
+	fmt.Println("Statement for this network (a work in progress, not correct yet):")
+
+	networkStatement, err := trainedNetwork.StatementWithInputDataVariables()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+		os.Exit(1)
+	}
+	fmt.Println(wann.Render(networkStatement))
 }
