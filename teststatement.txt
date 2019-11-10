@@ -1,0 +1,34 @@
+package main
+
+import (
+	"fmt"
+	"math"
+)
+
+func f(inputData []float64) float64 {
+	return -(math.Log(1.0+math.Exp(inputData[0]))*1.999999999999592 + math.Exp(-(math.Pow(inputData[1], 2.0))/2.0)*1.999999999999592 + math.Pow(inputData[2], 2.0)*1.999999999999592 + math.Sin((inputData[3])*math.Pi)*1.999999999999592 + math.Abs(inputData[4])*1.999999999999592)
+}
+
+func main() {
+	up := []float64{
+		0.0, 1.0, 0.0, //  o
+		1.0, 1.0, 1.0} // ooo
+
+	down := []float64{
+		1.0, 1.0, 1.0, // ooo
+		0.0, 1.0, 0.0} //  o
+
+	left := []float64{
+		1.0, 1.0, 1.0, // ooo
+		0.0, 0.0, 1.0} //   o
+
+	right := []float64{
+		1.0, 1.0, 1.0, // ooo
+		1.0, 0.0, 0.0} // o
+
+	fmt.Println("up score", f(up))
+	fmt.Println("down score", f(down))
+	fmt.Println("left score", f(left))
+	fmt.Println("right score", f(right))
+}
+
