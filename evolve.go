@@ -88,10 +88,10 @@ func (net *Network) Complexity() float64 {
 	// TODO: These two constants really affect the results. Place them in the Config struct instead.
 
 	// How much should the function complexity matter in relation to the number of connected nodes?
-	const functionComplexityMultiplier = 2.0
+	const functionComplexityMultiplier = 7.0
 
 	// How much should the complexity score matter in relation to the network results, when scoring the network?
-	const complexityMultiplier = 3.0
+	const complexityMultiplier = 5.0
 
 	sum := 0.0
 	// Sum the complexity of all activation functions.
@@ -273,18 +273,20 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		// }
 	}
 	if config.Verbose {
-		fmt.Printf("[all time best network, random weight ] weight=%f score=%f\n", bestNetwork.Weight, bestScore)
+		fmt.Printf("[all time best network, random weight  ] weight=%f score=%f\n", bestNetwork.Weight, bestScore)
 	}
 
 	// Now find the best weight for the best network, using a population of 1
 	// and a step size of 0.0001 for the weight
 	population = []*Network{bestNetwork}
+	bestWeight := -2.0
 	for w := -2.0; w <= 2.0; w += 0.0001 {
 		scoreMap, _ := ScorePopulation(population, w, inputData, incorrectOutputMultipliers)
 		// Handle the best score stats
 		if scoreMap[0] > bestScore {
 			bestScore = scoreMap[0]
 			population[0].SetWeight(w)
+			bestWeight = w
 		}
 	}
 
@@ -294,35 +296,11 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 	}
 
 	// Save the best weight for the network
-	//bestNetwork.SetWeight(bestWeight)
+	bestNetwork.SetWeight(bestWeight)
 
 	if config.Verbose {
-		fmt.Printf("[all time best network, optimal weight] weight=%f best score=%f\n", bestNetwork.Weight, bestScore)
+		fmt.Printf("[all time best network, optimal weight ] weight=%f best score=%f\n", bestNetwork.Weight, bestScore)
 	}
-
-	// Find what needs to be added and multiplied to normalize the score (0..1)
-
-	//smallestScore := worstScore
-	//largestScore := bestScore
-
-	//normalizeMul := 1.0/largestScore - smallestScore
-	//normalizeAdd := smallestScore
-	//if normalizeMul > 0 {
-	//	normalizeAdd = -smallestScore
-	//}
-
-	//normalize := func(x float64) float64 { return (x * normalizeMul) + normalizeAdd }
-	//normalizedWorstScore := normalize(smallestScore)
-	//normalizedBestScore := normalize(largestScore)
-	////fmt.Println(normalizedWorstScore, normalizedBestScore)
-
-	//norm := NewNormalizationInfo(true)
-	//norm.add = normalizeAdd
-	//norm.mul = normalizeMul
-
-	//if config.Verbose {
-	//	fmt.Printf("normalization function: y = (x * %f) + %f\n", norm.mul, norm.add)
-	//}
 
 	return bestNetwork, nil
 }

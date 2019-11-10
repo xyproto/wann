@@ -77,11 +77,4 @@ func main() {
 	if config.Verbose {
 		fmt.Println("ok")
 	}
-
-	networkStatement, err := trainedNetwork.StatementWithInputDataVariables()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
-		os.Exit(1)
-	}
-	fmt.Println(wann.Render(networkStatement))
 }
