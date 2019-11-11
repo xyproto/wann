@@ -384,3 +384,17 @@ func (net *Network) StatementWithInputDataVariables() (*jen.Statement, error) {
 	}
 	return statement, nil
 }
+
+// Render renders a *jen.Statement to a string, if possible
+// if there is an error about an extra ")", then that's because anonymous functions are not supported by jen
+// Do not Render until statements could be placed at the top-level in a Go program.
+func Render(inner *jen.Statement) string {
+	return inner.GoString()
+}
+
+// OutputNodeStatementX returns a statement for the output node, using "x" for the variable
+func (net *Network) OutputNodeStatementX(functionName string) string {
+	inner := net.AllNodes[net.OutputNode].ActivationFunction.Statement(jen.Id("x"))
+	f := jen.Id(functionName).Op(":=").Add(inner)
+	return Render(f)
+}
