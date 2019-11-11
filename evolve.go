@@ -54,7 +54,7 @@ func (net *Network) Modify(maxIterations int) {
 	case 0:
 		// Insert a node, replacing a randomly chosen existing connection
 		counter := 0
-		for net.InsertRandomNode() == false {
+		for !net.InsertRandomNode() {
 			counter++
 			if maxIterations > 0 && counter > maxIterations {
 				break
@@ -116,7 +116,7 @@ func (net *Network) Complexity() float64 {
 
 // Evolve evolves a neural network, given a slice of training data and a slice of correct output values.
 // Will overwrite config.Inputs.
-func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []float64) (*Network, error) {
+func (config *Config) Evolve(inputData [][]float64, incorrectOutputMultipliers []float64) (*Network, error) {
 
 	// TODO: If the config.initialConnectionRatio field is too low (0.0, for instance), then this function will fail.
 	//       Return with an error if none of the networks in a population has any connections left, then get rid of the "no improvement counter".
@@ -126,27 +126,27 @@ func (config *Config) Evolve(inputData [][]float64, correctOutputMultipliers []f
 		config.Init()
 	}
 
-	const maxModificationInterationsWhenMutating = 10
-
-	incorrectOutputMultipliers := make([]float64, len(correctOutputMultipliers))
-	for i := range correctOutputMultipliers {
-		// Convert from having 0..1 for meaning from incorrect to correct, to -1..1 to mean the same
-		incorrectOutputMultipliers[i] = correctOutputMultipliers[i]*2.0 - 1.0
-		// Convert from having 0..1 for meaning from incorrect to correct, to 1..0 to mean the same
-		//incorrectOutputMultipliers[i] = -correctOutputMultipliers[i] + 1.0
-	}
-
 	inputLength := len(inputData)
 	if inputLength == 0 {
 		return nil, errors.New("no input data")
 	}
 
-	if len(correctOutputMultipliers) == 1 && inputLength != 1 {
+	const maxModificationInterationsWhenMutating = 10
+
+	// incorrectOutputMultipliers := make([]float64, len(correctOutputMultipliers))
+	// for i := range correctOutputMultipliers {
+	// 	// Convert from having 0..1 for meaning from incorrect to correct, to -1..1 to mean the same
+	// 	incorrectOutputMultipliers[i] = correctOutputMultipliers[i]*2.0 - 1.0
+	// 	// Convert from having 0..1 for meaning from incorrect to correct, to 1..0 to mean the same
+	// 	//incorrectOutputMultipliers[i] = -correctOutputMultipliers[i] + 1.0
+	// }
+
+	if len(incorrectOutputMultipliers) == 1 && inputLength != 1 {
 		// Assume the first slice of floats in the input data is the correct and that the rest are examples of being wrong
 		for i := 1; i < inputLength; i++ {
-			correctOutputMultipliers = append(correctOutputMultipliers, -1.0)
+			incorrectOutputMultipliers = append(incorrectOutputMultipliers, -1.0)
 		}
-	} else if inputLength != len(correctOutputMultipliers) {
+	} else if inputLength != len(incorrectOutputMultipliers) {
 		// Assume that the list of correct output multipliers should match the length of the float64 slices in inputData
 		return nil, errors.New("the length of the input data and the slice of output multipliers differs")
 	}
