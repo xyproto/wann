@@ -256,9 +256,9 @@ func (neuron Neuron) NetworkStatementWithInputDataVariables(visited *[]NeuronInd
 			}
 			activationStatement := ActivationStatement(neuron.ActivationFunction, neuron.Net.Weight, inputStatements)
 			//fmt.Printf("** Statements to combine with %s:\n", neuron.ActivationFunction.Name())
-			for _, inputStatement := range inputStatements {
-				fmt.Printf("\t%s\n", inputStatement)
-			}
+			//for _, inputStatement := range inputStatements {
+			//	fmt.Printf("\t%#v\n", inputStatement)
+			//}
 			//fmt.Println("** Activation statement: ", render(activationStatement))
 			return activationStatement, nil
 		}
