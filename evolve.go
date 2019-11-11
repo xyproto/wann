@@ -88,24 +88,30 @@ func (net *Network) Complexity() float64 {
 	// TODO: These two constants really affect the results. Place them in the Config struct instead.
 
 	// How much should the function complexity matter in relation to the number of connected nodes?
-	const functionComplexityMultiplier = 7.0
+	const functionComplexityMultiplier = 1.0
 
-	// How much should the complexity score matter in relation to the network results, when scoring the network?
-	const complexityMultiplier = 5.0
+	// Weight the number of connected nodes
+	const numberOfNodesMultiplier = 2.0
 
-	sum := 0.0
+	// Number of input nodes connected to the output node multiplier
+	const outputNodeInputNodesMultiplier = 3.0
+
+	activationFunctionComplexity := 0.0
 	// Sum the complexity of all activation functions.
 	// This penalizes both slow activation functions and
 	// unconnected nodes.
 	for _, n := range net.AllNodes {
 		if n.Value == nil {
-			sum += ComplexityEstimate[n.ActivationFunction] * functionComplexityMultiplier
+			activationFunctionComplexity += ComplexityEstimate[n.ActivationFunction]
 		}
 	}
+	activationFunctionComplexity *= functionComplexityMultiplier
 	// The number of connected nodes should also carry some weight
-	connectedNodes := float64(len(net.Connected()))
+	connectedNodes := float64(len(net.Connected())) * numberOfNodesMultiplier
+	// The number of input nodes to the output node
+	outputNodeComplexity := float64(len(net.AllNodes[net.OutputNode].InputNodes)) * outputNodeInputNodesMultiplier
 	// This must always be larger than 0, to avoid divide by zero later
-	return (connectedNodes+sum)*complexityMultiplier + 1.0
+	return connectedNodes + activationFunctionComplexity + outputNodeComplexity + 1.0
 }
 
 // Evolve evolves a neural network, given a slice of training data and a slice of correct output values.
