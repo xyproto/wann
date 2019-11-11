@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-// ExampleNetwork_Trace
-func TestNetwork_Trace(t *testing.T) {
+// ExampleNetwork_StatementWithInputValues
+func TestNetworkStatementWithInputValues(t *testing.T) {
 	rand.Seed(1)
 	net := NewNetwork(&Config{
 		inputs:                 6,
@@ -23,8 +23,8 @@ func TestNetwork_Trace(t *testing.T) {
 	fmt.Println(Render(statement))
 }
 
-// ExampleNetwork_Trace2
-func TestNetwork_Trace2(t *testing.T) {
+// ExampleNetwork_StatementWithInputDataVariables
+func TestNetwork_StatementWithInputDataVariables(t *testing.T) {
 	rand.Seed(1)
 	net := NewNetwork(&Config{
 		inputs:                 6,

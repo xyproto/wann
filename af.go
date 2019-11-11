@@ -239,10 +239,10 @@ func (afi ActivationFunctionIndex) Statement(inner *jen.Statement) *jen.Statemen
 	case SoftPlus:
 		// math.Log(1.0 + math.Exp(inner))
 		return jen.Qual("math", "Log").Call(jen.Lit(1.0).Op("+").Qual("math", "Exp").Call(inner))
-	default:
-		// Same as for Linear, just return the given statement, wrapped in parenthesis
-		fallthrough
 	case Linear:
+		// This is also the default case: (inner)
+		fallthrough
+	default:
 		// (inner)
 		return jen.Parens(inner)
 	}

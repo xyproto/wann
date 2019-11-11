@@ -3,20 +3,14 @@ package wann
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"os/exec"
 	"strconv"
+	"strings"
 
 	"github.com/dave/jennifer/jen"
 )
-
-// In returns true if this NeuronIndex is in the given *[]NeuronIndex slice
-func (ni NeuronIndex) In(nodes *[]NeuronIndex) bool {
-	for _, ni2 := range *nodes {
-		if ni2 == ni {
-			return true
-		}
-	}
-	return false
-}
 
 var errIgnore = errors.New("ignore this node")
 
@@ -397,4 +391,75 @@ func (net *Network) OutputNodeStatementX(functionName string) string {
 	inner := net.AllNodes[net.OutputNode].ActivationFunction.Statement(jen.Id("x"))
 	f := jen.Id(functionName).Op(":=").Add(inner)
 	return Render(f)
+}
+
+// RunStatementX will run the given statement by wrapping it in a program and using "go run"
+func RunStatementX(statement *jen.Statement, x float64) (float64, error) {
+	file, err := ioutil.TempFile("/tmp", "af_*.go")
+	if err != nil {
+		return 0.0, err
+	}
+	filename := file.Name()
+	defer os.Remove(filename)
+	// Build the contents of the source file using jennifer
+	f := jen.NewFile("main")
+	f.Func().Id("main").Params().Block(
+		jen.Id("x").Op(":=").Lit(x),
+		jen.Qual("fmt", "Println").Call(statement),
+	)
+	// Save the file
+	if ioutil.WriteFile(filename, []byte(f.GoString()), 0664) != nil {
+		return 0.0, err
+	}
+	// Run the file
+	cmd := exec.Command("go", "run", filename)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return 0.0, err
+	}
+	// Return the outputted float string as a float64
+	resultString := strings.TrimSpace(string(out))
+	resultFloat, err := strconv.ParseFloat(resultString, 64)
+	if err != nil {
+		return 0.0, err
+	}
+	return resultFloat, nil
+}
+
+// RunStatementInputData will run the given statement by wrapping it in a program and using "go run"
+func RunStatementInputData(statement *jen.Statement, inputData []float64) (float64, error) {
+	file, err := ioutil.TempFile("/tmp", "af_*.go")
+	if err != nil {
+		return 0.0, err
+	}
+	filename := file.Name()
+	defer os.Remove(filename)
+	// Build the contents of the source file using jennifer
+	f := jen.NewFile("main")
+	f.Func().Id("main").Params().Block(
+		// Build a statement that declares and initializes "inputData" based on the contents of inputData
+		jen.Id("inputData").Op(":=").Index().Float64().ValuesFunc(func(g *jen.Group) {
+			for i := 0; i < len(inputData); i++ {
+				g.Lit(inputData[i])
+			}
+		}),
+		jen.Qual("fmt", "Println").Call(statement),
+	)
+	// Save the file
+	if ioutil.WriteFile(filename, []byte(f.GoString()), 0664) != nil {
+		return 0.0, err
+	}
+	// Run the file
+	cmd := exec.Command("go", "run", filename)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return 0.0, err
+	}
+	// Return the outputted float string as a float64
+	resultString := strings.TrimSpace(string(out))
+	resultFloat, err := strconv.ParseFloat(resultString, 64)
+	if err != nil {
+		return 0.0, err
+	}
+	return resultFloat, nil
 }

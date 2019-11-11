@@ -1,15 +1,7 @@
 package wann
 
 import (
-	"fmt"
-	"io/ioutil"
-	"os"
-	"os/exec"
 	"sort"
-	"strconv"
-	"strings"
-
-	"github.com/dave/jennifer/jen"
 )
 
 // Pair is used for sorting dictionaries by value.
@@ -38,93 +30,12 @@ func SortByValue(m map[int]float64) PairList {
 	return pl
 }
 
-// checkInputNeurons was used for debugging
-func (net *Network) checkInputNeurons() {
-	for neuronIndex, neuron := range net.AllNodes {
-		if len(net.AllNodes) != len(neuron.Net.AllNodes) {
-			panic("net.AllNodes and neuron.Net.AllNodes have different length")
-		}
-		if net != neuron.Net {
-			//panic("neuron Net pointer is out of sync")
-			net.AllNodes[neuronIndex].Net = net
-		}
-		neuron = net.AllNodes[neuronIndex]
-		if net != neuron.Net {
-			panic("neuron Net pointer is out of sync")
-		}
-		for _, inputNeuronIndex := range neuron.InputNodes {
-			if int(inputNeuronIndex) >= len(net.AllNodes) {
-				fmt.Println("Network:", net.String())
-				panic(fmt.Sprintf("indexNeuronIndex out of range: %d\n", inputNeuronIndex))
-			}
-			if int(inputNeuronIndex) >= len(neuron.Net.AllNodes) {
-				panic(fmt.Sprintf("indexNeuronIndex out of range: %d\n", inputNeuronIndex))
-			}
+// In returns true if this NeuronIndex is in the given *[]NeuronIndex slice
+func (ni NeuronIndex) In(nodes *[]NeuronIndex) bool {
+	for _, ni2 := range *nodes {
+		if ni2 == ni {
+			return true
 		}
 	}
-}
-
-// RunStatementX will run the given statement by wrapping it in a program and using "go run"
-func RunStatementX(statement *jen.Statement, x float64) (float64, error) {
-	file, err := ioutil.TempFile("/tmp", "af_*.go")
-	if err != nil {
-		return 0.0, err
-	}
-	filename := file.Name()
-	defer os.Remove(filename)
-	// Build the contents of the source file using jennifer
-	f := jen.NewFile("main")
-	f.Func().Id("main").Params().Block(
-		jen.Id("x").Op(":=").Lit(x),
-		jen.Qual("fmt", "Println").Call(statement),
-	)
-	// Save the file
-	if ioutil.WriteFile(filename, []byte(f.GoString()), 0664) != nil {
-		return 0.0, err
-	}
-	// Run the file
-	cmd := exec.Command("go", "run", filename)
-	out, err := cmd.CombinedOutput()
-	// Return the outputted float string as a float64
-	resultString := strings.TrimSpace(string(out))
-	resultFloat, err := strconv.ParseFloat(resultString, 64)
-	if err != nil {
-		return 0.0, err
-	}
-	return resultFloat, nil
-}
-
-// RunStatementInputData will run the given statement by wrapping it in a program and using "go run"
-func RunStatementInputData(statement *jen.Statement, inputData []float64) (float64, error) {
-	file, err := ioutil.TempFile("/tmp", "af_*.go")
-	if err != nil {
-		return 0.0, err
-	}
-	filename := file.Name()
-	defer os.Remove(filename)
-	// Build the contents of the source file using jennifer
-	f := jen.NewFile("main")
-	f.Func().Id("main").Params().Block(
-		// Build a statement that declares and initializes "inputData" based on the contents of inputData
-		jen.Id("inputData").Op(":=").Index().Float64().ValuesFunc(func(g *jen.Group) {
-			for i := 0; i < len(inputData); i++ {
-				g.Lit(inputData[i])
-			}
-		}),
-		jen.Qual("fmt", "Println").Call(statement),
-	)
-	// Save the file
-	if ioutil.WriteFile(filename, []byte(f.GoString()), 0664) != nil {
-		return 0.0, err
-	}
-	// Run the file
-	cmd := exec.Command("go", "run", filename)
-	out, err := cmd.CombinedOutput()
-	// Return the outputted float string as a float64
-	resultString := strings.TrimSpace(string(out))
-	resultFloat, err := strconv.ParseFloat(resultString, 64)
-	if err != nil {
-		return 0.0, err
-	}
-	return resultFloat, nil
+	return false
 }
