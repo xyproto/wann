@@ -4,15 +4,16 @@
 
 Weight Agnostic Neural Networks is a new type of neural network, where the weights of all the neurons are shared and the structure of the network is what matters.
 
-The term was introduced in this paper (from 2019-06-12):
+This package implements Weight Agnostic Neural Networks for Go, and is inspired by this paper from June 2019:
 
 *"Weight Agnostic Neural Networks" by Adam Gaier and David Ha*. ([PDF](https://arxiv.org/pdf/1906.04358.pdf) | [Interactive version](https://weightagnostic.github.io/) | [Google AI blog post](https://ai.googleblog.com/2019/08/exploring-weight-agnostic-neural.html))
 
-This package implements Weight Agnostic Neural Networks for Go.
-
 ## Features and limitations
 
-* Neural networks can be trained and used, but I have only tried this on very simple training data and there is surely a lot of room for improvement, both in term of benchmarking/profiling and controlling the rate of mutation.
+* All activation functions are benchmarked at the start of the program and the results are taken into account when calculating the complexity of a network.
+* All networks can be translated to a Go statement, using the wonderful [jennifer](https://github.com/dave/jennifer) package (work in progress, there are a few kinks that needs to be ironed out).
+* Networks can be saved as `SVG` diagrams.
+* Neural networks can be trained and used. See the `cmd` folder for examples.
 * A random weight is chosen when training, instead of looping over the range of the weight. The paper describes both methods.
 * After the network has been trained, the optimal weight is found by looping over all weights (with a step size of `0.0001`).
 * Increased complexity counts negatively when evolving networks. A quick benchmark of all available activation functions at the start of the program determines which activation function us more complex. This optimizes not only for less complex networks, but also for execution speed.
@@ -60,7 +61,7 @@ func main() {
 	}
 
 	// Which of the elements in the input data are we trying to identify?
-	correctResultsForUp := []float64{1.0, 0.0, 0.0, 0.0}
+	correctResultsForUp := []float64{0.0, -1.0, -1.0, -1.0}
 
 	// Prepare a neural network configuration struct
 	config := &wann.Config{
