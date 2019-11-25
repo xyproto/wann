@@ -1,3 +1,5 @@
+github.com/JoshVarga/GoMNIST v0.0.0-20150727083122-f6acf860c1f7 h1:YD6laRNzzsQjs68MMoKHr0yMQbnera6p3hgKF2zhjCY=
+github.com/JoshVarga/GoMNIST v0.0.0-20150727083122-f6acf860c1f7/go.mod h1:IeUc2z/zfbjZT63yza2x49k03X3i9qXhS3MsghRQtws=
 github.com/buger/goterm v0.0.0-20181115115552-c206103e1f37/go.mod h1:u9UyCz2eTrSGy6fbupqJ54eY5c4IC8gREQ1053dK12U=
 github.com/cheekybits/is v0.0.0-20150225183255-68e9c0620927/go.mod h1:h/aW8ynjgkuj+NQRlZcDbAbM1ORAbXjXX77sX7T289U=
 github.com/dave/jennifer v1.3.0 h1:p3tl41zjjCZTNBytMwrUuiAnherNUZktlhPTKoF/sEk=

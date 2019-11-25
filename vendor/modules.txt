@@ -1,3 +1,5 @@
+# github.com/JoshVarga/GoMNIST v0.0.0-20150727083122-f6acf860c1f7
+github.com/JoshVarga/GoMNIST
 # github.com/dave/jennifer v1.3.0
 github.com/dave/jennifer/jen
 # github.com/xyproto/af v0.0.0-20191018214415-1a8887381bd3
