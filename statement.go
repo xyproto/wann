@@ -395,7 +395,7 @@ func (net *Network) OutputNodeStatementX(functionName string) string {
 
 // RunStatementX will run the given statement by wrapping it in a program and using "go run"
 func RunStatementX(statement *jen.Statement, x float64) (float64, error) {
-	file, err := ioutil.TempFile("/tmp", "af_*.go")
+	file, err := ioutil.TempFile("", "af_*.go")
 	if err != nil {
 		return 0.0, err
 	}
@@ -428,7 +428,7 @@ func RunStatementX(statement *jen.Statement, x float64) (float64, error) {
 
 // RunStatementInputData will run the given statement by wrapping it in a program and using "go run"
 func RunStatementInputData(statement *jen.Statement, inputData []float64) (float64, error) {
-	file, err := ioutil.TempFile("/tmp", "af_*.go")
+	file, err := ioutil.TempFile("", "af_*.go")
 	if err != nil {
 		return 0.0, err
 	}
