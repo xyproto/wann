@@ -1,6 +1,6 @@
 # TODO
 
-- [ ] Draw a test-diagram with all activation functions + choose a color per activation function.
-- [ ] Add the next step, according to the paper.
+- [ ] Train and test with the Mnist dataset.
+- [ ] Fix any remaining issues with drawing SVG diagrams.
+- [ ] Fix any remaining issues with generating expressions.
 - [ ] Draw an "O" on the output node in the diagram.
-- [ ] Debugging this is no fun. Rewrite in Clojure, C++17 or Rust.
