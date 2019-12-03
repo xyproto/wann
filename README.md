@@ -12,11 +12,11 @@ This package implements Weight Agnostic Neural Networks for Go, and is inspired 
 
 * All activation functions are benchmarked at the start of the program and the results are taken into account when calculating the complexity of a network.
 * All networks can be translated to a Go statement, using the wonderful [jennifer](https://github.com/dave/jennifer) package (work in progress, there are a few kinks that needs to be ironed out).
-* Networks can be saved as `SVG` diagrams.
+* Networks can be saved as `SVG` diagrams. This feature needs more testing.
 * Neural networks can be trained and used. See the `cmd` folder for examples.
 * A random weight is chosen when training, instead of looping over the range of the weight. The paper describes both methods.
 * After the network has been trained, the optimal weight is found by looping over all weights (with a step size of `0.0001`).
-* Increased complexity counts negatively when evolving networks. A quick benchmark of all available activation functions at the start of the program determines which activation function us more complex. This optimizes not only for less complex networks, but also for execution speed.
+* Increased complexity counts negatively when evolving networks. This optimizes not only for less complex networks, but also for execution speed.
 * The diagram drawing routine plots the activation functions directly onto the nodes, together with a label. This can be saved as an SVG file.
 
 ## Example program
