@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 )
 
 // NewFile Creates a new file, with the specified package name.
@@ -124,31 +126,13 @@ func (f *File) isLocal(path string) bool {
 	return f.path == path
 }
 
-var reserved = []string{
-	/* keywords */
-	"break", "default", "func", "interface", "select", "case", "defer", "go", "map", "struct", "chan", "else", "goto", "package", "switch", "const", "fallthrough", "if", "range", "type", "continue", "for", "import", "return", "var",
-	/* predeclared */
-	"bool", "byte", "complex64", "complex128", "error", "float32", "float64", "int", "int8", "int16", "int32", "int64", "rune", "string", "uint", "uint8", "uint16", "uint32", "uint64", "uintptr", "true", "false", "iota", "nil", "append", "cap", "close", "complex", "copy", "delete", "imag", "len", "make", "new", "panic", "print", "println", "real", "recover",
-	/* common variables */
-	"err",
-}
-
-func isReservedWord(alias string) bool {
-	for _, name := range reserved {
-		if alias == name {
-			return true
-		}
-	}
-	return false
-}
-
 func (f *File) isValidAlias(alias string) bool {
 	// multiple dot-imports are ok
 	if alias == "." {
 		return true
 	}
 	// the import alias is invalid if it's a reserved word
-	if isReservedWord(alias) {
+	if IsReservedWord(alias) {
 		return false
 	}
 	// the import alias is invalid if it's already been registered
@@ -257,6 +241,16 @@ func guessAlias(path string) string {
 	// alias should now only contain alphanumerics
 	importsRegex := regexp.MustCompile(`[^a-z0-9]`)
 	alias = importsRegex.ReplaceAllString(alias, "")
+
+	// can't have a first digit, per Go identifier rules, so just skip them
+	for firstRune, runeLen := utf8.DecodeRuneInString(alias); unicode.IsDigit(firstRune); firstRune, runeLen = utf8.DecodeRuneInString(alias) {
+		alias = alias[runeLen:]
+	}
+
+	// If path part was all digits, we may be left with an empty string. In this case use "pkg" as the alias.
+	if alias == "" {
+		alias = "pkg"
+	}
 
 	return alias
 }
