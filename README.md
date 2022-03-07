@@ -60,8 +60,8 @@ func main() {
         right,
     }
 
-    // Which of the elements in the input data are we trying to identify?
-    correctResultsForUp := []float64{0.0, -1.0, -1.0, -1.0}
+    // Target scores for: up, down, left, right
+    correctResultsForUp := []float64{1.0, -1.0, -1.0, -1.0}
 
     // Prepare a neural network configuration struct
     config := &wann.Config{
@@ -168,5 +168,5 @@ There is a complete example for outputting Go code in `cmd/gofunction`.
 ## General info
 
 * Version: 0.3.2
-* License: MIT
+* License: BSD-3
 * Author: Alexander F. Rødseth &lt;xyproto@archlinux.org&gt;
