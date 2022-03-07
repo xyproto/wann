@@ -34,8 +34,8 @@ func main() {
 		right,
 	}
 
-	// Which of the elements in the input data are we trying to identify?
-	correctResultsForUp := []float64{0.0, -1.0, -1.0, -1.0}
+	// Target scores for: up, down, left, right
+	correctResultsForUp := []float64{1.0, -1.0, -1.0, -1.0}
 
 	// Prepare a neural network configuration struct
 	config := &wann.Config{
